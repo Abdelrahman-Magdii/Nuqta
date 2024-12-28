@@ -1,0 +1,15 @@
+@Operation(summary = "Get Nearest Requests", description = "Retrieve the nearest requests to the given location")
+@GetMapping("/nearest")
+public ResponseEntity<?> getNearestReq(@RequestParam double longitude, @RequestParam double latitude) {
+      List<ReqDto> dto = reqMapper.map(reqServices.findNearestLocation(longitude, latitude));
+      return new ResponseEntity<>(dto, HttpStatus.OK);
+}
+@Query(value = "SELECT r FROM requests r " +
+      "WHERE ST_DWithin(r.location, ST_SetSRID(ST_Point(:longitude, :latitude), 4326), 1000) " +
+      "ORDER BY ST_Distance(r.location, ST_SetSRID(ST_Point(:longitude, :latitude), 4326)) ASC",
+       nativeQuery = true)
+List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longitude, @Param("latitude") double latitude);
+
+
+@Query("SELECT r FROM ReqEntity r WHERE ST_Distance(r.location, ST_SetSRID(ST_Point(:lat, :lon), 4326)) <= 5000")
+List<ReqEntity> findNearestLocationWithin1000m(@Param("lat") double latitude, @Param("lon") double longitude);
