@@ -1,48 +1,65 @@
 package com.spring.nuqta.usermanagement.Services;
 
 import com.spring.nuqta.base.Services.BaseServices;
+import com.spring.nuqta.exception.GlobalException;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
-
 
 @Service
 public class UserServices extends BaseServices<UserEntity, Long> {
 
+
     @Override
-    public List<UserEntity> findAll() {
-        if (super.findAll().isEmpty()) {
-            throw new NoSuchElementException("No Found Users");
+    public List<UserEntity> findAll() throws GlobalException {
+        List<UserEntity> users = super.findAll();
+        if (users.isEmpty()) {
+            throw new GlobalException("No users found", HttpStatus.NOT_FOUND);
         }
-        return super.findAll();
+        return users;
     }
 
+
     @Override
-    public UserEntity findById(Long aLong) {
-        if (super.findById(aLong) == null) {
-            throw new NoSuchElementException("No Found User that id :" + aLong);
+    public UserEntity findById(Long id) throws GlobalException {
+        UserEntity user = super.findById(id);
+        if (user == null) {
+            throw new GlobalException("User not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
-        return super.findById(aLong);
+        return user;
     }
 
-    @Override
-    public UserEntity insert(UserEntity entity) {
 
+    @Override
+    public UserEntity insert(UserEntity entity) throws GlobalException {
+        if (entity == null || entity.getUsername() == null || entity.getUsername().isEmpty()) {
+            throw new GlobalException("Username cannot be empty", HttpStatus.BAD_REQUEST);
+        }
         return super.insert(entity);
     }
 
+
     @Override
-    public UserEntity update(UserEntity entity) {
+    public UserEntity update(UserEntity entity) throws GlobalException {
+        if (entity == null || entity.getId() == null) {
+            throw new GlobalException("User ID cannot be null", HttpStatus.BAD_REQUEST);
+        }
+        UserEntity existingUser = super.findById(entity.getId());
+        if (existingUser == null) {
+            throw new GlobalException("User not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND);
+        }
         return super.update(entity);
     }
 
+
     @Override
-    public void deleteById(Long aLong) {
-        if (super.findById(aLong) == null) {
-            throw new NoSuchElementException("No Found User that id :" + aLong);
+    public void deleteById(Long id) throws GlobalException {
+        UserEntity user = super.findById(id);
+        if (user == null) {
+            throw new GlobalException("User not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
-        super.deleteById(aLong);
+        super.deleteById(id);
     }
 }
