@@ -2,13 +2,9 @@ package com.spring.nuqta.donation.Entity;
 
 import com.spring.nuqta.base.Entity.BaseEntity;
 import com.spring.nuqta.enums.DonStatus;
+import com.spring.nuqta.request.Entity.ReqEntity;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -57,8 +53,8 @@ public class DonEntity extends BaseEntity<Long> {
     @OneToOne(mappedBy = "donation")
     private UserEntity user;
 
-//    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-//    @JoinColumn(name = "request_id", referencedColumnName = "id")
-//    private ReqEntity request;
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "request_id", referencedColumnName = "id")
+    private ReqEntity request;
 
 }

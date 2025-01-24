@@ -1,7 +1,8 @@
 package com.spring.nuqta.chatPot.Controller;
 
+import com.spring.nuqta.chatPot.Dto.ChatResponse;
+import com.spring.nuqta.chatPot.Services.AskDoctorService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,15 +14,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/ask-doctor")
 public class AskDoctorController {
 
-    private final ChatClient chat;
-    
+    private final AskDoctorService askDoctorService;
+
     @Autowired
-    public AskDoctorController(ChatClient.Builder chat) {
-        this.chat = chat.build();
+    public AskDoctorController(AskDoctorService askDoctorService) {
+        this.askDoctorService = askDoctorService;
     }
 
-    @PostMapping("/question")
-    public String askQuestion(@RequestBody String question) {
-        return chat.prompt().user(question).call().content();
+    @PostMapping("/chat")
+    public ChatResponse chat(@RequestBody String message) {
+        return new ChatResponse(this.askDoctorService.chat(message));
     }
+
+
 }

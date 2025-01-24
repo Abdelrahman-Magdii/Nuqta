@@ -1,6 +1,8 @@
 package com.spring.nuqta.request.Mapper;
 
 import com.spring.nuqta.base.Mapper.BaseMapper;
+import com.spring.nuqta.donation.Dto.DonDto;
+import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.organization.Dto.OrgDto;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.request.Dto.ReqDto;
@@ -25,12 +27,14 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
     @Mapping(target = "latitude", expression = "java(entity.getLocation() != null ? entity.getLocation().getCoordinate().y : null)")
     @Mapping(target = "user", source = "user", qualifiedByName = "mapUserEntityToDto")
     @Mapping(target = "organization", source = "organization", qualifiedByName = "mapOrganizationEntityToDto")
+    @Mapping(target = "donation", source = "donation", qualifiedByName = "mapDonationEntityToDto")
     ReqDto map(ReqEntity entity);
 
     @Override
     @Mapping(target = "location", expression = "java(dto.getLongitude() != null && dto.getLatitude() != null ? createGeometry(dto.getLongitude(), dto.getLatitude()) : null)")
     @Mapping(target = "user", source = "user", qualifiedByName = "mapUserDtoToEntity")
     @Mapping(target = "organization", source = "organization", qualifiedByName = "mapOrgDtoToEntity")
+    @Mapping(target = "donation", source = "donation", qualifiedByName = "mapDonationDtoToEntity")
     ReqEntity unMap(ReqDto dto);
 
     @Override
@@ -114,6 +118,49 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         entity.setEmail(orgDto.getEmail());
         entity.setPhone_number(orgDto.getPhone_number());
         entity.setLocation(new GeometryFactory().createPoint(new Coordinate(orgDto.getLongitude(), orgDto.getLatitude())));
+
+        return entity;
+    }
+
+    /// *****************************************//
+    @Named("mapDonationEntityToDto")
+    default DonDto mapDonationEntityToDto(DonEntity donEntity) {
+        if (donEntity == null) {
+            return null;
+        }
+
+        DonDto dto = new DonDto();
+        dto.setId(donEntity.getId());
+        dto.setDonationDate(donEntity.getDonationDate());
+        dto.setLastDonation(donEntity.getLastDonation());
+        dto.setWeight(donEntity.getWeight());
+        dto.setAmount(donEntity.getAmount());
+        dto.setBloodType(donEntity.getBloodType());
+        dto.setStatus(donEntity.getStatus());
+        dto.setPaymentOffered(donEntity.getPaymentOffered());
+        if (donEntity.getLocation() != null) {
+            dto.setLongitude(donEntity.getLocation().getCoordinate().x);
+            dto.setLatitude(donEntity.getLocation().getCoordinate().y);
+        }
+
+        return dto;
+    }
+
+    @Named("mapDonationDtoToEntity")
+    default DonEntity mapDonationDtoToEntity(DonDto donDto) {
+        if (donDto == null) {
+            return null;
+        }
+        DonEntity entity = new DonEntity();
+        entity.setId(donDto.getId());
+        entity.setDonationDate(donDto.getDonationDate());
+        entity.setLastDonation(donDto.getLastDonation());
+        entity.setWeight(donDto.getWeight());
+        entity.setAmount(donDto.getAmount());
+        entity.setBloodType(donDto.getBloodType());
+        entity.setStatus(donDto.getStatus());
+        entity.setPaymentOffered(donDto.getPaymentOffered());
+        entity.setLocation(new GeometryFactory().createPoint(new Coordinate(donDto.getLongitude(), donDto.getLatitude())));
 
         return entity;
     }

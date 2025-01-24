@@ -1,19 +1,12 @@
 package com.spring.nuqta.request.Entity;
 
 import com.spring.nuqta.base.Entity.BaseEntity;
+import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.enums.Level;
 import com.spring.nuqta.enums.Status;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +17,7 @@ import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -61,15 +55,15 @@ public class ReqEntity extends BaseEntity<Long> {
     @Column(name = "payment_available")
     private Boolean paymentAvailable;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private UserEntity user;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "org_id", referencedColumnName = "id")
     private OrgEntity organization;
 
-//    @OneToMany(mappedBy = "request", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-//    private Set<DonEntity> donation;
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<DonEntity> donation;
 
 }

@@ -2,6 +2,7 @@ package com.spring.nuqta.request.Dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.nuqta.base.Dto.BaseDto;
+import com.spring.nuqta.donation.Dto.DonDto;
 import com.spring.nuqta.enums.Level;
 import com.spring.nuqta.enums.Status;
 import com.spring.nuqta.organization.Dto.OrgDto;
@@ -12,6 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Schema(name = "Request Entity")
 @Getter
@@ -57,5 +59,6 @@ public class ReqDto extends BaseDto<Long> {
     @Schema(description = "Organization details")
     private OrgDto organization;
 
+    private Set<DonDto> donation;
 
 }

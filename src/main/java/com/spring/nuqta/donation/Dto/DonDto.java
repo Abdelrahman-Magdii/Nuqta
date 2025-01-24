@@ -3,6 +3,7 @@ package com.spring.nuqta.donation.Dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.nuqta.base.Dto.BaseDto;
 import com.spring.nuqta.enums.DonStatus;
+import com.spring.nuqta.request.Dto.ReqDto;
 import com.spring.nuqta.usermanagement.Dto.UserDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -50,4 +51,7 @@ public class DonDto extends BaseDto<Long> {
 
     @Schema(description = "User details associated with the donation.", example = "[]")
     private UserDto user;
+
+    @Schema(description = "", example = "[]")
+    private ReqDto request;
 }
