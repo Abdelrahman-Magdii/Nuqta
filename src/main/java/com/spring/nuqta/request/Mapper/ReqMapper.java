@@ -138,10 +138,9 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         dto.setBloodType(donEntity.getBloodType());
         dto.setStatus(donEntity.getStatus());
         dto.setPaymentOffered(donEntity.getPaymentOffered());
-        if (donEntity.getLocation() != null) {
-            dto.setLongitude(donEntity.getLocation().getCoordinate().x);
-            dto.setLatitude(donEntity.getLocation().getCoordinate().y);
-        }
+        dto.setLongitude(donEntity.getLocation().getCoordinate().x);
+        dto.setLatitude(donEntity.getLocation().getCoordinate().y);
+
 
         return dto;
     }

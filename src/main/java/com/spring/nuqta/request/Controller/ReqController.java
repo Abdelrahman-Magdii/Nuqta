@@ -7,18 +7,14 @@ import com.spring.nuqta.request.Mapper.AddReqMapper;
 import com.spring.nuqta.request.Mapper.ReqMapper;
 import com.spring.nuqta.request.Services.ReqServices;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -33,6 +29,9 @@ public class ReqController {
     private final AddReqMapper addReqMapper;
 
     @Operation(summary = "Get All Requests", description = "Retrieve a list of all requests")
+    @ApiResponse(responseCode = "200", description = "Requests get successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ReqDto.class)))
     @GetMapping()
     public ResponseEntity<?> getAllReq() {
         List<ReqDto> dto = reqMapper.map(reqServices.findAll());
@@ -40,6 +39,9 @@ public class ReqController {
     }
 
     @Operation(summary = "Get Request by ID", description = "Retrieve details of a specific request by its ID")
+    @ApiResponse(responseCode = "200", description = "Request get successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ReqDto.class)))
     @GetMapping("/{id}")
     public ResponseEntity<?> getReqById(@PathVariable Long id) {
         ReqDto reqDto = reqMapper.map(reqServices.findById(id));
@@ -48,6 +50,9 @@ public class ReqController {
 
 
     @Operation(summary = "Add New Request", description = "Create a new request")
+    @ApiResponse(responseCode = "200", description = "Request created successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AddReqDto.class)))
     @PostMapping("/{userId}")
     public ResponseEntity<?> addReq(@PathVariable Long userId, @RequestBody AddReqDto addReqDto) {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
@@ -56,6 +61,9 @@ public class ReqController {
     }
 
     @Operation(summary = "Update an Existing Request", description = "Update the details of an existing request")
+    @ApiResponse(responseCode = "200", description = "Request updated successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AddReqDto.class)))
     @PutMapping("/{userId}")
     public ResponseEntity<?> updateReq(@PathVariable Long userId, @RequestBody AddReqDto addReqDto) {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
@@ -66,6 +74,9 @@ public class ReqController {
 
 
     @Operation(summary = "Add New Request", description = "Create a new request")
+    @ApiResponse(responseCode = "200", description = "Request created successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AddReqDto.class)))
     @PostMapping("org/{orgId}")
     public ResponseEntity<?> addReqForOrg(@PathVariable Long orgId, @RequestBody AddReqDto addReqDto) {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
@@ -74,6 +85,9 @@ public class ReqController {
     }
 
     @Operation(summary = "Update an Existing Request", description = "Update the details of an existing request")
+    @ApiResponse(responseCode = "200", description = "Request updated successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AddReqDto.class)))
     @PutMapping("org/{orgId}")
     public ResponseEntity<?> updateReqForOrg(@PathVariable Long orgId, @RequestBody AddReqDto addReqDto) {
         ReqEntity entity = addReqMapper.unMap(addReqDto);

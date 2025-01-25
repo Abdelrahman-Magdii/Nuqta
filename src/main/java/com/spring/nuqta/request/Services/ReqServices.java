@@ -60,7 +60,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         return super.update(entity);
     }
 
-    
+
     @Override
     public void deleteById(Long id) throws GlobalException {
         ReqEntity request = reqRepo.findById(id)

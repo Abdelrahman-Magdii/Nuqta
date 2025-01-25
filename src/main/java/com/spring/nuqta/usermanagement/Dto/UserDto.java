@@ -1,7 +1,5 @@
 package com.spring.nuqta.usermanagement.Dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.nuqta.base.Dto.BaseDto;
 import com.spring.nuqta.donation.Dto.DonDto;
 import com.spring.nuqta.enums.Scope;
@@ -34,13 +32,10 @@ public class UserDto extends BaseDto<Long> {
     @Schema(description = "Scope of the user, indicating their operational access", example = "USER")
     private Scope scope;
 
-    @Schema(description = "Donation details associated with the user", example = "[]")
-    @JsonProperty("donation")
+    @Schema(description = "Donation details associated with the user", example = "{}")
     private DonDto donation;
 
     @Schema(description = "Requests details associated with the user", example = "[]")
-    @JsonProperty("requests")
-    @JsonIgnore
     private List<ReqDto> requests;
 
 }

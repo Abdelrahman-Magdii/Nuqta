@@ -53,12 +53,13 @@ public class ReqDto extends BaseDto<Long> {
     @Schema(description = "Y coordinate of the request's location", example = "74.0060")
     private Double latitude;
 
-    @Schema(description = "User details")
+    @Schema(description = "User details", example = "{}")
     private UserDto user;
 
-    @Schema(description = "Organization details")
+    @Schema(description = "Organization details", example = "{}")
     private OrgDto organization;
 
+    @Schema(description = "All Donation that accept request", example = "[]")
     private Set<DonDto> donation;
 
 }

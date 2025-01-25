@@ -1,6 +1,5 @@
 package com.spring.nuqta.organization.Dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.nuqta.base.Dto.BaseDto;
 import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.request.Dto.ReqDto;
@@ -14,8 +13,8 @@ import java.util.List;
 @Getter
 @Setter
 public class OrgDto extends BaseDto<Long> {
-    
-    @Schema(description = "Name of the organization", example = "Nuqta Technologies")
+
+    @Schema(description = "Name of the organization", example = "Nuqta")
     private String org_name;
 
     @Schema(description = "Email address of the organization", example = "info@nuqta.com")
@@ -36,8 +35,7 @@ public class OrgDto extends BaseDto<Long> {
     @Schema(description = "Operational scope of the organization", example = "ORGANIZATION")
     private Scope scope;
 
-    @Schema(description = "Requests details associated with the user")
-    @JsonProperty("requests")
+    @Schema(description = "Requests details associated with the user", example = "[]")
     private List<ReqDto> requests;
 
 
