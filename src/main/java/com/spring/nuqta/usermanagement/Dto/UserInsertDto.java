@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Schema(name = "User Entity", description = "Represents the details of a user.")
 @Getter
 @Setter
@@ -22,16 +24,15 @@ public class UserInsertDto extends BaseDto<Long> {
     @Schema(description = "password of the user", example = "*******")
     private String password;
 
-    @Schema(description = "Age of the user", example = "30")
-    private Integer age;
+    @Schema(description = "Birth date of the user", example = "2003-10-03")
+    private LocalDate birthDate;
 
     @Schema(description = "Phone number of the user", example = "+11234567890")
-    private String phone_number;
+    private String phoneNumber;
 
     @Schema(description = "Scope of the user, indicating their operational access", example = "USER")
     private Scope scope;
 
     @Schema(description = "Donation details associated with the user")
     private DonDto donation;
-
 }

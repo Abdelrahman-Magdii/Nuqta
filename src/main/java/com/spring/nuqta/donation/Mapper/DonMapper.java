@@ -15,6 +15,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
+import java.time.LocalDate;
+
 @Mapper(componentModel = "spring")
 public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
 
@@ -52,8 +54,8 @@ public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
         userDto.setId(userEntity.getId()); // Map only essential fields to avoid recursion
         userDto.setUsername(userEntity.getUsername());
         userDto.setEmail(userEntity.getEmail());
-        userDto.setAge(userEntity.getAge());
-        userDto.setPhone_number(userEntity.getPhone_number());
+        userDto.setAge(LocalDate.now().getYear() - userEntity.getBirthDate().getYear());
+        userDto.setPhoneNumber(userEntity.getPhoneNumber());
         userDto.setScope(userEntity.getScope());
         return userDto;
     }

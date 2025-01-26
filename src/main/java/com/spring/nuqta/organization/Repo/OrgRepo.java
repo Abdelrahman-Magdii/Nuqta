@@ -4,7 +4,10 @@ import com.spring.nuqta.base.Repo.BaseRepo;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface OrgRepo extends BaseRepo <OrgEntity,Long> {
+import java.util.Optional;
 
+@Repository
+public interface OrgRepo extends BaseRepo<OrgEntity, Long> {
+
+    Optional<OrgEntity> findByEmail(String email);
 }

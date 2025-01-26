@@ -17,6 +17,9 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
+import java.time.LocalDate;
+import java.time.Period;
+
 
 @Mapper(componentModel = "spring")
 public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
@@ -62,10 +65,9 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         dto.setId(userEntity.getId());
         dto.setUsername(userEntity.getUsername());
         dto.setEmail(userEntity.getEmail());
-        dto.setPhone_number(userEntity.getPhone_number());
+        dto.setPhoneNumber(userEntity.getPhoneNumber());
         dto.setScope(userEntity.getScope());
-        dto.setAge(userEntity.getAge());
-
+        dto.setAge(Period.between(userEntity.getBirthDate(), LocalDate.now()).getYears());
 
         return dto;
     }
@@ -76,13 +78,27 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         if (userDto == null) {
             return null;
         }
+
         UserEntity entity = new UserEntity();
         entity.setId(userDto.getId());
         entity.setUsername(userDto.getUsername());
         entity.setEmail(userDto.getEmail());
-        entity.setPhone_number(userDto.getPhone_number());
+        entity.setPhoneNumber(userDto.getPhoneNumber());
         entity.setScope(userDto.getScope());
-        entity.setAge(userDto.getAge());
+
+        // Calculate birthDate from age
+        if (userDto.getAge() != null) {
+            LocalDate birthDate = LocalDate.now().minusYears(userDto.getAge()).withDayOfYear(1); // Set to January 1st
+            entity.setBirthDate(birthDate);
+        }
+
+//        // Map nested objects (if needed)
+//        if (userDto.getDonation() != null) {
+//            entity.setDonation(mapDonDtoToEntity(userDto.getDonation()));
+//        }
+//        if (userDto.getRequests() != null) {
+//            entity.setRequests(mapReqDtosToEntities(userDto.getRequests()));
+//        }
 
         return entity;
     }

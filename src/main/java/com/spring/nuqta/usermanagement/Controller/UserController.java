@@ -52,10 +52,10 @@ public class UserController {
     @ApiResponse(responseCode = "201", description = "User created successfully",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = UserInsertDto.class)))
-    @PostMapping("")
+    @PostMapping("/signin")
     public ResponseEntity<UserDto> addUser(@RequestBody UserInsertDto userDto) {
         UserEntity entity = userInsertMapper.unMap(userDto);
-        userServices.insert(entity);
+        userServices.create(entity);
         UserDto dto = userMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }

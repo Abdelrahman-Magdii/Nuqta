@@ -13,6 +13,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -22,13 +24,15 @@ import java.util.stream.Collectors;
 public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
 
     @Override
+    @Mapping(target = "age", source = "birthDate", qualifiedByName = "calculateAgeFromBirthDate")
     @Mapping(target = "donation", source = "donation", qualifiedByName = "mapDonationToDto")
-    @Mapping(target = "requests", source = "request", qualifiedByName = "mapRequestSetToDtoList")
+    @Mapping(target = "requests", source = "requests", qualifiedByName = "mapRequestSetToDtoList")
     UserDto map(UserEntity userEntity);
 
     @Override
+    @Mapping(target = "birthDate", source = "age", qualifiedByName = "calculateBirthDateFromAge")
     @Mapping(target = "donation", source = "donation", qualifiedByName = "mapDonationToEntity")
-    @Mapping(target = "request", source = "requests", qualifiedByName = "mapRequestDtoListToEntitySet")
+    @Mapping(target = "requests", source = "requests", qualifiedByName = "mapRequestDtoListToEntitySet")
     UserEntity unMap(UserDto userDto);
 
     // Custom method to map DonEntity to DonDto
@@ -119,4 +123,24 @@ public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
                 })
                 .collect(Collectors.toSet());
     }
+
+
+    // Custom method to calculate age from birthDate
+    @Named("calculateAgeFromBirthDate")
+    default int calculateAgeFromBirthDate(LocalDate birthDate) {
+        if (birthDate == null) {
+            return 0;
+        }
+        return Period.between(birthDate, LocalDate.now()).getYears();
+    }
+
+    // Custom method to calculate birthDate from age
+    @Named("calculateBirthDateFromAge")
+    default LocalDate calculateBirthDateFromAge(int age) {
+        if (age < 0) {
+            throw new IllegalArgumentException("Age cannot be negative");
+        }
+        return LocalDate.now().minusYears(age).withDayOfYear(1); // Set to January 1st of the calculated year
+    }
+
 }

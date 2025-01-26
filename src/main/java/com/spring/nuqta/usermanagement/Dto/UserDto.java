@@ -27,7 +27,7 @@ public class UserDto extends BaseDto<Long> {
 
 
     @Schema(description = "Phone number of the user", example = "+11234567890")
-    private String phone_number;
+    private String phoneNumber;
 
     @Schema(description = "Scope of the user, indicating their operational access", example = "USER")
     private Scope scope;

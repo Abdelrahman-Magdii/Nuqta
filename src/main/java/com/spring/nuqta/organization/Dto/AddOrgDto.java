@@ -35,5 +35,4 @@ public class AddOrgDto extends BaseDto<Long> {
     @Schema(description = "Operational scope of the organization", example = "ORGANIZATION")
     private Scope scope;
 
-
 }

@@ -4,19 +4,14 @@ import com.spring.nuqta.base.Entity.BaseEntity;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.request.Entity.ReqEntity;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.util.Set;
 
 @Getter
@@ -27,25 +22,41 @@ import java.util.Set;
 @Table(name = "Users")
 public class UserEntity extends BaseEntity<Long> {
 
+    @Column(unique = true, nullable = false, length = 50)
     private String username;
 
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
 
+    @Column(nullable = false)
     private String password;
 
-    private Integer age;
+    @NotNull
+    @Column(name = "birth_date", nullable = false)
+    private LocalDate birthDate;
 
-    private String phone_number;
+    @Column(name = "phone_number", nullable = false, length = 15)
+    private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Scope scope;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "donation_id", referencedColumnName = "id")
     private DonEntity donation;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ReqEntity> request;
+    private Set<ReqEntity> requests;
 
+    public UserEntity(String username, String email, String password, LocalDate birthDate, String phoneNumber, Scope scope, DonEntity donation) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.birthDate = birthDate;
+        this.phoneNumber = phoneNumber;
+        this.scope = scope;
+        this.donation = donation;
+    }
 
 }
