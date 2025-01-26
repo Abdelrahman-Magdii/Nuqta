@@ -27,11 +27,6 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     private final JwtUtilsUser jwtUtils;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * Validates required user fields.
-     *
-     * @param params the user information
-     */
     private static void validateUserFields(UserEntity params) {
         if (Objects.isNull(params.getUsername())) {
             throw new GlobalException("Username is required.", HttpStatus.BAD_REQUEST);
@@ -85,6 +80,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         if (existingUser == null) {
             throw new GlobalException("User not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND);
         }
+        entity.setPassword(passwordEncoder.encode(entity.getPassword()));
         return super.update(entity);
     }
 
@@ -96,7 +92,6 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         }
         super.deleteById(id);
     }
-
 
     @Transactional
     public AuthUserDto create(UserEntity entity) {
