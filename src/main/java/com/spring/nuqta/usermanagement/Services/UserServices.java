@@ -3,11 +3,13 @@ package com.spring.nuqta.usermanagement.Services;
 import com.spring.nuqta.base.Services.BaseServices;
 import com.spring.nuqta.exception.GlobalException;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class UserServices extends BaseServices<UserEntity, Long> {
 
@@ -34,6 +36,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
 
     @Override
     public UserEntity insert(UserEntity entity) throws GlobalException {
+        log.info("Inserting user: " + entity.getUsername());
         if (entity == null || entity.getUsername() == null || entity.getUsername().isEmpty()) {
             throw new GlobalException("Username cannot be empty", HttpStatus.BAD_REQUEST);
         }
