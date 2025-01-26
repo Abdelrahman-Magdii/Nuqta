@@ -3,6 +3,7 @@ package com.spring.nuqta.authentication.Controller;
 import com.spring.nuqta.authentication.Dto.AuthOrgDto;
 import com.spring.nuqta.authentication.Dto.AuthUserDto;
 import com.spring.nuqta.authentication.Services.AuthService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.SystemException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+@Tag(name = "Authentication")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor

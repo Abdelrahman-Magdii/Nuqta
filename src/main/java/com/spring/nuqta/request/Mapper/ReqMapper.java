@@ -94,10 +94,7 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
 
 //        // Map nested objects (if needed)
 //        if (userDto.getDonation() != null) {
-//            entity.setDonation(mapDonDtoToEntity(userDto.getDonation()));
-//        }
-//        if (userDto.getRequests() != null) {
-//            entity.setRequests(mapReqDtosToEntities(userDto.getRequests()));
+//            entity.setDonation(mapDonationDtoToEntity(userDto.getDonation()));
 //        }
 
         return entity;
@@ -111,11 +108,11 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         }
         OrgDto dto = new OrgDto();
         dto.setId(orgEntity.getId());
-        dto.setLicense_number(orgEntity.getLicense_number());
+        dto.setLicenseNumber(orgEntity.getLicenseNumber());
         dto.setScope(orgEntity.getScope());
-        dto.setOrg_name(orgEntity.getOrg_name());
+        dto.setOrgName(orgEntity.getOrgName());
         dto.setEmail(orgEntity.getEmail());
-        dto.setPhone_number(orgEntity.getPhone_number());
+        dto.setPhoneNumber(orgEntity.getPhoneNumber());
         dto.setLongitude(orgEntity.getLocation().getCoordinate().x);
         dto.setLatitude(orgEntity.getLocation().getCoordinate().y);
         return dto;
@@ -128,11 +125,11 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         }
         OrgEntity entity = new OrgEntity();
         entity.setId(orgDto.getId());
-        entity.setLicense_number(orgDto.getLicense_number());
+        entity.setLicenseNumber(orgDto.getLicenseNumber());
         entity.setScope(orgDto.getScope());
-        entity.setOrg_name(orgDto.getOrg_name());
+        entity.setOrgName(orgDto.getOrgName());
         entity.setEmail(orgDto.getEmail());
-        entity.setPhone_number(orgDto.getPhone_number());
+        entity.setPhoneNumber(orgDto.getPhoneNumber());
         entity.setLocation(new GeometryFactory().createPoint(new Coordinate(orgDto.getLongitude(), orgDto.getLatitude())));
 
         return entity;

@@ -15,7 +15,7 @@ import java.util.List;
 public class OrgDto extends BaseDto<Long> {
 
     @Schema(description = "Name of the organization", example = "Nuqta")
-    private String org_name;
+    private String orgName;
 
     @Schema(description = "Email address of the organization", example = "info@nuqta.com")
     private String email;
@@ -27,10 +27,10 @@ public class OrgDto extends BaseDto<Long> {
     private Double latitude;
 
     @Schema(description = "Phone number of the organization", example = "+1234567890")
-    private String phone_number;
+    private String phoneNumber;
 
     @Schema(description = "License number of the organization", example = "LIC-987654321")
-    private String license_number;
+    private String licenseNumber;
 
     @Schema(description = "Operational scope of the organization", example = "ORGANIZATION")
     private Scope scope;

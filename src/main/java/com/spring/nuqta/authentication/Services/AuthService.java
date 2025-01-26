@@ -57,11 +57,13 @@ public class AuthService {
 
     public AuthOrgDto authOrganization(final Map<String, Object> params)
             throws SystemException {
-        String referenceId = (String) params.get("reference_id");
+        String licenseNumber = (String) params.get("licenseNumber");
+        String email = (String) params.get("email");
         String password = (String) params.get("password");
 
-        validateOrganizationParams(referenceId, password);
-        OrgEntity organization = validateOrganizationAuth(referenceId, password);
+
+        validateOrganizationParams(licenseNumber, email, password);
+        OrgEntity organization = validateOrganizationAuth(licenseNumber, password, email);
 
         String token = jwtUtilsOrganization.generateToken(organization);
 
@@ -109,10 +111,10 @@ public class AuthService {
                 username, email, password != null ? "******" : null);
         if ((username == null || username.trim().isEmpty())
                 && (email == null || email.trim().isEmpty())) {
-            throw new GlobalException("error.emailOrLoginName.required", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("Email Or Username required", HttpStatus.BAD_REQUEST);
         }
         if (password == null || password.trim().isEmpty()) {
-            throw new GlobalException("error.password.required", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("Password required", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -120,10 +122,10 @@ public class AuthService {
         UserEntity user = (username != null)
                 ? userRepository.findByUsername(username)
                 .orElseThrow(() -> new GlobalException(
-                        "error.loginNameOrEmail.invalid", HttpStatus.BAD_REQUEST))
+                        "Username Or Email invalid.", HttpStatus.BAD_REQUEST))
                 : userRepository.findByEmail(email)
                 .orElseThrow(() -> new GlobalException(
-                        "error.loginNameOrEmail.invalid", HttpStatus.BAD_REQUEST));
+                        "Username Or Email invalid.", HttpStatus.BAD_REQUEST));
 
         Optional<UserEntity> user1 = userRepository.findByUsername(username);
         Optional<UserEntity> user2 = userRepository.findByEmail(email);
@@ -134,32 +136,46 @@ public class AuthService {
                 && passwordEncoder.matches(password, user2.get().getPassword())) {
             return (UserEntity) user2.get();
         } else if (!passwordEncoder.matches(password, user1.get().getPassword())) {
-            throw new GlobalException("error.password.invalid", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);
         } else {
-            throw new GlobalException("error.loginNameOrEmail.invalid", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("Username Or Email invalid.", HttpStatus.BAD_REQUEST);
         }
 
     }
 
-    private void validateOrganizationParams(String referenceId, String password) {
-        if (referenceId == null || referenceId.trim().isEmpty()) {
-            throw new GlobalException("error.referenceId.required", HttpStatus.BAD_REQUEST);
+    private void validateOrganizationParams(String licenseNumber, String email, String password) {
+        if ((licenseNumber == null || licenseNumber.trim().isEmpty())
+                && (email == null || email.trim().isEmpty())) {
+            throw new GlobalException("License Number or Email required", HttpStatus.BAD_REQUEST);
         }
         if (password == null || password.trim().isEmpty()) {
-            throw new GlobalException("error.password.required", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("Password required.", HttpStatus.BAD_REQUEST);
         }
     }
 
-    private OrgEntity validateOrganizationAuth(String email, String password) {
-        OrgEntity organization =
+    private OrgEntity validateOrganizationAuth(String licenseNumber, String password, String email) {
+        OrgEntity organization = (email != null) ?
                 organizationRepository.findByEmail(email)
                         .orElseThrow(() -> new GlobalException(
-                                "error.email.invalid", HttpStatus.BAD_REQUEST));
+                                "Organization Email invalid", HttpStatus.BAD_REQUEST)) :
+                organizationRepository.findByLicenseNumber(licenseNumber)
+                        .orElseThrow(() -> new GlobalException(
+                                "License Number invalid", HttpStatus.BAD_REQUEST));
 
-        if (!passwordEncoder.matches(password, organization.getPassword())) {
-            throw new GlobalException("error.password.invalid", HttpStatus.BAD_REQUEST);
+        Optional<OrgEntity> org1 = organizationRepository.findByLicenseNumber(licenseNumber);
+        Optional<OrgEntity> org2 = organizationRepository.findByEmail(email);
+
+        if (org1.isPresent()
+                && passwordEncoder.matches(password, org1.get().getPassword())) {
+            return (OrgEntity) org1.get();
+        } else if (org2.isPresent()
+                && passwordEncoder.matches(password, org2.get().getPassword())) {
+            return (OrgEntity) org2.get();
+        } else if (!passwordEncoder.matches(password, org1.get().getPassword())) {
+            throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);
+        } else {
+            throw new GlobalException("License Number Or Email invalid.", HttpStatus.BAD_REQUEST);
         }
-        return organization;
     }
 
 }

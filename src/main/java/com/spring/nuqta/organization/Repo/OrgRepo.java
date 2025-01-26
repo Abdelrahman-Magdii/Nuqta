@@ -10,4 +10,8 @@ import java.util.Optional;
 public interface OrgRepo extends BaseRepo<OrgEntity, Long> {
 
     Optional<OrgEntity> findByEmail(String email);
+
+    Optional<OrgEntity> findByLicenseNumber(String licenseNumber);
+
+    Optional<OrgEntity> findByLicenseNumberOrEmail(String email, String licenseNumber);
 }

@@ -52,10 +52,10 @@ public class OrgController {
     @ApiResponse(responseCode = "201", description = "Organization added successfully",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = AddOrgDto.class)))
-    @PostMapping("")
+    @PostMapping("/signin")
     public ResponseEntity<OrgDto> addOrg(@RequestBody AddOrgDto addOrgDto) {
         OrgEntity entity = addOrgMapper.unMap(addOrgDto);
-        orgServices.insert(entity);
+        orgServices.create(entity);
         OrgDto dto = orgMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
