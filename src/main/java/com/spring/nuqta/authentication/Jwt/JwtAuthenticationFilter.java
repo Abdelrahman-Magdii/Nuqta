@@ -1,10 +1,10 @@
 package com.spring.nuqta.authentication.Jwt;
 
+import com.spring.nuqta.authentication.Dto.AuthOrgDto;
+import com.spring.nuqta.authentication.Dto.AuthUserDto;
 import com.spring.nuqta.authentication.SecurityConfig;
 import com.spring.nuqta.authentication.Services.AuthService;
 import com.spring.nuqta.enums.Scope;
-import com.spring.nuqta.organization.Dto.AddOrgDto;
-import com.spring.nuqta.usermanagement.Dto.UserInsertDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,8 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain)
-            throws ServletException, IOException {
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
         logger.info("Authorization Header: " + authHeader);
@@ -73,11 +72,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Authenticate user or organization
             UsernamePasswordAuthenticationToken authenticationToken = null;
-            if (auth.get() instanceof UserInsertDto) {
-                UserInsertDto userDto = (UserInsertDto) auth.get();
+            if (auth.get() instanceof AuthUserDto) {
+                AuthUserDto userDto = (AuthUserDto) auth.get();
                 authenticationToken = createAuthenticationToken(userDto, request);
-            } else if (auth.get() instanceof AddOrgDto) {
-                AddOrgDto orgDto = (AddOrgDto) auth.get();
+            } else if (auth.get() instanceof AuthOrgDto) {
+                AuthOrgDto orgDto = (AuthOrgDto) auth.get();
                 authenticationToken = createAuthenticationToken(orgDto, request);
             }
 
@@ -96,8 +95,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // Creates authentication token based on UserDto or OrgDto
     private UsernamePasswordAuthenticationToken createAuthenticationToken(Object dto,
                                                                           HttpServletRequest request) {
-        Scope scope = (dto instanceof UserInsertDto) ? ((UserInsertDto) dto).getScope()
-                : ((AddOrgDto) dto).getScope();
+        Scope scope = (dto instanceof AuthUserDto) ? ((AuthUserDto) dto).getScope()
+                : ((AuthOrgDto) dto).getScope();
 
 
         UsernamePasswordAuthenticationToken authenticationToken =

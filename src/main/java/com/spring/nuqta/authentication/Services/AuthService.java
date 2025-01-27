@@ -4,7 +4,6 @@ import com.spring.nuqta.authentication.Dto.AuthOrgDto;
 import com.spring.nuqta.authentication.Dto.AuthUserDto;
 import com.spring.nuqta.authentication.Jwt.JwtUtilsOrganization;
 import com.spring.nuqta.authentication.Jwt.JwtUtilsUser;
-import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.exception.GlobalException;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.organization.Repo.OrgRepo;
@@ -17,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -74,21 +74,37 @@ public class AuthService {
     }
 
 
-    public <T> Optional<T> authByToken(final String token) throws SystemException {
+    public <T> Optional<T> authByToken(final String token) {
         String scope = jwtUtilsUser.getScope(token);
-        String subject;
 
-        if (Scope.USER.equals(scope)) {
-            subject = jwtUtilsUser.getSubject(token);
-            return (Optional<T>) userRepository.findByUsername(subject)
-                    .map(user -> createUserDto(user, token));
-        } else if (Scope.ORGANIZATION.equals(scope)) {
-            subject = jwtUtilsOrganization.getSubject(token);
-            return (Optional<T>) organizationRepository.findByEmail(subject)
-                    .map(organization -> createOrgDto(organization, token));
+        if (Objects.equals(scope, "USER")) {
+            return authenticateUser(token);
+        } else if (Objects.equals(scope, "ORGANIZATION")) {
+            return authenticateOrganization(token);
         }
+
         return Optional.empty();
     }
+
+    private <T> Optional<T> authenticateUser(String token) {
+        String subject = jwtUtilsUser.getSubject(token);
+
+        return userRepository.findByUsername(subject)
+                .map(user -> {
+                    AuthUserDto authuserDto = createUserDto(user, token);
+                    return (T) authuserDto;
+                });
+    }
+
+    private <T> Optional<T> authenticateOrganization(String token) {
+        String subject = jwtUtilsOrganization.getSubject(token);
+        return organizationRepository.findByEmail(subject)
+                .map(organization -> {
+                    AuthOrgDto authOrgDto = createOrgDto(organization, token);
+                    return (T) authOrgDto;
+                });
+    }
+
 
     // ----------------------- Private Methods ---------------------------
 
