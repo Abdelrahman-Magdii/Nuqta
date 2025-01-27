@@ -16,51 +16,99 @@ import java.util.function.Function;
 @Getter
 public abstract class JwtUtils {
 
+    // Secret key used for signing and verifying JWT tokens
     @Value("${security.jwt.secret-key}")
     private String secretKey;
 
+    // Expiration time for regular JWT tokens (in milliseconds)
     @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
 
+    // Expiration time for refresh tokens (in milliseconds)
     @Value("${security.jwt.refresh-expiration-time}")
     private long refreshExpiration;
 
-    // Extract username from JWT token
+    /**
+     * Extracts the username (subject) from the JWT token.
+     *
+     * @param token The JWT token.
+     * @return The subject (username) of the token.
+     */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // Extract specific claims
+    /**
+     * Extracts a specific claim from the JWT token using a claims resolver function.
+     *
+     * @param token          The JWT token.
+     * @param claimsResolver A function to resolve the desired claim from the token's claims.
+     * @return The resolved claim.
+     */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    /********************************/
-    // Extract expiration date of JWT
+    /**
+     * Extracts the expiration date of the JWT token.
+     *
+     * @param token The JWT token.
+     * @return The expiration date of the token.
+     */
     public Date getExpireAt(String token) {
         return extractExpiration(token);
     }
 
-    // Extract expiration date from token
+    /**
+     * Extracts the expiration date from the JWT token.
+     *
+     * @param token The JWT token.
+     * @return The expiration date of the token.
+     */
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    // Extract all claims from JWT
+    /**
+     * Extracts all claims from the JWT token.
+     *
+     * @param token The JWT token.
+     * @return All claims contained in the token.
+     */
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSignInKey()).build()
-                .parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignInKey()) // Set the signing key for verification
+                .build()
+                .parseClaimsJws(token) // Parse the token
+                .getBody(); // Extract the claims
     }
 
-    // Get signing key for JWT
+    /**
+     * Generates the signing key from the base64-encoded secret key.
+     *
+     * @return The signing key used for JWT verification.
+     */
     Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey); // Decode the base64 secret key
+        return Keys.hmacShaKeyFor(keyBytes); // Create a HMAC SHA key
     }
 
-    // Abstract methods to be implemented in the subclass
+    /**
+     * Abstract method to extract the subject (username) from the token.
+     * Must be implemented by subclasses.
+     *
+     * @param token The JWT token.
+     * @return The subject of the token.
+     */
     public abstract String getSubject(String token);
 
+    /**
+     * Abstract method to extract the scope (role) from the token.
+     * Must be implemented by subclasses.
+     *
+     * @param token The JWT token.
+     * @return The scope of the token.
+     */
     public abstract String getScope(String token);
 }
