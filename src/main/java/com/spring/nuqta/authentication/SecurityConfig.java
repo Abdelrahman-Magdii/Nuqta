@@ -4,10 +4,9 @@ import com.spring.nuqta.authentication.Jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -25,27 +24,21 @@ public class SecurityConfig {
     // List of public API endpoints that don't require authentication
     public static final String[] PUBLIC_APIS = {"/swagger-ui/**", "/api/auth/**",
             "/api-docs/**", "/api/user/signin", "/api/org/signin"};
-    private final AuthenticationProvider authenticationProvider;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors().and().csrf().disable() // Disable CSRF for APIs (adjust for forms)
-                .httpBasic() // Enable basic HTTP authentication for testing
-                .and()
+        http
+                .cors(AbstractHttpConfigurer::disable) // Disable CORS if not required
+                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for APIs
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(HttpMethod.GET, PUBLIC_APIS)
-                        .permitAll() // Allow access to public endpoints
-
-                        .requestMatchers(HttpMethod.POST, PUBLIC_APIS)
-                        .permitAll()
-
+                        .requestMatchers(PUBLIC_APIS).permitAll() // Allow requests to public APIs
                         .anyRequest().authenticated() // All other requests require authentication
-                ).sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Stateless session management (JWT)
-                .and().authenticationProvider(authenticationProvider) // Custom authentication provider
-                .addFilterBefore(jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class); // Add JWT filter
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Use stateless session management
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
 
         return http.build();
     }
