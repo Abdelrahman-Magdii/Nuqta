@@ -15,16 +15,13 @@ public class AuthOrgDto {
     private String accessToken;
     @JsonProperty("expire_at")
     private String expireAt;
-    @JsonProperty("refresh_token")
-    private String refreshToken;
     @JsonProperty("scope")
     private Scope scope;
 
-    public AuthOrgDto(Long orgId, String accessToken, String expireAt, String refreshToken, Scope scope) {
+    public AuthOrgDto(Long orgId, String accessToken, String expireAt, Scope scope) {
         this.orgId = orgId;
         this.accessToken = accessToken;
         this.expireAt = expireAt;
-        this.refreshToken = refreshToken;
         this.scope = scope;
     }
 }

@@ -54,8 +54,16 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         if (existingOrganization == null) {
             throw new GlobalException("Organization not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND);
         }
-        entity.setPassword(passwordEncoder.encode(entity.getPassword()));
-        return super.update(entity);
+        existingOrganization.setId(entity.getId());
+//        existingOrganization.setEmail(entity.getEmail());
+//        existingOrganization.setLicenseNumber(entity.getLicenseNumber());
+        existingOrganization.setOrgName(entity.getOrgName());
+//        existingOrganization.setPassword(passwordEncoder.encode(entity.getPassword()));
+        existingOrganization.setLocation(entity.getLocation());
+        existingOrganization.setPhoneNumber(entity.getPhoneNumber());
+        existingOrganization.setScope(entity.getScope());
+
+        return super.update(existingOrganization);
     }
 
     @Override
@@ -71,13 +79,11 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     public AuthOrgDto create(OrgEntity params) {
         validateOrganizationFields(params);
 
-        Optional<OrgEntity> organization =
-                organizationRepository.findByLicenseNumberOrEmail(params.getEmail(), params.getLicenseNumber());
+        Optional<OrgEntity> existingOrganization =
+                organizationRepository.findByLicenseNumberOrEmail(params.getLicenseNumber(), params.getEmail());
 
-        log.info("Creating organization with : " + params.getLicenseNumber());
-
-        if (organization.isPresent()) {
-            throw new GlobalException("Organization Email is exist", HttpStatus.BAD_REQUEST);
+        if (existingOrganization.isPresent()) {
+            throw new GlobalException("Organization Email or License Number is exist", HttpStatus.BAD_REQUEST);
         }
 
         OrgEntity organizationCreation = new OrgEntity(params.getOrgName(),
@@ -91,7 +97,6 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
 
         AuthOrgDto orgDto = new AuthOrgDto(organizationCreation.getId(), token,
                 String.valueOf(jwtUtilsOrganization.getExpireAt(token)),
-                jwtUtilsOrganization.createRefreshToken(organizationCreation),
                 organizationCreation.getScope());
 
         return orgDto;

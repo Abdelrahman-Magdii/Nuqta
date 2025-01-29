@@ -1,15 +1,94 @@
-@Operation(summary = "Get Nearest Requests", description = "Retrieve the nearest requests to the given location")
-@GetMapping("/nearest")
-public ResponseEntity<?> getNearestReq(@RequestParam double longitude, @RequestParam double latitude) {
-      List<ReqDto> dto = reqMapper.map(reqServices.findNearestLocation(longitude, latitude));
-      return new ResponseEntity<>(dto, HttpStatus.OK);
-}
 @Query(value = "SELECT r FROM requests r " +
       "WHERE ST_DWithin(r.location, ST_SetSRID(ST_Point(:longitude, :latitude), 4326), 1000) " +
       "ORDER BY ST_Distance(r.location, ST_SetSRID(ST_Point(:longitude, :latitude), 4326)) ASC",
        nativeQuery = true)
 List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longitude, @Param("latitude") double latitude);
 
+=> user sign in
+{
+    "username": "user6",
+    "email": "user6@example.com",
+    "password": "1234",
+    "birthDate": "2001-05-15",
+    "phoneNumber": "+11234567891",
+    "scope": "USER",
+    "donation": {
+        "longitude": -74.009,
+        "latitude": 40.7120
+    }
+}
 
-@Query("SELECT r FROM ReqEntity r WHERE ST_Distance(r.location, ST_SetSRID(ST_Point(:lat, :lon), 4326)) <= 5000")
-List<ReqEntity> findNearestLocationWithin1000m(@Param("lat") double latitude, @Param("lon") double longitude);
+=> user login
+{
+   "username": "user6",
+   "email": "user6@example.com",
+   "password": "1234"
+}
+
+=> user complete profile
+{
+   "id": 8,
+   "username": "abdo",
+   "email": "abdo@example.com",
+   "password": "1234",
+   "birthDate": "2003-10-03",
+   "phoneNumber": "+11234567890",
+   "scope": "USER",
+   "donation": {
+       "id": 29,
+      "amount": 0.5,
+      "status": "COMPLETED",
+      "longitude": 40.7128,
+      "latitude": -74.006,
+      "weight": 90,
+      "blood_type": "O+",
+      "donation_date": "2025-01-03",
+      "last_donation": "2024-11-30",
+      "payment_offered": true
+
+  }
+}
+
+=> organization sign in
+{
+  "orgName": "Nuqta",
+  "email": "ooo@nuqta.com",
+  "licenseNumber": "LIC-987621",
+  "password": "1234",
+  "longitude": -74.0060,
+  "latitude": 40.7128,
+  "phoneNumber": "+1234567890",
+  "scope": "ORGANIZATION"
+}
+
+=> organization login
+{
+    // "licenseNumber": "LIC-987621",
+    "email": "ooo@nuqta.com",
+    "password": "1234"
+}
+
+=> organization complete profile
+{
+  "orgName": "Nuqta",
+  "email": "ooo@nuqta.com",
+  // "licenseNumber": "LIC-987621",
+  "password": "1234",
+  "longitude": -74.0060,
+  "latitude": 40.7128,
+  "phoneNumber": "+1234567890",
+  "scope": "ORGANIZATION"
+}
+
+=> add request
+  {
+    "amount": 0.5,
+    "address": null,
+    "longitude": -6.967621,
+    "latitude": 55.365305,
+    "blood_type_needed": "B+",
+    "request_date": "2025-11-30",
+    "urgency_level": "MEDIUM",
+    "status": "OPEN",
+    "payment_available": true
+}

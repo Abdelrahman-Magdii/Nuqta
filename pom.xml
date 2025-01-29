@@ -121,10 +121,6 @@
         </dependency>
 
         <!-- OpenAI Integration -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-vertex-ai-gemini-spring-boot-starter</artifactId>
-        </dependency>
 
         <!-- JWT-->
         <dependency>

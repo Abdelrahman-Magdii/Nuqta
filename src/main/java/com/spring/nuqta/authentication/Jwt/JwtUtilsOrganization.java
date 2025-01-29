@@ -45,15 +45,6 @@ public class JwtUtilsOrganization extends JwtUtils {
         return buildToken(extraClaims, organization, getJwtExpiration());
     }
 
-    /**
-     * Creates a refresh token for the organization.
-     *
-     * @param organization The organization entity for which the refresh token is being generated.
-     * @return The generated refresh token.
-     */
-    public String createRefreshToken(OrgEntity organization) {
-        return buildToken(new HashMap<>(), organization, getRefreshExpiration());
-    }
 
     /**
      * Generates a JWT token for the organization without additional claims.
@@ -96,12 +87,4 @@ public class JwtUtilsOrganization extends JwtUtils {
         return super.getJwtExpiration();
     }
 
-    /**
-     * Helper method to get the refresh token expiration time from the parent class.
-     *
-     * @return The refresh token expiration time (in milliseconds).
-     */
-    public long getRefreshExpiration() {
-        return super.getRefreshExpiration();
-    }
 }

@@ -46,12 +46,12 @@ public class DonDto extends BaseDto<Long> {
     private Double latitude;
 
     @Schema(description = "weight of the donation", example = "80")
-    private Long weight;
+    private Double weight;
 
 
     @Schema(description = "User details associated with the donation.", example = "[]")
     private UserDto user;
 
-    @Schema(description = "", example = "[]")
+    @Schema(description = "All Requests that donation Accepts", example = "[]")
     private ReqDto request;
 }

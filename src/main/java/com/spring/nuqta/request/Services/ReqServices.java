@@ -8,12 +8,14 @@ import com.spring.nuqta.request.Entity.ReqEntity;
 import com.spring.nuqta.request.Repo.ReqRepo;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class ReqServices extends BaseServices<ReqEntity, Long> {
 
@@ -39,28 +41,6 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
                 .orElseThrow(() -> new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND));
     }
 
-
-    @Override
-    public ReqEntity insert(ReqEntity entity) throws GlobalException {
-//        ||entity.getDescription() == null || entity.getDescription().isEmpty()
-        if (entity == null) {
-            throw new GlobalException("Request description cannot be empty", HttpStatus.BAD_REQUEST);
-        }
-        return super.insert(entity);
-    }
-
-
-    @Override
-    public ReqEntity update(ReqEntity entity) throws GlobalException {
-        if (entity == null || entity.getId() == null) {
-            throw new GlobalException("Request ID cannot be null", HttpStatus.BAD_REQUEST);
-        }
-        ReqEntity existingRequest = reqRepo.findById(entity.getId())
-                .orElseThrow(() -> new GlobalException("Request not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND));
-        return super.update(entity);
-    }
-
-
     @Override
     public void deleteById(Long id) throws GlobalException {
         ReqEntity request = reqRepo.findById(id)
@@ -76,11 +56,34 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         return reqRepo.save(reqEntity);
     }
 
-
     public ReqEntity addRequestForOrg(Long orgId, ReqEntity reqEntity) throws GlobalException {
         OrgEntity org = orgRepo.findById(orgId)
                 .orElseThrow(() -> new GlobalException("Organization not found with ID: " + orgId, HttpStatus.NOT_FOUND));
         reqEntity.setOrganization(org);
         return reqRepo.save(reqEntity);
+    }
+
+    @Override
+    public ReqEntity update(ReqEntity entity) throws GlobalException {
+        if (entity == null || entity.getId() == null) {
+            throw new GlobalException("Request ID cannot be null", HttpStatus.BAD_REQUEST);
+        }
+
+        // Fetch the existing entity from the database
+        ReqEntity existingEntity = reqRepo.findById(entity.getId())
+                .orElseThrow(() -> new GlobalException("Request not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND));
+
+        // Update only the non-relationship fields
+        existingEntity.setBloodTypeNeeded(entity.getBloodTypeNeeded());
+        existingEntity.setAmount(entity.getAmount());
+        existingEntity.setLocation(entity.getLocation());
+        existingEntity.setAddress(entity.getAddress());
+        existingEntity.setRequestDate(entity.getRequestDate());
+        existingEntity.setStatus(entity.getStatus());
+        existingEntity.setUrgencyLevel(entity.getUrgencyLevel());
+        existingEntity.setPaymentAvailable(entity.getPaymentAvailable());
+
+        // Save the updated entity (relationships remain unchanged)
+        return reqRepo.save(existingEntity);
     }
 }

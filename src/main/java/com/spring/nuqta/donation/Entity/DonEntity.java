@@ -42,12 +42,12 @@ public class DonEntity extends BaseEntity<Long> {
     @Enumerated(EnumType.STRING)
     private DonStatus status;
 
-    @JdbcTypeCode(SqlTypes.GEOMETRY)
+    @JdbcTypeCode(SqlTypes.GEOGRAPHY)
     @Column(name = "location", columnDefinition = "GEOGRAPHY")
     private Geometry location;
 
     @Column(name = "weight")
-    private Long weight;
+    private Double weight;
 
 
     @OneToOne(mappedBy = "donation")

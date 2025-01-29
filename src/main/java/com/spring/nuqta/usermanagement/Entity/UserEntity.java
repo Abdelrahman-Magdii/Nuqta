@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -30,8 +29,7 @@ public class UserEntity extends BaseEntity<Long> {
 
     @Column(nullable = false)
     private String password;
-
-    @NotNull
+    
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 

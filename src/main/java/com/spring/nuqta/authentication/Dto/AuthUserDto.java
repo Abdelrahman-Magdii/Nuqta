@@ -16,15 +16,12 @@ public class AuthUserDto {
     private String accessToken;
     @JsonProperty("expire_at")
     private String expireAt;
-    @JsonProperty("refresh_token")
-    private String refreshToken;
     private Scope scope;
 
-    public AuthUserDto(Long userId, String accessToken, String expireAt, String refreshToken, Scope scope) {
+    public AuthUserDto(Long userId, String accessToken, String expireAt, Scope scope) {
         this.userId = userId;
         this.accessToken = accessToken;
         this.expireAt = expireAt;
-        this.refreshToken = refreshToken;
         this.scope = scope;
     }
 

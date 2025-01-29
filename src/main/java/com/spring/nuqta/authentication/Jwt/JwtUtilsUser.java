@@ -34,16 +34,6 @@ public class JwtUtilsUser extends JwtUtils {
     }
 
     /**
-     * Creates a refresh token for the user.
-     *
-     * @param user The user entity for which the refresh token is being generated.
-     * @return The generated refresh token.
-     */
-    public String createRefreshToken(UserEntity user) {
-        return buildToken(new HashMap<>(), user, getRefreshExpiration());
-    }
-
-    /**
      * Generates a JWT token with additional claims for the user.
      *
      * @param extraClaims Additional claims to include in the token.
@@ -95,12 +85,4 @@ public class JwtUtilsUser extends JwtUtils {
         return super.getJwtExpiration();
     }
 
-    /**
-     * Helper method to get the refresh token expiration time from the parent class.
-     *
-     * @return The refresh token expiration time (in milliseconds).
-     */
-    public long getRefreshExpiration() {
-        return super.getRefreshExpiration();
-    }
 }

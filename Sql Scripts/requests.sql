@@ -1,0 +1,2 @@
+SELECT id, created_date, created_user, modified_date, modified_user, address, amount, blood_type_needed, location, payment_available, request_date, status, urgency_level, org_id, user_id
+	FROM public.requests;

@@ -80,8 +80,20 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         if (existingUser == null) {
             throw new GlobalException("User not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND);
         }
-        entity.setPassword(passwordEncoder.encode(entity.getPassword()));
-        return super.update(entity);
+
+        if (existingUser.getDonation().getId() == null || !existingUser.getDonation().getId().equals(entity.getDonation().getId())) {
+            throw new GlobalException("Donation not found with ID: " + entity.getDonation().getId(), HttpStatus.NOT_FOUND);
+        }
+
+        existingUser.setId(entity.getId());
+        existingUser.setUsername(entity.getUsername());
+//        existingUser.setEmail(entity.getEmail());
+//        existingUser.setPassword(passwordEncoder.encode(entity.getPassword()));
+        existingUser.setPhoneNumber(entity.getPhoneNumber());
+        existingUser.setScope(entity.getScope());
+        existingUser.setDonation(entity.getDonation());
+
+        return super.update(existingUser);
     }
 
     @Override
@@ -114,7 +126,6 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         String token = jwtUtils.generateToken(userCreation);
         AuthUserDto userDto = new AuthUserDto(userCreation.getId(), token,
                 String.valueOf(jwtUtils.getExpireAt(token)),
-                jwtUtils.createRefreshToken(userCreation),
                 userCreation.getScope());
 
 

@@ -24,10 +24,6 @@ public abstract class JwtUtils {
     @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
 
-    // Expiration time for refresh tokens (in milliseconds)
-    @Value("${security.jwt.refresh-expiration-time}")
-    private long refreshExpiration;
-
     /**
      * Extracts the username (subject) from the JWT token.
      *

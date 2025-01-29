@@ -12,12 +12,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @Tag(name = "Requests", description = "APIs for managing requests")
 @RequiredArgsConstructor
 @RestController
@@ -57,19 +59,8 @@ public class ReqController {
     public ResponseEntity<?> addReq(@PathVariable Long userId, @RequestBody AddReqDto addReqDto) {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
         reqServices.addRequest(userId, entity);
-        return new ResponseEntity<>(addReqDto, HttpStatus.CREATED);
-    }
-
-    @Operation(summary = "Update an Existing Request", description = "Update the details of an existing request")
-    @ApiResponse(responseCode = "200", description = "Request updated successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = AddReqDto.class)))
-    @PutMapping("/{userId}")
-    public ResponseEntity<?> updateReq(@PathVariable Long userId, @RequestBody AddReqDto addReqDto) {
-        ReqEntity entity = addReqMapper.unMap(addReqDto);
-        reqServices.addRequest(userId, entity);
         AddReqDto dto = addReqMapper.map(entity);
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
 
 
@@ -81,21 +72,21 @@ public class ReqController {
     public ResponseEntity<?> addReqForOrg(@PathVariable Long orgId, @RequestBody AddReqDto addReqDto) {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
         reqServices.addRequestForOrg(orgId, entity);
-        return new ResponseEntity<>(addReqDto, HttpStatus.CREATED);
+        AddReqDto dto = addReqMapper.map(entity);
+        return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Update an Existing Request", description = "Update the details of an existing request")
     @ApiResponse(responseCode = "200", description = "Request updated successfully",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = AddReqDto.class)))
-    @PutMapping("org/{orgId}")
-    public ResponseEntity<?> updateReqForOrg(@PathVariable Long orgId, @RequestBody AddReqDto addReqDto) {
+    @PutMapping("")
+    public ResponseEntity<?> updateReq(@RequestBody AddReqDto addReqDto) {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
-        reqServices.addRequestForOrg(orgId, entity);
+        reqServices.update(entity);
         AddReqDto dto = addReqMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
-
 
     @Operation(summary = "Delete Request by ID", description = "Delete a request by its ID")
     @DeleteMapping("/{id}")

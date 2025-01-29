@@ -65,5 +65,4 @@ public class ReqEntity extends BaseEntity<Long> {
 
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<DonEntity> donation;
-
 }

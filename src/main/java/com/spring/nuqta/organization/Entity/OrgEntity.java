@@ -28,10 +28,12 @@ public class OrgEntity extends BaseEntity<Long> {
 
     @NotBlank(message = "Organization name cannot be blank")
     @Size(max = 100, message = "Organization name cannot exceed 100 characters")
+    @Column(unique = true, nullable = false, length = 50)
     private String orgName;
 
     @NotBlank(message = "Email cannot be blank")
     @Email(message = "Email should be valid")
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
 
     @NotBlank(message = "Password cannot be blank")
@@ -49,6 +51,7 @@ public class OrgEntity extends BaseEntity<Long> {
 
     @NotBlank(message = "License number cannot be blank")
     @Size(max = 50, message = "License number cannot exceed 50 characters")
+    @Column(unique = true, nullable = false, length = 100)
     private String licenseNumber;
 
     @NotNull(message = "Scope cannot be null")

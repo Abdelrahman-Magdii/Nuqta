@@ -51,6 +51,7 @@ public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
         donationDto.setLongitude(donation.getLocation().getCoordinate().y);
         donationDto.setPaymentOffered(donation.getPaymentOffered());
         donationDto.setBloodType(donation.getBloodType());
+        donationDto.setWeight(donation.getWeight());
         return donationDto;
     }
 
@@ -69,7 +70,7 @@ public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
         donation.setLocation(new GeometryFactory().createPoint(new Coordinate(donationDto.getLongitude(), donationDto.getLatitude())));
         donation.setPaymentOffered(donationDto.getPaymentOffered());
         donation.setBloodType(donationDto.getBloodType());
-
+        donation.setWeight(donationDto.getWeight());
         return donation;
     }
 

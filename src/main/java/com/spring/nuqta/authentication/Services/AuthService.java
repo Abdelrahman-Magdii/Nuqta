@@ -51,7 +51,7 @@ public class AuthService {
 
         return new AuthUserDto(user.getId(), token,
                 String.valueOf(jwtUtilsUser.getExpireAt(token)),
-                jwtUtilsUser.createRefreshToken(user), user.getScope());
+                user.getScope());
     }
 
 
@@ -69,7 +69,6 @@ public class AuthService {
 
         return new AuthOrgDto(organization.getId(), token,
                 String.valueOf(jwtUtilsOrganization.getExpireAt(token)),
-                jwtUtilsOrganization.createRefreshToken(organization),
                 organization.getScope());
     }
 
@@ -111,13 +110,13 @@ public class AuthService {
     private AuthUserDto createUserDto(UserEntity user, String token) {
         return new AuthUserDto(user.getId(), token,
                 String.valueOf(jwtUtilsUser.getExpireAt(token)),
-                jwtUtilsUser.createRefreshToken(user), user.getScope());
+                user.getScope());
     }
 
     private AuthOrgDto createOrgDto(OrgEntity organization, String token) {
         return new AuthOrgDto(organization.getId(), token,
                 String.valueOf(jwtUtilsOrganization.getExpireAt(token)),
-                jwtUtilsOrganization.createRefreshToken(organization), organization.getScope());
+                organization.getScope());
     }
 
     // -------------------- Validation and Auth Logic --------------------

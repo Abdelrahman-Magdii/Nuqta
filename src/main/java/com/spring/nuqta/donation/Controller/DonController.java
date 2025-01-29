@@ -1,6 +1,7 @@
 package com.spring.nuqta.donation.Controller;
 
 import com.spring.nuqta.donation.Dto.DonDto;
+import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.donation.Mapper.DonMapper;
 import com.spring.nuqta.donation.Services.DonServices;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,10 +46,22 @@ public class DonController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @Operation(summary = "Delete Donation by ID", description = "Delete a donation by its unique ID")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteDonationById(@PathVariable Long id) {
-        donServices.deleteById(id);
-        return new ResponseEntity<>(id, HttpStatus.OK);
+
+    @Operation(summary = "Get Nearest Donations", description = "Retrieve a list of donations nearest to the provided coordinates")
+    @ApiResponse(responseCode = "200", description = "Donations retrieved successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = DonDto.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid input parameters (e.g., missing latitude or longitude)")
+    @GetMapping("/nearest")
+    public ResponseEntity<?> getNearestDonations(@RequestParam double latitude, @RequestParam double longitude) {
+
+        // Fetch nearest donations from the service layer
+        List<DonEntity> nearestDonations = donServices.findNearestLocations(latitude, longitude);
+
+        // Map entities to DTOs
+        List<DonDto> dtos = donMapper.map(nearestDonations);
+
+        // Return the DTOs with a 200 OK status
+        return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 }

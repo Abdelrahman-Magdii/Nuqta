@@ -1,5 +1,6 @@
 package com.spring.nuqta.organization.Controller;
 
+import com.spring.nuqta.authentication.Dto.AuthOrgDto;
 import com.spring.nuqta.organization.Dto.AddOrgDto;
 import com.spring.nuqta.organization.Dto.OrgDto;
 import com.spring.nuqta.organization.Entity.OrgEntity;
@@ -53,11 +54,10 @@ public class OrgController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = AddOrgDto.class)))
     @PostMapping("/signin")
-    public ResponseEntity<OrgDto> addOrg(@RequestBody AddOrgDto addOrgDto) {
+    public ResponseEntity<AuthOrgDto> signin(@RequestBody AddOrgDto addOrgDto) {
         OrgEntity entity = addOrgMapper.unMap(addOrgDto);
-        orgServices.create(entity);
-        OrgDto dto = orgMapper.map(entity);
-        return new ResponseEntity<>(dto, HttpStatus.CREATED);
+        AuthOrgDto token = orgServices.create(entity);
+        return new ResponseEntity<>(token, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Update an Organization", description = "Update an existing organization's details")
@@ -67,7 +67,7 @@ public class OrgController {
     @PutMapping("")
     public ResponseEntity<OrgDto> updateOrg(@RequestBody AddOrgDto addOrgDto) {
         OrgEntity entity = addOrgMapper.unMap(addOrgDto);
-        orgServices.update(entity);
+        entity = orgServices.update(entity);
         OrgDto dto = orgMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -76,6 +76,6 @@ public class OrgController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrgById(@PathVariable Long id) {
         orgServices.deleteById(id);
-        return new ResponseEntity<>(id, HttpStatus.OK);
+        return new ResponseEntity<>("Success Delete Organization", HttpStatus.OK);
     }
 }

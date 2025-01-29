@@ -1,5 +1,6 @@
 package com.spring.nuqta.usermanagement.Controller;
 
+import com.spring.nuqta.authentication.Dto.AuthUserDto;
 import com.spring.nuqta.usermanagement.Dto.UserDto;
 import com.spring.nuqta.usermanagement.Dto.UserInsertDto;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
@@ -48,16 +49,15 @@ public class UserController {
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
-    @Operation(summary = "Add New User", description = "Create a new user")
-    @ApiResponse(responseCode = "201", description = "User created successfully",
+    @Operation(summary = "Sign in User", description = "Sign in a new user")
+    @ApiResponse(responseCode = "201", description = "User Sign in successfully",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = UserInsertDto.class)))
     @PostMapping("/signin")
-    public ResponseEntity<UserDto> addUser(@RequestBody UserInsertDto userDto) {
+    public ResponseEntity<AuthUserDto> Signin(@RequestBody UserInsertDto userDto) {
         UserEntity entity = userInsertMapper.unMap(userDto);
-        userServices.create(entity);
-        UserDto dto = userMapper.map(entity);
-        return new ResponseEntity<>(dto, HttpStatus.CREATED);
+        AuthUserDto token = userServices.create(entity);
+        return new ResponseEntity<>(token, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Update an Existing User", description = "Update the details of an existing user")
@@ -67,7 +67,7 @@ public class UserController {
     @PutMapping("")
     public ResponseEntity<UserDto> updateUser(@RequestBody UserInsertDto userDto) {
         UserEntity entity = userInsertMapper.unMap(userDto);
-        userServices.update(entity);
+        entity = userServices.update(entity);
         UserDto dto = userMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -76,6 +76,6 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUserById(@PathVariable Long id) {
         userServices.deleteById(id);
-        return new ResponseEntity<>(id, HttpStatus.OK);
+        return new ResponseEntity<>("Success Delete User ", HttpStatus.OK);
     }
 }
