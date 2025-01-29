@@ -89,6 +89,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         existingUser.setUsername(entity.getUsername());
 //        existingUser.setEmail(entity.getEmail());
 //        existingUser.setPassword(passwordEncoder.encode(entity.getPassword()));
+        existingUser.setGender(entity.getGender());
         existingUser.setPhoneNumber(entity.getPhoneNumber());
         existingUser.setScope(entity.getScope());
         existingUser.setDonation(entity.getDonation());
@@ -118,7 +119,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
 
         UserEntity userCreation = new UserEntity(entity.getUsername(), entity.getEmail(),
                 passwordEncoder.encode(entity.getPassword()), entity.getBirthDate(),
-                entity.getPhoneNumber(), entity.getScope(), entity.getDonation());
+                entity.getPhoneNumber(), entity.getScope(), entity.getDonation(), entity.getGender());
 
         userCreation = userRepository.save(userCreation);
 

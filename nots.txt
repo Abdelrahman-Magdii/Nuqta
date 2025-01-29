@@ -4,6 +4,10 @@
        nativeQuery = true)
 List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longitude, @Param("latitude") double latitude);
 
+
+=> in profile more features (AI models)
+=> remove language
+=> remove message
 => user sign in
 {
     "username": "user6",
@@ -11,6 +15,7 @@ List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longit
     "password": "1234",
     "birthDate": "2001-05-15",
     "phoneNumber": "+11234567891",
+    "gender":"male"
     "scope": "USER",
     "donation": {
         "longitude": -74.009,
@@ -33,6 +38,7 @@ List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longit
    "password": "1234",
    "birthDate": "2003-10-03",
    "phoneNumber": "+11234567890",
+   "gender":"male",
    "scope": "USER",
    "donation": {
        "id": 29,

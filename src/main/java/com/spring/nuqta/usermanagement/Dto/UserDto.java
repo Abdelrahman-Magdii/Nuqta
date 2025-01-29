@@ -2,6 +2,7 @@ package com.spring.nuqta.usermanagement.Dto;
 
 import com.spring.nuqta.base.Dto.BaseDto;
 import com.spring.nuqta.donation.Dto.DonDto;
+import com.spring.nuqta.enums.Gender;
 import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.request.Dto.ReqDto;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,6 +29,9 @@ public class UserDto extends BaseDto<Long> {
 
     @Schema(description = "Phone number of the user", example = "+11234567890")
     private String phoneNumber;
+
+    @Schema(description = "Gender of user", example = "male")
+    private Gender gender;
 
     @Schema(description = "Scope of the user, indicating their operational access", example = "USER")
     private Scope scope;

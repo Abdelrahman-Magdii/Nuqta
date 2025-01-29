@@ -58,7 +58,7 @@ public class ReqController {
     @PostMapping("/{userId}")
     public ResponseEntity<?> addReq(@PathVariable Long userId, @RequestBody AddReqDto addReqDto) {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
-        reqServices.addRequest(userId, entity);
+        entity = reqServices.addRequest(userId, entity);
         AddReqDto dto = addReqMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
@@ -71,7 +71,7 @@ public class ReqController {
     @PostMapping("org/{orgId}")
     public ResponseEntity<?> addReqForOrg(@PathVariable Long orgId, @RequestBody AddReqDto addReqDto) {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
-        reqServices.addRequestForOrg(orgId, entity);
+        entity = reqServices.addRequestForOrg(orgId, entity);
         AddReqDto dto = addReqMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
@@ -83,7 +83,7 @@ public class ReqController {
     @PutMapping("")
     public ResponseEntity<?> updateReq(@RequestBody AddReqDto addReqDto) {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
-        reqServices.update(entity);
+        entity = reqServices.update(entity);
         AddReqDto dto = addReqMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -92,6 +92,6 @@ public class ReqController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteReqById(@PathVariable Long id) {
         reqServices.deleteById(id);
-        return new ResponseEntity<>(id, HttpStatus.OK);
+        return new ResponseEntity<>("Success Delete Request", HttpStatus.OK);
     }
 }

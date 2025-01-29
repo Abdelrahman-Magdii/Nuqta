@@ -2,6 +2,7 @@ package com.spring.nuqta.usermanagement.Entity;
 
 import com.spring.nuqta.base.Entity.BaseEntity;
 import com.spring.nuqta.donation.Entity.DonEntity;
+import com.spring.nuqta.enums.Gender;
 import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.request.Entity.ReqEntity;
 import jakarta.persistence.*;
@@ -29,12 +30,16 @@ public class UserEntity extends BaseEntity<Long> {
 
     @Column(nullable = false)
     private String password;
-    
+
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
     @Column(name = "phone_number", nullable = false, length = 15)
     private String phoneNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Gender gender;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -47,7 +52,7 @@ public class UserEntity extends BaseEntity<Long> {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ReqEntity> requests;
 
-    public UserEntity(String username, String email, String password, LocalDate birthDate, String phoneNumber, Scope scope, DonEntity donation) {
+    public UserEntity(String username, String email, String password, LocalDate birthDate, String phoneNumber, Scope scope, DonEntity donation, Gender gender) {
         this.username = username;
         this.email = email;
         this.password = password;
@@ -55,6 +60,8 @@ public class UserEntity extends BaseEntity<Long> {
         this.phoneNumber = phoneNumber;
         this.scope = scope;
         this.donation = donation;
+        this.gender = gender;
     }
+
 
 }
