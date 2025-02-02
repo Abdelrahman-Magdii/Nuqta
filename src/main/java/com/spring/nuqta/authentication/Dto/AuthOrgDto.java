@@ -11,10 +11,11 @@ public class AuthOrgDto {
 
     @JsonProperty("org_id")
     private Long orgId;
-    @JsonProperty("access_token")
+    @JsonProperty("token")
     private String accessToken;
     @JsonProperty("expire_at")
     private String expireAt;
+
     @JsonProperty("scope")
     private Scope scope;
 

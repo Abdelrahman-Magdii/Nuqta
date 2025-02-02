@@ -1,5 +1,6 @@
 package com.spring.nuqta.usermanagement.Entity;
 
+import com.spring.nuqta.authentication.Entity.VerificationToken;
 import com.spring.nuqta.base.Entity.BaseEntity;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.enums.Gender;
@@ -52,16 +53,11 @@ public class UserEntity extends BaseEntity<Long> {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ReqEntity> requests;
 
-    public UserEntity(String username, String email, String password, LocalDate birthDate, String phoneNumber, Scope scope, DonEntity donation, Gender gender) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.birthDate = birthDate;
-        this.phoneNumber = phoneNumber;
-        this.scope = scope;
-        this.donation = donation;
-        this.gender = gender;
-    }
+
+    private boolean enabled = false;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<VerificationToken> tokens;
 
 
 }

@@ -4,10 +4,10 @@
        nativeQuery = true)
 List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longitude, @Param("latitude") double latitude);
 
-
+==> "longitude": -6.967621,
+==> "latitude": 55.365305,
 => in profile more features (AI models)
-=> remove language
-=> remove message
+=> remove message or direct to whatsApp
 => user sign in
 {
     "username": "user6",
@@ -15,8 +15,8 @@ List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longit
     "password": "1234",
     "birthDate": "2001-05-15",
     "phoneNumber": "+11234567891",
-    "gender":"male"
-    "scope": "USER",
+    "gender":"male"=>(MALE, FEMALE)
+    "scope": "USER",==>(USER , ORGANIZATION)
     "donation": {
         "longitude": -74.009,
         "latitude": 40.7120
@@ -38,18 +38,18 @@ List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longit
    "password": "1234",
    "birthDate": "2003-10-03",
    "phoneNumber": "+11234567890",
-   "gender":"male",
-   "scope": "USER",
+   "gender":"male", => (MALE, FEMALE)
+   "scope": "USER", => (USER , ORGANIZATION)
    "donation": {
        "id": 29,
       "amount": 0.5,
-      "status": "COMPLETED",
+      "status": "COMPLETED", => (PENDING, COMPLETED)
       "longitude": 40.7128,
       "latitude": -74.006,
       "weight": 90,
       "blood_type": "O+",
       "donation_date": "2025-01-03",
-      "last_donation": "2024-11-30",
+      "last_donation": "2025-11-30",
       "payment_offered": true
 
   }
@@ -64,7 +64,7 @@ List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longit
   "longitude": -74.0060,
   "latitude": 40.7128,
   "phoneNumber": "+1234567890",
-  "scope": "ORGANIZATION"
+  "scope": "ORGANIZATION" => (USER , ORGANIZATION)
 }
 
 => organization login
@@ -83,7 +83,7 @@ List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longit
   "longitude": -74.0060,
   "latitude": 40.7128,
   "phoneNumber": "+1234567890",
-  "scope": "ORGANIZATION"
+  "scope": "ORGANIZATION" => (USER , ORGANIZATION)
 }
 
 => add request
@@ -94,7 +94,7 @@ List<ReqEntity> findNearestLocationWithin1000m(@Param("longitude") double longit
     "latitude": 55.365305,
     "blood_type_needed": "B+",
     "request_date": "2025-11-30",
-    "urgency_level": "MEDIUM",
-    "status": "OPEN",
+    "urgency_level": "MEDIUM", => (LOW,MEDIUM,HIGH)
+    "status": "OPEN", => (OPEN, FULFILLED)
     "payment_available": true
 }

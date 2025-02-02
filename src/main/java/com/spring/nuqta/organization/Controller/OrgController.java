@@ -1,6 +1,5 @@
 package com.spring.nuqta.organization.Controller;
 
-import com.spring.nuqta.authentication.Dto.AuthOrgDto;
 import com.spring.nuqta.organization.Dto.AddOrgDto;
 import com.spring.nuqta.organization.Dto.OrgDto;
 import com.spring.nuqta.organization.Entity.OrgEntity;
@@ -17,7 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "Organization", description = "APIs for managing organizations")
 @RequiredArgsConstructor
@@ -49,16 +50,24 @@ public class OrgController {
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
-    @Operation(summary = "Add New Organization", description = "Create a new organization")
+
+    @Operation(summary = "Sign in Organization", description = "Create a new organization")
     @ApiResponse(responseCode = "201", description = "Organization added successfully",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = AddOrgDto.class)))
-    @PostMapping("/signin")
-    public ResponseEntity<AuthOrgDto> signin(@RequestBody AddOrgDto addOrgDto) {
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody AddOrgDto addOrgDto) {
         OrgEntity entity = addOrgMapper.unMap(addOrgDto);
-        AuthOrgDto token = orgServices.create(entity);
-        return new ResponseEntity<>(token, HttpStatus.CREATED);
+        orgServices.saveOrg(entity);
+
+        // Create a map for the JSON response
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Check Email verification sent!");
+
+        // Return the response as JSON
+        return ResponseEntity.ok(response);
     }
+
 
     @Operation(summary = "Update an Organization", description = "Update an existing organization's details")
     @ApiResponse(responseCode = "200", description = "Organization update successfully",

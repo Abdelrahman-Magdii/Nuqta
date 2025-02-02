@@ -50,8 +50,7 @@ public class AuthService {
         String token = jwtUtilsUser.generateToken(user);
 
         return new AuthUserDto(user.getId(), token,
-                String.valueOf(jwtUtilsUser.getExpireAt(token)),
-                user.getScope());
+                String.valueOf(jwtUtilsUser.getExpireAt(token)), user.getScope());
     }
 
 
@@ -109,14 +108,12 @@ public class AuthService {
 
     private AuthUserDto createUserDto(UserEntity user, String token) {
         return new AuthUserDto(user.getId(), token,
-                String.valueOf(jwtUtilsUser.getExpireAt(token)),
-                user.getScope());
+                String.valueOf(jwtUtilsUser.getExpireAt(token)), user.getScope());
     }
 
     private AuthOrgDto createOrgDto(OrgEntity organization, String token) {
         return new AuthOrgDto(organization.getId(), token,
-                String.valueOf(jwtUtilsOrganization.getExpireAt(token)),
-                organization.getScope());
+                String.valueOf(jwtUtilsOrganization.getExpireAt(token)), organization.getScope());
     }
 
     // -------------------- Validation and Auth Logic --------------------
@@ -142,19 +139,24 @@ public class AuthService {
                 .orElseThrow(() -> new GlobalException(
                         "Username Or Email invalid.", HttpStatus.BAD_REQUEST));
 
-        Optional<UserEntity> user1 = userRepository.findByUsername(username);
-        Optional<UserEntity> user2 = userRepository.findByEmail(email);
-        if (user1.isPresent()
-                && passwordEncoder.matches(password, user1.get().getPassword())) {
-            return (UserEntity) user1.get();
-        } else if (user2.isPresent()
-                && passwordEncoder.matches(password, user2.get().getPassword())) {
-            return (UserEntity) user2.get();
-        } else if (!passwordEncoder.matches(password, user1.get().getPassword())) {
-            throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);
+        if (user.isEnabled()) {
+            Optional<UserEntity> user1 = userRepository.findByUsername(username);
+            Optional<UserEntity> user2 = userRepository.findByEmail(email);
+            if (user1.isPresent()
+                    && passwordEncoder.matches(password, user1.get().getPassword())) {
+                return (UserEntity) user1.get();
+            } else if (user2.isPresent()
+                    && passwordEncoder.matches(password, user2.get().getPassword())) {
+                return (UserEntity) user2.get();
+            } else if (!passwordEncoder.matches(password, user1.get().getPassword())) {
+                throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);
+            } else {
+                throw new GlobalException("Username Or Email invalid.", HttpStatus.BAD_REQUEST);
+            }
         } else {
-            throw new GlobalException("Username Or Email invalid.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("Check Email verification sent", HttpStatus.NOT_FOUND);
         }
+
 
     }
 
@@ -168,6 +170,7 @@ public class AuthService {
         }
     }
 
+
     private OrgEntity validateOrganizationAuth(String licenseNumber, String password, String email) {
         OrgEntity organization = (email != null) ?
                 organizationRepository.findByEmail(email)
@@ -177,20 +180,28 @@ public class AuthService {
                         .orElseThrow(() -> new GlobalException(
                                 "License Number invalid", HttpStatus.BAD_REQUEST));
 
-        Optional<OrgEntity> org1 = organizationRepository.findByLicenseNumber(licenseNumber);
-        Optional<OrgEntity> org2 = organizationRepository.findByEmail(email);
+        if (organization.isEnabled()) {
+            Optional<OrgEntity> org1 = organizationRepository.findByLicenseNumber(licenseNumber);
+            Optional<OrgEntity> org2 = organizationRepository.findByEmail(email);
 
-        if (org1.isPresent()
-                && passwordEncoder.matches(password, org1.get().getPassword())) {
-            return (OrgEntity) org1.get();
-        } else if (org2.isPresent()
-                && passwordEncoder.matches(password, org2.get().getPassword())) {
-            return (OrgEntity) org2.get();
-        } else if (!passwordEncoder.matches(password, org1.get().getPassword())) {
-            throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);
+            if (org1.isPresent()
+                    && passwordEncoder.matches(password, org1.get().getPassword())) {
+                return (OrgEntity) org1.get();
+            } else if (org2.isPresent()
+                    && passwordEncoder.matches(password, org2.get().getPassword())) {
+                return (OrgEntity) org2.get();
+            } else if (!passwordEncoder.matches(password, org1.get().getPassword())) {
+                throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);
+            } else {
+                throw new GlobalException("License Number Or Email invalid.", HttpStatus.BAD_REQUEST);
+            }
+        } else if (organization.getEmail() == null) {
+            throw new GlobalException("Organization Not Found", HttpStatus.NOT_FOUND);
         } else {
-            throw new GlobalException("License Number Or Email invalid.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("Check Organization verification sent", HttpStatus.NOT_FOUND);
         }
+
     }
+
 
 }

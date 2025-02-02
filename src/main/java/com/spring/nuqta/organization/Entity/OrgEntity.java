@@ -58,6 +58,9 @@ public class OrgEntity extends BaseEntity<Long> {
     @Enumerated(EnumType.STRING)
     private Scope scope;
 
+    private boolean enabled = false;
+
+
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ReqEntity> requests;
 

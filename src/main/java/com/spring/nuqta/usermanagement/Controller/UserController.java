@@ -1,6 +1,5 @@
 package com.spring.nuqta.usermanagement.Controller;
 
-import com.spring.nuqta.authentication.Dto.AuthUserDto;
 import com.spring.nuqta.usermanagement.Dto.UserDto;
 import com.spring.nuqta.usermanagement.Dto.UserInsertDto;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
@@ -17,7 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "User", description = "APIs for managing users")
 @RequiredArgsConstructor
@@ -53,12 +54,18 @@ public class UserController {
     @ApiResponse(responseCode = "201", description = "User Sign in successfully",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = UserInsertDto.class)))
-    @PostMapping("/signin")
-    public ResponseEntity<AuthUserDto> Signin(@RequestBody UserInsertDto userDto) {
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, String>> register(@RequestBody UserInsertDto userDto) {
         UserEntity entity = userInsertMapper.unMap(userDto);
-        AuthUserDto token = userServices.create(entity);
-        return new ResponseEntity<>(token, HttpStatus.CREATED);
+        userServices.saveUser(entity);
+
+        // Create a map with the message
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Check Email verification sent!");
+
+        return ResponseEntity.ok(response);
     }
+
 
     @Operation(summary = "Update an Existing User", description = "Update the details of an existing user")
     @ApiResponse(responseCode = "200", description = "User updated successfully",

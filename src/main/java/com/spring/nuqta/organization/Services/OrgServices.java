@@ -1,15 +1,19 @@
 package com.spring.nuqta.organization.Services;
 
-import com.spring.nuqta.authentication.Dto.AuthOrgDto;
-import com.spring.nuqta.authentication.Jwt.JwtUtilsOrganization;
+import com.spring.nuqta.authentication.Entity.VerificationToken;
+import com.spring.nuqta.authentication.Services.VerificationTokenService;
 import com.spring.nuqta.base.Services.BaseServices;
 import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.exception.GlobalException;
+import com.spring.nuqta.mail.Services.EmailService;
+import com.spring.nuqta.mail.template.AccountVerificationEmailContext;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.organization.Repo.OrgRepo;
-import jakarta.transaction.Transactional;
+import com.spring.nuqta.usermanagement.Repo.UserRepo;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,7 +29,12 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
 
     private final OrgRepo organizationRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtilsOrganization jwtUtilsOrganization;
+    private final VerificationTokenService verificationTokenService;
+    private final EmailService emailService;
+    private final UserRepo userRepo;
+
+    @Value("${site.base.url.http}")
+    private String baseUrl;
 
     @Override
     public List<OrgEntity> findAll() throws GlobalException {
@@ -75,8 +84,8 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         super.deleteById(aLong);
     }
 
-    @Transactional
-    public AuthOrgDto create(OrgEntity params) {
+
+    public void saveOrg(OrgEntity params) {
         validateOrganizationFields(params);
 
         Optional<OrgEntity> existingOrganization =
@@ -86,21 +95,39 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
             throw new GlobalException("Organization Email or License Number is exist", HttpStatus.BAD_REQUEST);
         }
 
-        OrgEntity organizationCreation = new OrgEntity(params.getOrgName(),
-                params.getEmail(), passwordEncoder.encode(params.getPassword()), params.getLocation(), params.getPhoneNumber(), params.getLicenseNumber(), params.getScope());
+        OrgEntity organizationCreation = new OrgEntity();
+        organizationCreation.setOrgName(params.getOrgName());
+        organizationCreation.setEmail(params.getEmail());
+        organizationCreation.setLocation(params.getLocation());
+        organizationCreation.setPhoneNumber(params.getPhoneNumber());
+        organizationCreation.setScope(params.getScope());
+        organizationCreation.setPassword(passwordEncoder.encode(params.getPassword()));
+        organizationCreation.setLicenseNumber(params.getLicenseNumber());
 
         organizationCreation = organizationRepository.save(organizationCreation);
 
 
-        //         create token
-        String token = jwtUtilsOrganization.generateToken(organizationCreation);
+        sendVerificationEmail(organizationCreation);
 
-        AuthOrgDto orgDto = new AuthOrgDto(organizationCreation.getId(), token,
-                String.valueOf(jwtUtilsOrganization.getExpireAt(token)),
-                organizationCreation.getScope());
-
-        return orgDto;
     }
+
+    public void sendVerificationEmail(OrgEntity entity) {
+        VerificationToken token = verificationTokenService.createToken();
+        token.setOrganization(entity);
+
+        verificationTokenService.saveToken(token);
+
+        AccountVerificationEmailContext context = new AccountVerificationEmailContext();
+        context.init(entity);
+        context.setToken(token.getToken());
+        context.buildVerificationUrl(baseUrl, token.getToken(), entity.getEmail());
+        try {
+            emailService.sendMail(context);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void validateOrganizationFields(OrgEntity params) {
 

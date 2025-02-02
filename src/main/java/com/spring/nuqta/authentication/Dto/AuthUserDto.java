@@ -12,7 +12,7 @@ public class AuthUserDto {
 
     @JsonProperty("user_id")
     private Long userId;
-    @JsonProperty("access_token")
+    @JsonProperty("token")
     private String accessToken;
     @JsonProperty("expire_at")
     private String expireAt;
