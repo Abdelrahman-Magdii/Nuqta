@@ -1,5 +1,6 @@
 package com.spring.nuqta.usermanagement.Entity;
 
+import com.spring.nuqta.OtpMail.Entity.OtpVerifyEntity;
 import com.spring.nuqta.authentication.Entity.VerificationToken;
 import com.spring.nuqta.base.Entity.BaseEntity;
 import com.spring.nuqta.donation.Entity.DonEntity;
@@ -58,6 +59,9 @@ public class UserEntity extends BaseEntity<Long> {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<VerificationToken> tokens;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<OtpVerifyEntity> otpVerifies;
 
 
 }

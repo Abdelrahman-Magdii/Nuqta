@@ -61,7 +61,7 @@ public class UserController {
 
         // Create a map with the message
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Check Email verification sent!");
+        response.put("message", "User registered successfully. Please verify your email.");
 
         return ResponseEntity.ok(response);
     }

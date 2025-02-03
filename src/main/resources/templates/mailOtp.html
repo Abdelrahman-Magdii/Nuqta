@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Account Verification</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #f9f9f9;
             margin: 0;
             padding: 0;
         }
@@ -17,7 +17,7 @@
             background-color: #ffffff;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .header {
@@ -27,9 +27,9 @@
         }
 
         .header h1 {
-            margin: 0;
             font-size: 24px;
             color: #333;
+            margin-bottom: 10px;
         }
 
         .content {
@@ -42,15 +42,12 @@
             line-height: 1.6;
         }
 
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 16px;
-            color: #fff;
-            background-color: #007bff;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 20px;
+        .otp {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            color: #2c3e50;
         }
 
         .footer {
@@ -63,21 +60,23 @@
     </style>
 </head>
 <body>
+
 <div class="email-container">
     <div class="header">
         <h1>Welcome to Nuqta!</h1>
         <img src="cid:nuqtaLogo" style="width: 200px; border-radius: 5px;">
     </div>
     <div class="content">
-        <p>Hello <strong th:text="${User}">User</strong>,</p>
+        <p>Hello <strong th:text="${User}">user</strong>,</p>
         <p>Thank you for registering with Nuqta. To complete your registration, please verify your email address by
-            clicking the button below:</p>
-        <a class="button" th:href="${verificationURL}">Verify Email</a>
-        <p>If you did not create an account with Nuqta, please ignore this email.</p>
+            OTP for account verification is:</p>
+        <div class="otp" th:text="${otp}">otp</div>
+        <p>Please enter this code to complete your registration. The OTP is valid for a limited time.</p>
     </div>
     <div class="footer">
         <p>&copy; 2025 Nuqta. All rights reserved.</p>
     </div>
 </div>
+
 </body>
 </html>

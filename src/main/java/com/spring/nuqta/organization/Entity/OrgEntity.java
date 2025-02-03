@@ -1,5 +1,6 @@
 package com.spring.nuqta.organization.Entity;
 
+import com.spring.nuqta.OtpMail.Entity.OtpVerifyEntity;
 import com.spring.nuqta.base.Entity.BaseEntity;
 import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.request.Entity.ReqEntity;
@@ -63,6 +64,10 @@ public class OrgEntity extends BaseEntity<Long> {
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ReqEntity> requests;
+
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<OtpVerifyEntity> otpVerifies;
+
 
     public OrgEntity(String org_name, String email, String password, Geometry location, String phoneNumber, String licenseNumber, Scope scope) {
         this.orgName = org_name;

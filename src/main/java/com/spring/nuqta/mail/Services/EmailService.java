@@ -4,6 +4,7 @@ import com.spring.nuqta.mail.template.AbstractEmailContext;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,10 @@ public class EmailService {
         mimeMessageHelper.setSubject(email.getSubject());
         mimeMessageHelper.setFrom(email.getFrom());
         mimeMessageHelper.setText(emailContent, true);
+
+        ClassPathResource resource = new ClassPathResource("static/nuqta.png");
+        mimeMessageHelper.addInline("nuqtaLogo", resource);
+
         emailSender.send(message);
     }
 }

@@ -23,7 +23,7 @@ public class SecurityConfig {
 
     // List of public API endpoints that don't require authentication
     public static final String[] PUBLIC_APIS = {"/swagger-ui/**", "/api/auth/**",
-            "/api-docs/**", "/api/org/register", "/api/user/register"};
+            "/api-docs/**", "/api/org/register", "/api/user/register", "/api/phone/**"};
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean

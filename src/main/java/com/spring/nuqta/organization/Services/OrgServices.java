@@ -1,5 +1,8 @@
 package com.spring.nuqta.organization.Services;
 
+import com.spring.nuqta.OtpMail.General.GeneralVerify;
+import com.spring.nuqta.OtpMail.Repo.OtpVerifyRepo;
+import com.spring.nuqta.OtpMail.Services.OtpVerifyService;
 import com.spring.nuqta.authentication.Entity.VerificationToken;
 import com.spring.nuqta.authentication.Services.VerificationTokenService;
 import com.spring.nuqta.base.Services.BaseServices;
@@ -9,6 +12,7 @@ import com.spring.nuqta.mail.Services.EmailService;
 import com.spring.nuqta.mail.template.AccountVerificationEmailContext;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.organization.Repo.OrgRepo;
+import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +35,9 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     private final PasswordEncoder passwordEncoder;
     private final VerificationTokenService verificationTokenService;
     private final EmailService emailService;
+    private final OtpVerifyRepo otpVerifyRepo;
+    private final GeneralVerify generalVerify;
+    private final OtpVerifyService otpVerifyService;
     private final UserRepo userRepo;
 
     @Value("${site.base.url.http}")
@@ -91,7 +98,10 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         Optional<OrgEntity> existingOrganization =
                 organizationRepository.findByLicenseNumberOrEmail(params.getLicenseNumber(), params.getEmail());
 
-        if (existingOrganization.isPresent()) {
+        Optional<UserEntity> existingUser =
+                userRepo.findByEmail(params.getEmail());
+
+        if (existingOrganization.isPresent() || existingUser.isPresent()) {
             throw new GlobalException("Organization Email or License Number is exist", HttpStatus.BAD_REQUEST);
         }
 
@@ -107,27 +117,9 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         organizationCreation = organizationRepository.save(organizationCreation);
 
 
-        sendVerificationEmail(organizationCreation);
+        generalVerify.sendOtpEmail(organizationCreation);
 
     }
-
-    public void sendVerificationEmail(OrgEntity entity) {
-        VerificationToken token = verificationTokenService.createToken();
-        token.setOrganization(entity);
-
-        verificationTokenService.saveToken(token);
-
-        AccountVerificationEmailContext context = new AccountVerificationEmailContext();
-        context.init(entity);
-        context.setToken(token.getToken());
-        context.buildVerificationUrl(baseUrl, token.getToken(), entity.getEmail());
-        try {
-            emailService.sendMail(context);
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        }
-    }
-
 
     private void validateOrganizationFields(OrgEntity params) {
 
@@ -155,6 +147,24 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
             throw new GlobalException("Location is required.", HttpStatus.BAD_REQUEST);
         }
 
+    }
+
+    // using Token and email
+    public void sendVerificationEmail(OrgEntity entity) {
+        VerificationToken token = verificationTokenService.createToken();
+        token.setOrganization(entity);
+
+        verificationTokenService.saveToken(token);
+
+        AccountVerificationEmailContext context = new AccountVerificationEmailContext();
+        context.init(entity);
+        context.setToken(token.getToken());
+        context.buildVerificationUrl(baseUrl, token.getToken(), entity.getEmail());
+        try {
+            emailService.sendMail(context);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
     }
 
 

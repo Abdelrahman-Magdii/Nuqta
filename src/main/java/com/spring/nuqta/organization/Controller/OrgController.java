@@ -62,7 +62,7 @@ public class OrgController {
 
         // Create a map for the JSON response
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Check Email verification sent!");
+        response.put("message", "Organization registered successfully. Please verify your email.");
 
         // Return the response as JSON
         return ResponseEntity.ok(response);
