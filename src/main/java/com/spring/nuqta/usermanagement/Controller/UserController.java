@@ -85,4 +85,21 @@ public class UserController {
         userServices.deleteById(id);
         return new ResponseEntity<>("Success Delete User ", HttpStatus.OK);
     }
+
+    @Operation(summary = "Change User Password", description = "Allow users to change their password")
+    @ApiResponse(responseCode = "200", description = "Password changed successfully")
+    @PutMapping("/changePassword")
+    public ResponseEntity<Map<String, String>> changePassword(
+            @RequestParam Long userId,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword) {
+
+        userServices.changeUserPassword(userId, oldPassword, newPassword);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Password changed successfully.");
+
+        return ResponseEntity.ok(response);
+    }
+
 }

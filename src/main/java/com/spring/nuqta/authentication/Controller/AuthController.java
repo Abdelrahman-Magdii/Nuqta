@@ -1,9 +1,10 @@
 package com.spring.nuqta.authentication.Controller;
 
-import com.spring.nuqta.OtpMail.General.GeneralVerify;
 import com.spring.nuqta.authentication.Dto.AuthOrgDto;
 import com.spring.nuqta.authentication.Dto.AuthUserDto;
 import com.spring.nuqta.authentication.Services.AuthService;
+import com.spring.nuqta.forgotPassword.General.GeneralReset;
+import com.spring.nuqta.verificationToken.General.GeneralVerification;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.SystemException;
 import lombok.RequiredArgsConstructor;
@@ -23,22 +24,24 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
-    private final GeneralVerify generalVerify;
+    private final GeneralReset generalReset;
+    private final GeneralVerification generalVerification;
 
-    @GetMapping("/login/user")
+
+    @PostMapping("/login/user")
     public ResponseEntity<AuthUserDto> loginUser(@RequestBody Map<String, Object> input) throws SystemException {
         return ResponseEntity.ok(authService.authUser(input));
     }
 
-    @GetMapping("/login/organization")
+    @PostMapping("/login/organization")
     public ResponseEntity<AuthOrgDto> loginOrganization(@RequestBody Map<String, Object> input) throws SystemException {
         return ResponseEntity.ok(authService.authOrganization(input));
     }
 
     @GetMapping("/verify")
-    public ResponseEntity<?> verifyRegistration(@RequestParam("email") String email, @RequestParam("otp") String otp) {
+    public ResponseEntity<?> verifyRegistration(@RequestParam("token") String token, @RequestParam("mail") String mail) {
 
-        boolean verified = generalVerify.verifyEmail(email, otp);
+        boolean verified = generalVerification.verifyRegistration(token, mail);
         Map<String, String> response = new HashMap<>();
 
         if (verified) {
@@ -51,13 +54,13 @@ public class AuthController {
     }
 
 
-    @GetMapping("/resend")
-    public ResponseEntity<Map<String, String>> resendVerificationEmail(@RequestParam("email") String email) {
-        String result = generalVerify.resendOtp(email);
+    @PostMapping("/forgotPassword")
+    public ResponseEntity<Map<String, String>> forgotPassword(@RequestParam("email") String email) {
+        String result = generalReset.sendOtpEmail(email);
         Map<String, String> response = new HashMap<>();
 
         return switch (result) {
-            case "A new OTP has been sent to your email." -> {
+            case "Success sent OTP to your email." -> {
                 response.put("message", result);
                 yield ResponseEntity.ok(response);
             }
@@ -69,7 +72,7 @@ public class AuthController {
                 response.put("message", result);
                 yield ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
-            case "Email already verified." -> {
+            case "Email not verify. Please complete sign in." -> {
                 response.put("message", result);
                 yield ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
@@ -81,4 +84,22 @@ public class AuthController {
 
 
     }
+
+
+    @PostMapping("/resetPassword")
+    public ResponseEntity<?> resetPassword(@RequestParam String email, @RequestParam String otp, @RequestParam String newPassword) {
+
+        boolean verified = generalReset.resetPassword(email, otp, newPassword);
+
+        Map<String, String> response = new HashMap<>();
+
+        if (verified) {
+            response.put("messing", "Password reset successfully!");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("messing", "Invalid reset password code.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    }
+
 }

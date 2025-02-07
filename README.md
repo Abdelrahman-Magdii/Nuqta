@@ -11,7 +11,7 @@ To enhance safety, the app employs machine learning (ML) algorithms to assess th
 
 ---
 ## Class Diagram
-![](ERD.drawio.png)
+![](ERD.png)
 ## Features
 
 ### Core Functionalities

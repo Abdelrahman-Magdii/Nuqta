@@ -1,9 +1,10 @@
-package com.spring.nuqta.authentication.Services;
+package com.spring.nuqta.verificationToken.Services;
 
-import com.spring.nuqta.authentication.Entity.VerificationToken;
-import com.spring.nuqta.authentication.Repo.VerificationTokenRepo;
+import com.spring.nuqta.verificationToken.Entity.VerificationToken;
+import com.spring.nuqta.verificationToken.Repo.VerificationTokenRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.keygen.BytesKeyGenerator;
 import org.springframework.security.crypto.keygen.KeyGenerators;
@@ -21,6 +22,7 @@ public class VerificationTokenService {
     @Value("${token.validity.in.seconds}")
     private int tokenValidityInSeconds;
 
+    @Autowired
     public VerificationTokenService(VerificationTokenRepo verificationTokenRepo) {
         this.verificationTokenRepo = verificationTokenRepo;
     }

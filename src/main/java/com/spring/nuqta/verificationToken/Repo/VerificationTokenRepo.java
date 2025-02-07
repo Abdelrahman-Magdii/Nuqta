@@ -1,7 +1,7 @@
-package com.spring.nuqta.authentication.Repo;
+package com.spring.nuqta.verificationToken.Repo;
 
-import com.spring.nuqta.authentication.Entity.VerificationToken;
 import com.spring.nuqta.base.Repo.BaseRepo;
+import com.spring.nuqta.verificationToken.Entity.VerificationToken;
 import org.springframework.stereotype.Repository;
 
 @Repository

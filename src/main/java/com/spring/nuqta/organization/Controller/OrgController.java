@@ -87,4 +87,21 @@ public class OrgController {
         orgServices.deleteById(id);
         return new ResponseEntity<>("Success Delete Organization", HttpStatus.OK);
     }
+
+    @Operation(summary = "Change Organization Password", description = "Allow Organizations to change their password")
+    @ApiResponse(responseCode = "200", description = "Password changed successfully")
+    @PutMapping("/changePassword")
+    public ResponseEntity<Map<String, String>> changePassword(
+            @RequestParam Long orgId,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword) {
+
+        orgServices.changeOrgPassword(orgId, oldPassword, newPassword);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Password changed successfully.");
+
+        return ResponseEntity.ok(response);
+    }
+
 }

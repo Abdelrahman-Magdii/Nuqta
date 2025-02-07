@@ -1,22 +1,16 @@
 package com.spring.nuqta.usermanagement.Services;
 
-import com.spring.nuqta.OtpMail.General.GeneralVerify;
-import com.spring.nuqta.OtpMail.Repo.OtpVerifyRepo;
-import com.spring.nuqta.OtpMail.Services.OtpVerifyService;
-import com.spring.nuqta.authentication.Entity.VerificationToken;
-import com.spring.nuqta.authentication.Services.VerificationTokenService;
 import com.spring.nuqta.base.Services.BaseServices;
 import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.exception.GlobalException;
-import com.spring.nuqta.mail.Services.EmailService;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.organization.Repo.OrgRepo;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
+import com.spring.nuqta.verificationToken.General.GeneralVerification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,13 +27,8 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     private final UserRepo userRepository;
     private final OrgRepo organizationRepository;
     private final PasswordEncoder passwordEncoder;
-    private final OtpVerifyRepo otpVerifyRepo;
-    private final OtpVerifyService otpVerifyService;
-    private final GeneralVerify generalVerify;
-    private final EmailService emailService;
-    private final VerificationTokenService verificationTokenService;
-    @Value("${site.base.url.http}")
-    private String baseUrl;
+    private final GeneralVerification generalVerification;
+
 
     private static void validateUserFields(UserEntity params) {
         if (Objects.isNull(params.getUsername())) {
@@ -146,106 +135,24 @@ public class UserServices extends BaseServices<UserEntity, Long> {
 
         userCreation = userRepository.save(userCreation);
 
-        log.info("Saved user with ID: " + userCreation.getUsername());
-
-        generalVerify.sendOtpEmail(userCreation);
+        generalVerification.sendOtpEmail(userCreation);
     }
 
-
-//    public void sendOtpEmail(UserEntity entity) {
-//
-//        OtpVerifyEntity otpVerifyEntity = new OtpVerifyEntity();
-//        String otp = otpVerifyService.generateOtp();
-//
-//        otpVerifyEntity.setOtp(otp);
-//        otpVerifyEntity.setUser(entity);
-//        otpVerifyEntity.setExpiredAt(LocalDateTime.now().plusMinutes(60));
-//        otpVerifyRepo.save(otpVerifyEntity);
-//
-//        AccountVerificationEmailWithOtp context = new AccountVerificationEmailWithOtp();
-//        context.init(entity);
-//        context.buildVerificationOtp(otp);
-//
-//        try {
-//            emailService.sendMail(context);
-//        } catch (MessagingException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-
-//    public boolean verifyEmail(String otp) {
-//
-//        Optional<OtpVerifyEntity> tokenOpt = Optional.ofNullable(otpVerifyRepo.findByOtp(otp));
-//
-//        if (tokenOpt.isPresent()) {
-//            OtpVerifyEntity verify = tokenOpt.get();
-//
-//            if (verify.isExpired()) {
-//                throw new GlobalException("Expired verification token.", HttpStatus.BAD_REQUEST);
-//            }
-//
-//            if (verify.getUser() != null) {
-//                Optional<UserEntity> userOpt = userRepository.findById(verify.getUser().getId());
-////                Optional<UserEntity> entity = userRepository.findByEmail(mail);
-//
-//                if (userOpt.isPresent()) {
-//                    UserEntity user = userOpt.get();
-//                    user.setEnabled(true);
-//                    userRepository.save(user); // Save user (modify if needed)
-//                    otpVerifyService.deleteOtp(verify);
-//                    return true;
-//                }
-//            } else if (verify.getOrganization() != null) {
-//                Optional<OrgEntity> orgOpt = organizationRepository.findById(verify.getOrganization().getId());
-
-    /// /                Optional<OrgEntity> entity = organizationRepository.findByEmail(mail);
-//                if (orgOpt.isPresent()) {
-//                    OrgEntity org = orgOpt.get();
-//                    org.setEnabled(true);
-//                    organizationRepository.save(org); // Save organization (modify if needed)
-//                    otpVerifyService.deleteOtp(verify);
-//                    return true;
-//                }
-//            }
-//
-//        }
-//        return false; // Token not found or user does not exist
-//    }
-    public boolean verifyRegistration(String token, String mail) {
-        Optional<VerificationToken> tokenOpt = Optional.ofNullable(verificationTokenService.findByToken(token));
-
-        if (tokenOpt.isPresent()) {
-            VerificationToken verificationToken = tokenOpt.get();
-
-            if (verificationToken.isExpired()) {
-                throw new GlobalException("Expired verification token.", HttpStatus.BAD_REQUEST);
-            }
-
-            if (verificationToken.getUser() != null) {
-                Optional<UserEntity> userOpt = userRepository.findById(verificationToken.getUser().getId());
-                Optional<UserEntity> entity = userRepository.findByEmail(mail);
-                verificationToken.getUser().getEmail();
-                if (userOpt.isPresent() && entity.isPresent()) {
-                    UserEntity user = userOpt.get();
-                    user.setEnabled(true);
-                    userRepository.save(user); // Save user (modify if needed)
-                    verificationTokenService.removeToken(verificationToken);
-                    return true;
-                }
-            } else if (verificationToken.getOrganization() != null) {
-                Optional<OrgEntity> orgOpt = organizationRepository.findById(verificationToken.getOrganization().getId());
-                Optional<OrgEntity> entity = organizationRepository.findByEmail(mail);
-                if (orgOpt.isPresent() && entity.isPresent()) {
-                    OrgEntity org = orgOpt.get();
-                    org.setEnabled(true);
-                    organizationRepository.save(org); // Save organization (modify if needed)
-                    verificationTokenService.removeToken(verificationToken);
-                    return true;
-                }
-            }
-
+    @Transactional
+    public void changeUserPassword(Long userId, String oldPassword, String newPassword) {
+        UserEntity user = findById(userId);
+        if (user == null) {
+            throw new GlobalException("User not found with ID: " + userId, HttpStatus.NOT_FOUND);
         }
-        return false; // Token not found or user does not exist
+
+        // Verify old password
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new GlobalException("Old password is incorrect.", HttpStatus.BAD_REQUEST);
+        }
+
+        // Encode and update new password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
+
 }

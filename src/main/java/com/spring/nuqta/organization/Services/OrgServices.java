@@ -1,23 +1,16 @@
 package com.spring.nuqta.organization.Services;
 
-import com.spring.nuqta.OtpMail.General.GeneralVerify;
-import com.spring.nuqta.OtpMail.Repo.OtpVerifyRepo;
-import com.spring.nuqta.OtpMail.Services.OtpVerifyService;
-import com.spring.nuqta.authentication.Entity.VerificationToken;
-import com.spring.nuqta.authentication.Services.VerificationTokenService;
 import com.spring.nuqta.base.Services.BaseServices;
 import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.exception.GlobalException;
-import com.spring.nuqta.mail.Services.EmailService;
-import com.spring.nuqta.mail.template.AccountVerificationEmailContext;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.organization.Repo.OrgRepo;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
-import jakarta.mail.MessagingException;
+import com.spring.nuqta.verificationToken.General.GeneralVerification;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,15 +26,8 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
 
     private final OrgRepo organizationRepository;
     private final PasswordEncoder passwordEncoder;
-    private final VerificationTokenService verificationTokenService;
-    private final EmailService emailService;
-    private final OtpVerifyRepo otpVerifyRepo;
-    private final GeneralVerify generalVerify;
-    private final OtpVerifyService otpVerifyService;
+    private final GeneralVerification generalVerification;
     private final UserRepo userRepo;
-
-    @Value("${site.base.url.http}")
-    private String baseUrl;
 
     @Override
     public List<OrgEntity> findAll() throws GlobalException {
@@ -53,10 +39,10 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     }
 
     @Override
-    public OrgEntity findById(Long aLong) throws GlobalException {
-        OrgEntity organization = super.findById(aLong);
+    public OrgEntity findById(Long id) throws GlobalException {
+        OrgEntity organization = super.findById(id);
         if (organization == null) {
-            throw new GlobalException("Organization not found with ID: " + aLong, HttpStatus.NOT_FOUND);
+            throw new GlobalException("Organization not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
         return organization;
     }
@@ -91,7 +77,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         super.deleteById(aLong);
     }
 
-
+    @Transactional
     public void saveOrg(OrgEntity params) {
         validateOrganizationFields(params);
 
@@ -117,7 +103,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         organizationCreation = organizationRepository.save(organizationCreation);
 
 
-        generalVerify.sendOtpEmail(organizationCreation);
+        generalVerification.sendOtpEmail(organizationCreation);
 
     }
 
@@ -149,23 +135,21 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
 
     }
 
-    // using Token and email
-    public void sendVerificationEmail(OrgEntity entity) {
-        VerificationToken token = verificationTokenService.createToken();
-        token.setOrganization(entity);
-
-        verificationTokenService.saveToken(token);
-
-        AccountVerificationEmailContext context = new AccountVerificationEmailContext();
-        context.init(entity);
-        context.setToken(token.getToken());
-        context.buildVerificationUrl(baseUrl, token.getToken(), entity.getEmail());
-        try {
-            emailService.sendMail(context);
-        } catch (MessagingException e) {
-            e.printStackTrace();
+    @Transactional
+    public void changeOrgPassword(Long orgId, String oldPassword, String newPassword) {
+        OrgEntity org = findById(orgId);
+        if (org == null) {
+            throw new GlobalException("Organization not found with ID: " + orgId, HttpStatus.NOT_FOUND);
         }
-    }
 
+        // Verify old password
+        if (!passwordEncoder.matches(oldPassword, org.getPassword())) {
+            throw new GlobalException("Old password is incorrect.", HttpStatus.BAD_REQUEST);
+        }
+
+        // Encode and update new password
+        org.setPassword(passwordEncoder.encode(newPassword));
+        organizationRepository.save(org);
+    }
 
 }

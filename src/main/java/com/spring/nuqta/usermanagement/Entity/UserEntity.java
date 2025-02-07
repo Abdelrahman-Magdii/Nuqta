@@ -1,12 +1,12 @@
 package com.spring.nuqta.usermanagement.Entity;
 
-import com.spring.nuqta.OtpMail.Entity.OtpVerifyEntity;
-import com.spring.nuqta.authentication.Entity.VerificationToken;
 import com.spring.nuqta.base.Entity.BaseEntity;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.enums.Gender;
 import com.spring.nuqta.enums.Scope;
+import com.spring.nuqta.forgotPassword.Entity.ResetPasswordEntity;
 import com.spring.nuqta.request.Entity.ReqEntity;
+import com.spring.nuqta.verificationToken.Entity.VerificationToken;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -58,10 +58,9 @@ public class UserEntity extends BaseEntity<Long> {
     private boolean enabled = false;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<VerificationToken> tokens;
+    private Set<VerificationToken> verificationTokens;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<OtpVerifyEntity> otpVerifies;
-
+    private Set<ResetPasswordEntity> resetPasswordEntities;
 
 }

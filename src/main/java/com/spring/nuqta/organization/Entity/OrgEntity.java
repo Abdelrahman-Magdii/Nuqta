@@ -1,9 +1,10 @@
 package com.spring.nuqta.organization.Entity;
 
-import com.spring.nuqta.OtpMail.Entity.OtpVerifyEntity;
 import com.spring.nuqta.base.Entity.BaseEntity;
 import com.spring.nuqta.enums.Scope;
+import com.spring.nuqta.forgotPassword.Entity.ResetPasswordEntity;
 import com.spring.nuqta.request.Entity.ReqEntity;
+import com.spring.nuqta.verificationToken.Entity.VerificationToken;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -66,8 +67,10 @@ public class OrgEntity extends BaseEntity<Long> {
     private Set<ReqEntity> requests;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<OtpVerifyEntity> otpVerifies;
+    private Set<VerificationToken> verificationTokens;
 
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ResetPasswordEntity> resetPasswordEntities;
 
     public OrgEntity(String org_name, String email, String password, Geometry location, String phoneNumber, String licenseNumber, Scope scope) {
         this.orgName = org_name;

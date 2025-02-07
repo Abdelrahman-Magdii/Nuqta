@@ -1,4 +1,4 @@
-package com.spring.nuqta.authentication.Entity;
+package com.spring.nuqta.verificationToken.Entity;
 
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;

@@ -1,4 +1,4 @@
-package com.spring.nuqta.OtpMail.Entity;
+package com.spring.nuqta.forgotPassword.Entity;
 
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "Otp_Verify")
-public class OtpVerifyEntity {
+@Table(name = "Reset_Passwords")
+public class ResetPasswordEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
