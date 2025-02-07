@@ -113,7 +113,6 @@ The API endpoints are documented using **Postman**. You can access the API docum
 
 #### Donations
 - **GET /donations**: Retrieve all donations.
-- **POST /donations**: Record a new donation.
 
 ---
 
@@ -175,24 +174,24 @@ We welcome contributions! Here’s how you can contribute:
 
 ---
 
-## License
-
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
-
----
-
 ## Contact
 
-For inquiries, contact the development team at [email@example.com](mailto:email@example.com).
+For inquiries, contact the development team at [abdelrahmanmagdi527@gmail.com](mailto:abdelrahmanmagdi527@gmail.com).
 
 ---
 
 ## Acknowledgments
 
 - **Spring Boot** for providing a robust backend framework.
-- **Twilio** for enabling SMS-based phone verification.
+- **Spring Security JWT** for make app security.
 - **PostgreSQL** for reliable database management.
 - **JUnit** for comprehensive testing support.
+- **Mail** for send email verify.
+- **Twilio** for enabling SMS-based phone verification.
+- **Lombok** for reduced boilerplate code.
+- **MapStruct** for Java bean mapping.
+- **Swagger** for OpenAPI documentation.
+
 
 ---
 
