@@ -1,5 +1,6 @@
 package com.spring.nuqta.donation.Controller;
 
+import com.spring.nuqta.donation.Dto.AcceptDonationRequestDto;
 import com.spring.nuqta.donation.Dto.DonDto;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.donation.Mapper.DonMapper;
@@ -10,12 +11,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @Tag(name = "Donation", description = "APIs for managing donations")
 @RequiredArgsConstructor
 @RestController
@@ -64,4 +67,13 @@ public class DonController {
         // Return the DTOs with a 200 OK status
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
+
+
+    @PostMapping("/acceptRequest")
+    public ResponseEntity<?> acceptDonationRequest(@RequestBody AcceptDonationRequestDto dto) {
+        DonEntity updatedDonation = donServices.acceptDonationRequest(dto);
+        DonDto entity = donMapper.map(updatedDonation);
+        return ResponseEntity.ok(entity);
+    }
+
 }

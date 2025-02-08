@@ -53,7 +53,7 @@ public class DonEntity extends BaseEntity<Long> {
     @OneToOne(mappedBy = "donation")
     private UserEntity user;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "request_id", referencedColumnName = "id")
     private ReqEntity request;
 

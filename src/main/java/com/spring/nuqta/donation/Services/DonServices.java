@@ -1,20 +1,27 @@
 package com.spring.nuqta.donation.Services;
 
 import com.spring.nuqta.base.Services.BaseServices;
+import com.spring.nuqta.donation.Dto.AcceptDonationRequestDto;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.donation.Repo.DonRepo;
 import com.spring.nuqta.exception.GlobalException;
-import lombok.AllArgsConstructor;
+import com.spring.nuqta.request.Entity.ReqEntity;
+import com.spring.nuqta.request.Repo.ReqRepo;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class DonServices extends BaseServices<DonEntity, Long> {
 
     private final DonRepo donRepository;
+    private final ReqRepo reqRepository;
 
     @Override
     public List<DonEntity> findAll() {
@@ -43,4 +50,20 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         // Query the nearest locations within the specified distance
         return donRepository.findNearestLocationWithin100km(latitude, longitude);
     }
+
+    @Transactional
+    public DonEntity acceptDonationRequest(AcceptDonationRequestDto dto) {
+
+        DonEntity donation = donRepository.findById(dto.getDonationId())
+                .orElseThrow(() -> new GlobalException("Donation not found", HttpStatus.NOT_FOUND));
+
+
+        ReqEntity request = reqRepository.findById(dto.getRequestId())
+                .orElseThrow(() -> new GlobalException("Request not found", HttpStatus.NOT_FOUND));
+
+
+        donation.setRequest(request);
+        return donRepository.save(donation);
+    }
+
 }

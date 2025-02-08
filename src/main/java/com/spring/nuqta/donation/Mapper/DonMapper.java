@@ -77,6 +77,7 @@ public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
         reqDto.setBloodTypeNeeded(reqEntity.getBloodTypeNeeded());
         reqDto.setPaymentAvailable(reqEntity.getPaymentAvailable());
         reqDto.setUrgencyLevel(reqEntity.getUrgencyLevel());
+//        reqDto.setDonation(reqEntity.getDonation());
         return reqDto;
     }
 

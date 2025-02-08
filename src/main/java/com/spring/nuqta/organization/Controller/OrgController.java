@@ -90,7 +90,7 @@ public class OrgController {
 
     @Operation(summary = "Change Organization Password", description = "Allow Organizations to change their password")
     @ApiResponse(responseCode = "200", description = "Password changed successfully")
-    @PutMapping("/changePassword")
+    @PostMapping("/changePassword")
     public ResponseEntity<Map<String, String>> changePassword(
             @RequestParam Long orgId,
             @RequestParam String oldPassword,
