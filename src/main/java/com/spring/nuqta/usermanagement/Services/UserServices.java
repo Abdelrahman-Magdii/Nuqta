@@ -12,9 +12,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -96,6 +98,8 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         existingUser.setPhoneNumber(entity.getPhoneNumber());
         existingUser.setScope(entity.getScope());
         existingUser.setDonation(entity.getDonation());
+        existingUser.setModifiedDate(LocalDate.now());
+        existingUser.setModifiedUser(entity.getUsername());
 
         return super.update(existingUser);
     }
@@ -131,7 +135,8 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         userCreation.setGender(entity.getGender());
         userCreation.setPhoneNumber(entity.getPhoneNumber());
         userCreation.setBirthDate(entity.getBirthDate());
-
+        userCreation.setCreatedDate(LocalDate.now());
+        userCreation.setCreatedUser(entity.getUsername());
 
         userCreation = userRepository.save(userCreation);
 
@@ -155,4 +160,17 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         userRepository.save(user);
     }
 
+
+    public ResponseEntity<String> updateFcmToken(Long id, String fcmToken) {
+        Optional<UserEntity> userOptional = userRepository.findById(id);
+
+        if (userOptional.isPresent()) {
+            UserEntity user = userOptional.get();
+            user.setFcmToken(fcmToken);
+            userRepository.save(user);
+            return ResponseEntity.ok("FCM token updated successfully");
+        } else {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+    }
 }

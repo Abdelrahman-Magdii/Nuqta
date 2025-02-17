@@ -57,6 +57,9 @@ public class UserEntity extends BaseEntity<Long> {
 
     private boolean enabled = false;
 
+    @Column(name = "fcm_token")
+    private String fcmToken;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<VerificationToken> verificationTokens;
 

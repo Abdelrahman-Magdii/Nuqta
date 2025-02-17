@@ -12,9 +12,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -64,7 +66,8 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         existingOrganization.setLocation(entity.getLocation());
         existingOrganization.setPhoneNumber(entity.getPhoneNumber());
         existingOrganization.setScope(entity.getScope());
-
+        existingOrganization.setModifiedDate(LocalDate.now());
+        existingOrganization.setModifiedUser(entity.getOrgName());
         return super.update(existingOrganization);
     }
 
@@ -99,6 +102,10 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         organizationCreation.setScope(params.getScope());
         organizationCreation.setPassword(passwordEncoder.encode(params.getPassword()));
         organizationCreation.setLicenseNumber(params.getLicenseNumber());
+        organizationCreation.setModifiedDate(LocalDate.now());
+        organizationCreation.setModifiedUser(params.getOrgName());
+        organizationCreation.setCreatedDate(LocalDate.now());
+        organizationCreation.setCreatedUser(params.getOrgName());
 
         organizationCreation = organizationRepository.save(organizationCreation);
 
@@ -150,6 +157,19 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         // Encode and update new password
         org.setPassword(passwordEncoder.encode(newPassword));
         organizationRepository.save(org);
+    }
+
+    public ResponseEntity<String> updateFcmToken(Long id, String fcmToken) {
+        Optional<OrgEntity> orgOptional = organizationRepository.findById(id);
+
+        if (orgOptional.isPresent()) {
+            OrgEntity org = orgOptional.get();
+            org.setFcmToken(fcmToken);
+            organizationRepository.save(org);
+            return ResponseEntity.ok("FCM token updated successfully");
+        } else {
+            return ResponseEntity.badRequest().body("Organization not found");
+        }
     }
 
 }

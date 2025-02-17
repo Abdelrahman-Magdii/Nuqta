@@ -26,7 +26,6 @@ public class UserDto extends BaseDto<Long> {
     @Schema(description = "Age of the user", example = "30")
     private Integer age;
 
-
     @Schema(description = "Phone number of the user", example = "+11234567890")
     private String phoneNumber;
 

@@ -102,4 +102,10 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    
+    @PutMapping("fcmToken/{id}")
+    public ResponseEntity<String> updateFcmToken(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String fcmToken = request.get("fcmToken");
+        return userServices.updateFcmToken(id, fcmToken);
+    }
 }

@@ -1,10 +1,6 @@
 package com.spring.nuqta.base.Entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -42,10 +38,4 @@ public class BaseEntity<ID extends Number> {
     @LastModifiedBy
     private String modifiedUser;
 
-    public BaseEntity() {
-        this.createdDate = LocalDate.now();
-        this.createdUser = "System";
-        this.modifiedDate = LocalDate.now();
-        this.modifiedUser = "System";
-    }
 }

@@ -68,7 +68,6 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         dto.setPhoneNumber(userEntity.getPhoneNumber());
         dto.setScope(userEntity.getScope());
         dto.setAge(Period.between(userEntity.getBirthDate(), LocalDate.now()).getYears());
-
         return dto;
     }
 
@@ -153,8 +152,6 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         dto.setPaymentOffered(donEntity.getPaymentOffered());
         dto.setLongitude(donEntity.getLocation().getCoordinate().x);
         dto.setLatitude(donEntity.getLocation().getCoordinate().y);
-
-
         return dto;
     }
 
@@ -173,7 +170,6 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         entity.setStatus(donDto.getStatus());
         entity.setPaymentOffered(donDto.getPaymentOffered());
         entity.setLocation(new GeometryFactory().createPoint(new Coordinate(donDto.getLongitude(), donDto.getLatitude())));
-
         return entity;
     }
 

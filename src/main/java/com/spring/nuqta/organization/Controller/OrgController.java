@@ -104,4 +104,9 @@ public class OrgController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("fcmToken/{id}")
+    public ResponseEntity<String> updateFcmToken(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String fcmToken = request.get("fcmToken");
+        return orgServices.updateFcmToken(id, fcmToken);
+    }
 }

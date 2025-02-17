@@ -33,9 +33,7 @@ public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
     DonEntity unMap(DonDto dto);
 
     @Override
-    @Mapping(target = "location", expression = "java(dto.getLongitude() != null && dto.getLatitude() != null ? createGeometry(dto.getLongitude(), dto.getLatitude()) : entity.getLocation())")
     DonEntity unMap(@MappingTarget DonEntity entity, DonDto dto);
-
 
     default Geometry createGeometry(Double x, Double y) {
         if (x == null || y == null) {

@@ -27,13 +27,13 @@ public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
     @Mapping(target = "age", source = "birthDate", qualifiedByName = "calculateAgeFromBirthDate")
     @Mapping(target = "donation", source = "donation", qualifiedByName = "mapDonationToDto")
     @Mapping(target = "requests", source = "requests", qualifiedByName = "mapRequestSetToDtoList")
-    UserDto map(UserEntity userEntity);
+    UserDto map(UserEntity entity);
 
     @Override
     @Mapping(target = "birthDate", source = "age", qualifiedByName = "calculateBirthDateFromAge")
     @Mapping(target = "donation", source = "donation", qualifiedByName = "mapDonationToEntity")
     @Mapping(target = "requests", source = "requests", qualifiedByName = "mapRequestDtoListToEntitySet")
-    UserEntity unMap(UserDto userDto);
+    UserEntity unMap(UserDto dto);
 
     // Custom method to map DonEntity to DonDto
     @Named("mapDonationToDto")
@@ -47,11 +47,11 @@ public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
         donationDto.setDonationDate(donation.getDonationDate());
         donationDto.setLastDonation(donation.getLastDonation());
         donationDto.setStatus(donation.getStatus());
-        donationDto.setLatitude(donation.getLocation().getCoordinate().x);
-        donationDto.setLongitude(donation.getLocation().getCoordinate().y);
         donationDto.setPaymentOffered(donation.getPaymentOffered());
         donationDto.setBloodType(donation.getBloodType());
         donationDto.setWeight(donation.getWeight());
+        donationDto.setLatitude(donation.getLocation().getCoordinate().getX());
+        donationDto.setLongitude(donation.getLocation().getCoordinate().getY());
         return donationDto;
     }
 
@@ -67,10 +67,14 @@ public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
         donation.setDonationDate(donationDto.getDonationDate());
         donation.setLastDonation(donationDto.getLastDonation());
         donation.setStatus(donationDto.getStatus());
-        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(donationDto.getLongitude(), donationDto.getLatitude())));
         donation.setPaymentOffered(donationDto.getPaymentOffered());
         donation.setBloodType(donationDto.getBloodType());
         donation.setWeight(donationDto.getWeight());
+        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(donationDto.getLatitude(), donationDto.getLongitude())));
+        donation.setCreatedDate(LocalDate.now());
+        donation.setCreatedUser(donationDto.getUser().getUsername());
+        donation.setModifiedDate(LocalDate.now());
+        donation.setModifiedUser(donationDto.getUser().getUsername());
         return donation;
     }
 

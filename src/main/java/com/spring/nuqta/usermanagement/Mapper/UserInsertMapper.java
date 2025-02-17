@@ -11,16 +11,19 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import java.time.LocalDate;
+
 @Mapper(componentModel = "spring")
 public interface UserInsertMapper extends BaseMapper<UserEntity, UserInsertDto> {
 
     @Override
     @Mapping(target = "donation", source = "donation", qualifiedByName = "mapDonationToDto")
-    UserInsertDto map(UserEntity userEntity);
+    UserInsertDto map(UserEntity entity);
 
     @Override
     @Mapping(target = "donation", source = "donation", qualifiedByName = "mapDonationToEntity")
-    UserEntity unMap(UserInsertDto userDto);
+    UserEntity unMap(UserInsertDto dto);
+
 
     // Custom method to map DonEntity to DonDto
     @Named("mapDonationToDto")
@@ -34,11 +37,11 @@ public interface UserInsertMapper extends BaseMapper<UserEntity, UserInsertDto> 
         donationDto.setDonationDate(donation.getDonationDate());
         donationDto.setLastDonation(donation.getLastDonation());
         donationDto.setStatus(donation.getStatus());
-        donationDto.setLatitude(donation.getLocation().getCoordinate().x);
-        donationDto.setLongitude(donation.getLocation().getCoordinate().y);
         donationDto.setPaymentOffered(donation.getPaymentOffered());
         donationDto.setBloodType(donation.getBloodType());
         donationDto.setWeight(donation.getWeight());
+        donationDto.setLatitude(donation.getLocation().getCoordinate().getX());
+        donationDto.setLongitude(donation.getLocation().getCoordinate().getY());
         return donationDto;
     }
 
@@ -54,10 +57,12 @@ public interface UserInsertMapper extends BaseMapper<UserEntity, UserInsertDto> 
         donation.setDonationDate(donationDto.getDonationDate());
         donation.setLastDonation(donationDto.getLastDonation());
         donation.setStatus(donationDto.getStatus());
-        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(donationDto.getLongitude(), donationDto.getLatitude())));
         donation.setPaymentOffered(donationDto.getPaymentOffered());
         donation.setBloodType(donationDto.getBloodType());
         donation.setWeight(donationDto.getWeight());
+        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(donationDto.getLatitude(), donationDto.getLongitude())));
+        donation.setCreatedDate(LocalDate.now());
+        donation.setModifiedDate(LocalDate.now());
         return donation;
     }
 
