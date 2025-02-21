@@ -49,18 +49,17 @@ public class UserEntity extends BaseEntity<Long> {
     @Column(nullable = false)
     private Scope scope;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "donation_id", referencedColumnName = "id")
-    private DonEntity donation;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<ReqEntity> requests;
-
-
     private boolean enabled = false;
 
     @Column(name = "fcm_token")
     private String fcmToken;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<ReqEntity> requests;
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "donation_id", referencedColumnName = "id")
+    private DonEntity donation;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<VerificationToken> verificationTokens;

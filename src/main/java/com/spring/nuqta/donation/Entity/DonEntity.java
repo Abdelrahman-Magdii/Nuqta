@@ -52,10 +52,10 @@ public class DonEntity extends BaseEntity<Long> {
     private Double weight;
 
 
-    @OneToOne(mappedBy = "donation")
+    @OneToOne(mappedBy = "donation", cascade = CascadeType.ALL)
     private UserEntity user;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "request_id", referencedColumnName = "id")
     private ReqEntity request;
 
