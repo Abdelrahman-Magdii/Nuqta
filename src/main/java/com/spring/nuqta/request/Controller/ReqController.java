@@ -17,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Tag(name = "Requests", description = "APIs for managing requests")
@@ -92,6 +94,8 @@ public class ReqController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteReqById(@PathVariable Long id) {
         reqServices.deleteById(id);
-        return new ResponseEntity<>("Success Delete Request", HttpStatus.OK);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Request deleted successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

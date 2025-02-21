@@ -12,32 +12,44 @@ import com.spring.nuqta.request.Entity.ReqEntity;
 import com.spring.nuqta.request.Repo.ReqRepo;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Geometry;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Service class to handle CRUD operations for blood donation requests.
+ * Extends BaseServices to inherit common service functionalities.
+ */
 @Slf4j
 @Service
+@AllArgsConstructor
 public class ReqServices extends BaseServices<ReqEntity, Long> {
 
-    private static final double SEARCH_RADIUS = 10.000; // 10 KM radius
-    @Autowired
-    private ReqRepo reqRepo;
-    @Autowired
-    private UserRepo userRepo;
-    @Autowired
-    private OrgRepo orgRepo;
-    @Autowired
-    private NotificationService notificationService;
-    @Autowired
-    private DonRepo donRepo;
+    private static final double SEARCH_RADIUS = 10.000; // Defines a 10 KM search radius for nearby donors
+    private final ReqRepo reqRepo;
+    private final UserRepo userRepo;
+    private final OrgRepo orgRepo;
+    private final NotificationService notificationService;
+    private final DonRepo donRepo;
 
+    /**
+     * Retrieves all requests from the database.
+     * Uses caching to improve performance.
+     *
+     * @return List of all requests
+     * @throws GlobalException if no requests are found
+     */
     @Override
+    @Cacheable(value = "requests")
     public List<ReqEntity> findAll() throws GlobalException {
         List<ReqEntity> requests = super.findAll();
         if (requests.isEmpty()) {
@@ -46,40 +58,91 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         return requests;
     }
 
+    /**
+     * Finds a request by its ID.
+     * Uses caching to store request details.
+     *
+     * @param id Request ID
+     * @return ReqEntity object corresponding to the given ID
+     * @throws GlobalException if the request is not found
+     */
     @Override
+    @Cacheable(value = "requests", key = "#id")
     public ReqEntity findById(Long id) throws GlobalException {
         return reqRepo.findById(id)
                 .orElseThrow(() -> new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * Deletes a request by its ID.
+     * Ensures associated user and organization fields are set to null before deletion.
+     * Evicts the cache entry for the deleted request.
+     *
+     * @param id Request ID
+     * @throws GlobalException if the request is not found
+     */
     @Override
+    @Transactional
+    @CacheEvict(value = "requests", key = "#id")
     public void deleteById(Long id) throws GlobalException {
         ReqEntity request = reqRepo.findById(id)
                 .orElseThrow(() -> new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND));
-        super.deleteById(id);
+
+        // Unlink associated user and organization before deletion
+        request.setUser(null);
+        request.setOrganization(null);
+
+        reqRepo.deleteById(id);
     }
 
-
+    /**
+     * Creates a new request and links it to a user.
+     * Sends notifications to nearby donors.
+     * Clears cache after adding a new request.
+     *
+     * @param userId    ID of the user creating the request
+     * @param reqEntity The request entity to be saved
+     * @return The saved request entity
+     * @throws GlobalException if the user is not found
+     */
+    @CacheEvict(value = "requests", allEntries = true)
     public ReqEntity addRequest(Long userId, ReqEntity reqEntity) throws GlobalException {
         UserEntity user = userRepo.findById(userId)
                 .orElseThrow(() -> new GlobalException("User not found with ID: " + userId, HttpStatus.NOT_FOUND));
         reqEntity.setUser(user);
 
+        // Send notifications to nearby donors
         this.SendNotification(reqEntity);
+
+        // Set timestamps and user details
         reqEntity.setCreatedDate(LocalDate.now());
         reqEntity.setModifiedDate(LocalDate.now());
         reqEntity.setCreatedUser(user.getUsername());
         reqEntity.setModifiedUser(user.getUsername());
-        reqEntity = reqRepo.save(reqEntity);
-        return reqEntity;
+
+        return reqRepo.save(reqEntity);
     }
 
+    /**
+     * Creates a new request for an organization.
+     * Sends notifications to nearby donors.
+     * Clears cache after adding a new request.
+     *
+     * @param orgId     ID of the organization creating the request
+     * @param reqEntity The request entity to be saved
+     * @return The saved request entity
+     * @throws GlobalException if the organization is not found
+     */
+    @CacheEvict(value = "requests", allEntries = true)
     public ReqEntity addRequestForOrg(Long orgId, ReqEntity reqEntity) throws GlobalException {
         OrgEntity org = orgRepo.findById(orgId)
                 .orElseThrow(() -> new GlobalException("Organization not found with ID: " + orgId, HttpStatus.NOT_FOUND));
         reqEntity.setOrganization(org);
 
+        // Send notifications to nearby donors
         this.SendNotification(reqEntity);
+
+        // Set timestamps and organization details
         reqEntity.setCreatedDate(LocalDate.now());
         reqEntity.setModifiedDate(LocalDate.now());
         reqEntity.setCreatedUser(org.getOrgName());
@@ -88,17 +151,27 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         return reqRepo.save(reqEntity);
     }
 
+    /**
+     * Updates an existing request with new details.
+     * Does not update relationships (user and organization remain unchanged).
+     * Updates cache with new request details.
+     *
+     * @param entity The updated request entity
+     * @return The updated request entity
+     * @throws GlobalException if the request ID is null or the request is not found
+     */
     @Override
+    @CachePut(value = "requests", key = "#entity.id")
     public ReqEntity update(ReqEntity entity) throws GlobalException {
         if (entity == null || entity.getId() == null) {
             throw new GlobalException("Request ID cannot be null", HttpStatus.BAD_REQUEST);
         }
 
-        // Fetch the existing entity from the database
+        // Fetch the existing request entity
         ReqEntity existingEntity = reqRepo.findById(entity.getId())
                 .orElseThrow(() -> new GlobalException("Request not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND));
 
-        // Update only the non-relationship fields
+        // Update request details (excluding relationships)
         existingEntity.setBloodTypeNeeded(entity.getBloodTypeNeeded());
         existingEntity.setAmount(entity.getAmount());
         existingEntity.setLocation(entity.getLocation());
@@ -109,27 +182,43 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         existingEntity.setPaymentAvailable(entity.getPaymentAvailable());
 
         existingEntity.setModifiedDate(LocalDate.now());
-        existingEntity.setModifiedUser(entity.getUser().getUsername());
-        // Save the updated entity (relationships remain unchanged)
+
+        // Set modified user based on existing user or organization
+        if (existingEntity.getUser() != null) {
+            existingEntity.setModifiedUser(existingEntity.getUser().getUsername());
+        } else {
+            existingEntity.setModifiedUser(existingEntity.getOrganization().getOrgName());
+        }
+
         return reqRepo.save(existingEntity);
     }
 
+    /**
+     * Sends notifications to nearby donors about a new request.
+     *
+     * @param reqEntity The request entity
+     * @throws GlobalException if any error occurs while sending notifications
+     */
     public void SendNotification(ReqEntity reqEntity) throws GlobalException {
-        // Get nearby donors
         List<DonEntity> nearbyDonors = findNearbyDonors(reqEntity.getLocation());
 
-        // Send notifications to nearby donors
         for (DonEntity donor : nearbyDonors) {
             if (donor.getUser().getFcmToken() != null) {
                 notificationService.sendNotification(new NotificationRequest(
                         donor.getUser().getFcmToken(),
                         "Urgent Blood Request!",
-                        "A new blood donation request has been posted near you from" + reqEntity.getUser().getUsername()
+                        "A new blood donation request has been posted near you from " + reqEntity.getUser().getUsername()
                 ));
             }
         }
     }
 
+    /**
+     * Finds nearby donors within a given radius.
+     *
+     * @param requestLocation The location of the request
+     * @return List of nearby donors
+     */
     public List<DonEntity> findNearbyDonors(Geometry requestLocation) {
         return donRepo.findNearbyDonors(requestLocation, SEARCH_RADIUS);
     }

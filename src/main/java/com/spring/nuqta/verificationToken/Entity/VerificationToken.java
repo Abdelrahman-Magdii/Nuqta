@@ -5,12 +5,13 @@ import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
 @Table(name = "Token")
-public class VerificationToken {
+public class VerificationToken implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

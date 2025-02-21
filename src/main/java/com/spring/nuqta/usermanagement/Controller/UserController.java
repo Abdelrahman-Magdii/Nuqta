@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Tag(name = "User", description = "APIs for managing users")
 @RequiredArgsConstructor
 @RestController
@@ -35,7 +37,7 @@ public class UserController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = UserDto.class)))
     @GetMapping("")
-    public ResponseEntity<List<UserDto>> getAllUsers() {
+    public ResponseEntity<?> getAllUsers() {
         List<UserDto> dtos = userMapper.map(userServices.findAll());
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
@@ -83,7 +85,9 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUserById(@PathVariable Long id) {
         userServices.deleteById(id);
-        return new ResponseEntity<>("Success Delete User ", HttpStatus.OK);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User deleted successfully.");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @Operation(summary = "Change User Password", description = "Allow users to change their password")

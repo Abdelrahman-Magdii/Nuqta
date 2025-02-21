@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Geometry;
@@ -26,6 +27,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(name = "organization")
+@DynamicUpdate
 public class OrgEntity extends BaseEntity<Long> {
 
     @NotBlank(message = "Organization name cannot be blank")
@@ -65,13 +67,13 @@ public class OrgEntity extends BaseEntity<Long> {
     @Column(name = "fcm_token")
     private String fcmToken;
 
-    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<ReqEntity> requests;
 
-    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
     private Set<VerificationToken> verificationTokens;
 
-    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
     private Set<ResetPasswordEntity> resetPasswordEntities;
 
     public OrgEntity(String org_name, String email, String password, Geometry location, String phoneNumber, String licenseNumber, Scope scope) {

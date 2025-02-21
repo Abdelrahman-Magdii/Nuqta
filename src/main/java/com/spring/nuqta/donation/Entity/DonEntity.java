@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Geometry;
@@ -21,6 +22,7 @@ import java.time.LocalDate;
 @Setter
 @Entity
 @Table(name = "donation")
+@DynamicUpdate
 public class DonEntity extends BaseEntity<Long> {
 
     @Column(name = "blood_type")
@@ -53,7 +55,7 @@ public class DonEntity extends BaseEntity<Long> {
     @OneToOne(mappedBy = "donation")
     private UserEntity user;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "request_id", referencedColumnName = "id")
     private ReqEntity request;
 

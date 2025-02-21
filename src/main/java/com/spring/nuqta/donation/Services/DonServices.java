@@ -14,6 +14,8 @@ import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -29,36 +31,49 @@ public class DonServices extends BaseServices<DonEntity, Long> {
     private final ReqRepo reqRepository;
     private final NotificationService notificationService;
 
+    /**
+     * Retrieves all donations with caching.
+     */
     @Override
+    @Cacheable(value = "donation")
     public List<DonEntity> findAll() {
+        log.info("Fetching all donations from DB");
         return super.findAll();
     }
 
+    /**
+     * Retrieves a donation by ID with caching.
+     */
     @Override
+    @Cacheable(value = "donation", key = "#id")
     public DonEntity findById(Long id) {
-        // Validate the ID before calling the parent method
         if (id == null || id <= 0) {
-            throw new GlobalException("Invalid " + id + ":" + id + " ID must be a positive non-null value.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("Invalid ID: " + id, HttpStatus.BAD_REQUEST);
         }
 
-        // Call the parent class's method
         DonEntity entity = super.findById(id);
-
-        // Optional: Add custom logic for handling null results
         if (entity == null) {
-            throw new GlobalException("Entity not found for ID: " + id, HttpStatus.NOT_FOUND);
+            throw new GlobalException("Donation not found for ID: " + id, HttpStatus.NOT_FOUND);
         }
 
+        log.info("Fetching donation with ID: {}", id);
         return entity;
     }
 
+    /**
+     * Retrieves the nearest donation locations with caching.
+     */
+    @Cacheable(value = "nearestLocations", key = "#latitude + '-' + #longitude")
     public List<DonEntity> findNearestLocations(double latitude, double longitude) {
-        // Query the nearest locations within the specified distance
+        log.info("Fetching nearest donation locations for coordinates: {}, {}", latitude, longitude);
         return donRepository.findNearestLocationWithin100km(latitude, longitude);
     }
 
-
+    /**
+     * Accepts a donation request and updates the cache.
+     */
     @Transactional
+    @CacheEvict(value = "donation", key = "#dto.getDonationId()")
     public DonEntity acceptDonationRequest(AcceptDonationRequestDto dto) {
         DonEntity donation = donRepository.findById(dto.getDonationId())
                 .orElseThrow(() -> new GlobalException("Donation not found", HttpStatus.NOT_FOUND));
@@ -71,9 +86,13 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
         sendNotificationIfApplicable(donation, request);
 
+        log.info("Donation ID {} accepted for Request ID {}", dto.getDonationId(), dto.getRequestId());
         return entity;
     }
 
+    /**
+     * Sends a notification when a donation request is accepted.
+     */
     private void sendNotificationIfApplicable(DonEntity donation, ReqEntity request) {
         String donorName = donation.getUser().getUsername();
         String message = "Your blood donation request has been accepted by " + donorName;
@@ -90,5 +109,4 @@ public class DonServices extends BaseServices<DonEntity, Long> {
     private void sendNotification(String fcmToken, String message) {
         notificationService.sendNotification(new NotificationRequest(fcmToken, "Request Accepted", message));
     }
-
 }

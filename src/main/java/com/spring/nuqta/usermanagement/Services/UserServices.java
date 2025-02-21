@@ -8,9 +8,11 @@ import com.spring.nuqta.organization.Repo.OrgRepo;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
 import com.spring.nuqta.verificationToken.General.GeneralVerification;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,12 +28,17 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserServices extends BaseServices<UserEntity, Long> {
 
-    private final UserRepo userRepository;
-    private final OrgRepo organizationRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final GeneralVerification generalVerification;
+    private final UserRepo userRepository; // Repository for UserEntity operations
+    private final OrgRepo organizationRepository; // Repository for OrgEntity operations
+    private final PasswordEncoder passwordEncoder; // Password encoder for secure password handling
+    private final GeneralVerification generalVerification; // Service for general verification tasks
 
-
+    /**
+     * Validates the required fields of a UserEntity.
+     * Throws a GlobalException if any required field is missing or invalid.
+     *
+     * @param params The UserEntity to validate.
+     */
     private static void validateUserFields(UserEntity params) {
         if (Objects.isNull(params.getUsername())) {
             throw new GlobalException("Username is required.", HttpStatus.BAD_REQUEST);
@@ -58,25 +65,53 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         }
     }
 
+    /**
+     * Retrieves all users from the database.
+     * Caches the result for future requests.
+     *
+     * @return A list of all UserEntity objects.
+     * @throws GlobalException If no users are found.
+     */
     @Override
+    @Cacheable(value = "users")
     public List<UserEntity> findAll() throws GlobalException {
-        List<UserEntity> users = super.findAll();
+        List<UserEntity> users = userRepository.findAll();
         if (users.isEmpty()) {
             throw new GlobalException("No users found", HttpStatus.NOT_FOUND);
         }
+        log.info("Finding User Services: *******************");
         return users;
     }
 
+    /**
+     * Retrieves a user by their ID.
+     * Caches the result for future requests.
+     *
+     * @param id The ID of the user to retrieve.
+     * @return The UserEntity object.
+     * @throws GlobalException If the user is not found.
+     */
     @Override
+    @Cacheable(value = "users", key = "#id")
     public UserEntity findById(Long id) throws GlobalException {
         UserEntity user = super.findById(id);
         if (user == null) {
             throw new GlobalException("User not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
+        log.info("Finding User Services : *******************");
         return user;
     }
 
+    /**
+     * Updates an existing user in the database.
+     * Updates the cache with the modified user.
+     *
+     * @param entity The UserEntity with updated fields.
+     * @return The updated UserEntity object.
+     * @throws GlobalException If the user ID is null or the user is not found.
+     */
     @Override
+    @CachePut(value = "users", key = "#entity.id")
     public UserEntity update(UserEntity entity) throws GlobalException {
         if (entity == null || entity.getId() == null) {
             throw new GlobalException("User ID cannot be null", HttpStatus.BAD_REQUEST);
@@ -90,10 +125,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
             throw new GlobalException("Donation not found with ID: " + entity.getDonation().getId(), HttpStatus.NOT_FOUND);
         }
 
-        existingUser.setId(entity.getId());
         existingUser.setUsername(entity.getUsername());
-//        existingUser.setEmail(entity.getEmail());
-//        existingUser.setPassword(passwordEncoder.encode(entity.getPassword()));
         existingUser.setGender(entity.getGender());
         existingUser.setPhoneNumber(entity.getPhoneNumber());
         existingUser.setScope(entity.getScope());
@@ -104,7 +136,15 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         return super.update(existingUser);
     }
 
+    /**
+     * Deletes a user by their ID.
+     * Evicts the user from the cache.
+     *
+     * @param id The ID of the user to delete.
+     * @throws GlobalException If the user is not found.
+     */
     @Override
+    @CacheEvict(value = "users", key = "#id")
     public void deleteById(Long id) throws GlobalException {
         UserEntity user = super.findById(id);
         if (user == null) {
@@ -113,7 +153,14 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         super.deleteById(id);
     }
 
-    @Transactional
+    /**
+     * Saves a new user to the database.
+     * Validates the user fields and checks for existing users or organizations with the same email or username.
+     * Evicts all entries from the cache.
+     *
+     * @param entity The UserEntity to save.
+     */
+    @CacheEvict(value = "users", allEntries = true)
     public void saveUser(UserEntity entity) {
         validateUserFields(entity);
 
@@ -127,6 +174,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         }
 
         UserEntity userCreation = new UserEntity();
+
         userCreation.setUsername(entity.getUsername());
         userCreation.setEmail(entity.getEmail());
         userCreation.setPassword(passwordEncoder.encode(entity.getPassword()));
@@ -143,7 +191,17 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         generalVerification.sendOtpEmail(userCreation);
     }
 
-    @Transactional
+    /**
+     * Changes the password of an existing user.
+     * Verifies the old password before updating to the new password.
+     * Evicts the user from the cache.
+     *
+     * @param userId      The ID of the user.
+     * @param oldPassword The old password to verify.
+     * @param newPassword The new password to set.
+     * @throws GlobalException If the user is not found or the old password is incorrect.
+     */
+    @CacheEvict(value = "users", key = "#userId")
     public void changeUserPassword(Long userId, String oldPassword, String newPassword) {
         UserEntity user = findById(userId);
         if (user == null) {
@@ -160,9 +218,17 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         userRepository.save(user);
     }
 
-
+    /**
+     * Updates the FCM token for a user.
+     * Updates the cache with the modified user.
+     *
+     * @param id       The ID of the user.
+     * @param fcmToken The new FCM token to set.
+     * @return A ResponseEntity indicating success or failure.
+     */
+    @CachePut(value = "users", key = "#id")
     public ResponseEntity<String> updateFcmToken(Long id, String fcmToken) {
-        Optional<UserEntity> userOptional = userRepository.findById(id);
+        Optional<UserEntity> userOptional = Optional.ofNullable(super.findById(id));
 
         if (userOptional.isPresent()) {
             UserEntity user = userOptional.get();

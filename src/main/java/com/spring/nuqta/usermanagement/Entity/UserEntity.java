@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -22,6 +23,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(name = "Users")
+@DynamicUpdate
 public class UserEntity extends BaseEntity<Long> {
 
     @Column(unique = true, nullable = false, length = 50)
@@ -47,11 +49,11 @@ public class UserEntity extends BaseEntity<Long> {
     @Column(nullable = false)
     private Scope scope;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "donation_id", referencedColumnName = "id")
     private DonEntity donation;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<ReqEntity> requests;
 
 
@@ -60,10 +62,10 @@ public class UserEntity extends BaseEntity<Long> {
     @Column(name = "fcm_token")
     private String fcmToken;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<VerificationToken> verificationTokens;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<ResetPasswordEntity> resetPasswordEntities;
 
 }

@@ -4,11 +4,12 @@ import com.spring.nuqta.base.Repo.BaseRepo;
 import jakarta.persistence.MappedSuperclass;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
 @MappedSuperclass
-public abstract class BaseServices<T, ID extends Number> {
+public abstract class BaseServices<T, ID extends Number> implements Serializable {
 
     @Autowired
     private BaseRepo<T, ID> baseRepo;
