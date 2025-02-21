@@ -5,9 +5,9 @@ import com.spring.nuqta.authentication.Dto.AuthUserDto;
 import com.spring.nuqta.authentication.Jwt.JwtUtilsOrganization;
 import com.spring.nuqta.authentication.Jwt.JwtUtilsUser;
 import com.spring.nuqta.exception.GlobalException;
-import com.spring.nuqta.organization.Entity.OrgEntity;
+import com.spring.nuqta.organization.Projection.OrgAuthProjection;
 import com.spring.nuqta.organization.Repo.OrgRepo;
-import com.spring.nuqta.usermanagement.Entity.UserEntity;
+import com.spring.nuqta.usermanagement.Projection.UserAuthProjection;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
 import jakarta.transaction.SystemException;
 import lombok.extern.slf4j.Slf4j;
@@ -45,12 +45,12 @@ public class AuthService {
         String password = (String) params.get("password");
 
         validateUserParams(username, email, password);
-        UserEntity user = validateUserAuth(username, email, password);
+        UserAuthProjection user = validateUserAuth(username, email, password);
 
         String token = jwtUtilsUser.generateToken(user);
 
-        return new AuthUserDto(user.getId(), token,
-                String.valueOf(jwtUtilsUser.getExpireAt(token)), user.getScope());
+        return new AuthUserDto(user.id(), token,
+                String.valueOf(jwtUtilsUser.getExpireAt(token)), user.scope());
     }
 
 
@@ -62,13 +62,13 @@ public class AuthService {
 
 
         validateOrganizationParams(licenseNumber, email, password);
-        OrgEntity organization = validateOrganizationAuth(licenseNumber, password, email);
+        OrgAuthProjection organization = validateOrganizationAuth(licenseNumber, password, email);
 
         String token = jwtUtilsOrganization.generateToken(organization);
 
-        return new AuthOrgDto(organization.getId(), token,
+        return new AuthOrgDto(organization.id(), token,
                 String.valueOf(jwtUtilsOrganization.getExpireAt(token)),
-                organization.getScope());
+                organization.scope());
     }
 
 
@@ -87,7 +87,7 @@ public class AuthService {
     private <T> Optional<T> authenticateUser(String token) {
         String subject = jwtUtilsUser.getSubject(token);
 
-        return userRepository.findByUsername(subject)
+        return userRepository.findUserAuthProjectionByUsername(subject)
                 .map(user -> {
                     AuthUserDto authuserDto = createUserDto(user, token);
                     return (T) authuserDto;
@@ -96,7 +96,7 @@ public class AuthService {
 
     private <T> Optional<T> authenticateOrganization(String token) {
         String subject = jwtUtilsOrganization.getSubject(token);
-        return organizationRepository.findByEmail(subject)
+        return organizationRepository.findOrgAuthProjectionByEmail(subject)
                 .map(organization -> {
                     AuthOrgDto authOrgDto = createOrgDto(organization, token);
                     return (T) authOrgDto;
@@ -106,14 +106,14 @@ public class AuthService {
 
     // ----------------------- Private Methods ---------------------------
 
-    private AuthUserDto createUserDto(UserEntity user, String token) {
-        return new AuthUserDto(user.getId(), token,
-                String.valueOf(jwtUtilsUser.getExpireAt(token)), user.getScope());
+    private AuthUserDto createUserDto(UserAuthProjection user, String token) {
+        return new AuthUserDto(user.id(), token,
+                String.valueOf(jwtUtilsUser.getExpireAt(token)), user.scope());
     }
 
-    private AuthOrgDto createOrgDto(OrgEntity organization, String token) {
-        return new AuthOrgDto(organization.getId(), token,
-                String.valueOf(jwtUtilsOrganization.getExpireAt(token)), organization.getScope());
+    private AuthOrgDto createOrgDto(OrgAuthProjection organization, String token) {
+        return new AuthOrgDto(organization.id(), token,
+                String.valueOf(jwtUtilsOrganization.getExpireAt(token)), organization.scope());
     }
 
     // -------------------- Validation and Auth Logic --------------------
@@ -130,25 +130,25 @@ public class AuthService {
         }
     }
 
-    private UserEntity validateUserAuth(String username, String email, String password) {
-        UserEntity user = (username != null)
-                ? userRepository.findByUsername(username)
+    private UserAuthProjection validateUserAuth(String username, String email, String password) {
+        UserAuthProjection user = (username != null)
+                ? userRepository.findUserAuthProjectionByUsername(username)
                 .orElseThrow(() -> new GlobalException(
                         "Username Or Email invalid.", HttpStatus.BAD_REQUEST))
-                : userRepository.findByEmail(email)
+                : userRepository.findUserAuthProjectionByEmail(email)
                 .orElseThrow(() -> new GlobalException(
                         "Username Or Email invalid.", HttpStatus.BAD_REQUEST));
 
-        if (user.isEnabled()) {
-            Optional<UserEntity> user1 = userRepository.findByUsername(username);
-            Optional<UserEntity> user2 = userRepository.findByEmail(email);
+        if (user.enabled()) {
+            Optional<UserAuthProjection> user1 = userRepository.findUserAuthProjectionByUsername(username);
+            Optional<UserAuthProjection> user2 = userRepository.findUserAuthProjectionByEmail(email);
             if (user1.isPresent()
-                    && passwordEncoder.matches(password, user1.get().getPassword())) {
-                return (UserEntity) user1.get();
+                    && passwordEncoder.matches(password, user1.get().password())) {
+                return (UserAuthProjection) user1.get();
             } else if (user2.isPresent()
-                    && passwordEncoder.matches(password, user2.get().getPassword())) {
-                return (UserEntity) user2.get();
-            } else if (!passwordEncoder.matches(password, user1.get().getPassword())) {
+                    && passwordEncoder.matches(password, user2.get().password())) {
+                return (UserAuthProjection) user2.get();
+            } else if (!passwordEncoder.matches(password, user1.get().password())) {
                 throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);
             } else {
                 throw new GlobalException("Username Or Email invalid.", HttpStatus.BAD_REQUEST);
@@ -171,31 +171,31 @@ public class AuthService {
     }
 
 
-    private OrgEntity validateOrganizationAuth(String licenseNumber, String password, String email) {
-        OrgEntity organization = (email != null) ?
-                organizationRepository.findByEmail(email)
+    private OrgAuthProjection validateOrganizationAuth(String licenseNumber, String password, String email) {
+        OrgAuthProjection organization = (email != null) ?
+                organizationRepository.findOrgAuthProjectionByEmail(email)
                         .orElseThrow(() -> new GlobalException(
                                 "Organization Email invalid", HttpStatus.BAD_REQUEST)) :
-                organizationRepository.findByLicenseNumber(licenseNumber)
+                organizationRepository.findOrgAuthProjectionByLicenseNumber(licenseNumber)
                         .orElseThrow(() -> new GlobalException(
                                 "License Number invalid", HttpStatus.BAD_REQUEST));
 
-        if (organization.isEnabled()) {
-            Optional<OrgEntity> org1 = organizationRepository.findByLicenseNumber(licenseNumber);
-            Optional<OrgEntity> org2 = organizationRepository.findByEmail(email);
+        if (organization.enabled()) {
+            Optional<OrgAuthProjection> org1 = organizationRepository.findOrgAuthProjectionByLicenseNumber(licenseNumber);
+            Optional<OrgAuthProjection> org2 = organizationRepository.findOrgAuthProjectionByEmail(email);
 
             if (org1.isPresent()
-                    && passwordEncoder.matches(password, org1.get().getPassword())) {
-                return (OrgEntity) org1.get();
+                    && passwordEncoder.matches(password, org1.get().password())) {
+                return (OrgAuthProjection) org1.get();
             } else if (org2.isPresent()
-                    && passwordEncoder.matches(password, org2.get().getPassword())) {
-                return (OrgEntity) org2.get();
-            } else if (!passwordEncoder.matches(password, org1.get().getPassword())) {
+                    && passwordEncoder.matches(password, org2.get().password())) {
+                return (OrgAuthProjection) org2.get();
+            } else if (!passwordEncoder.matches(password, org1.get().password())) {
                 throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);
             } else {
                 throw new GlobalException("License Number Or Email invalid.", HttpStatus.BAD_REQUEST);
             }
-        } else if (organization.getEmail() == null) {
+        } else if (organization.email() == null) {
             throw new GlobalException("Organization Not Found", HttpStatus.NOT_FOUND);
         } else {
             throw new GlobalException("Check Organization verification sent", HttpStatus.NOT_FOUND);

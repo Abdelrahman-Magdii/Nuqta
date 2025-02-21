@@ -1,6 +1,6 @@
 package com.spring.nuqta.authentication.Jwt;
 
-import com.spring.nuqta.organization.Entity.OrgEntity;
+import com.spring.nuqta.organization.Projection.OrgAuthProjection;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -21,12 +21,12 @@ public class JwtUtilsOrganization extends JwtUtils {
      * @param expiration   The expiration time for the token (in milliseconds).
      * @return The generated JWT token.
      */
-    private String buildToken(Map<String, Object> extraClaims, OrgEntity organization,
+    private String buildToken(Map<String, Object> extraClaims, OrgAuthProjection organization,
                               long expiration) {
         return Jwts.builder()
                 .setClaims(extraClaims) // Set additional claims
-                .setSubject(organization.getEmail()) // Set the subject (organization email)
-                .claim("scope", organization.getScope().toString()) // Add the organization's scope as a claim
+                .setSubject(organization.email()) // Set the subject (organization email)
+                .claim("scope", organization.scope().toString()) // Add the organization's scope as a claim
                 .setIssuedAt(new Date(System.currentTimeMillis())) // Set the token issuance time
                 .setExpiration(new Date(System.currentTimeMillis() + expiration)) // Set the token expiration time
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256) // Sign the token with the signing key
@@ -41,7 +41,7 @@ public class JwtUtilsOrganization extends JwtUtils {
      * @return The generated JWT token.
      */
     public String generateToken(Map<String, Object> extraClaims,
-                                OrgEntity organization) {
+                                OrgAuthProjection organization) {
         return buildToken(extraClaims, organization, getJwtExpiration());
     }
 
@@ -52,7 +52,7 @@ public class JwtUtilsOrganization extends JwtUtils {
      * @param organization The organization entity for which the token is being generated.
      * @return The generated JWT token.
      */
-    public String generateToken(OrgEntity organization) {
+    public String generateToken(OrgAuthProjection organization) {
         return generateToken(new HashMap<>(), organization);
     }
 

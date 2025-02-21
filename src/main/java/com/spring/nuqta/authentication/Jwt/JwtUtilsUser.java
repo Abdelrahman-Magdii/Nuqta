@@ -1,6 +1,6 @@
 package com.spring.nuqta.authentication.Jwt;
 
-import com.spring.nuqta.usermanagement.Entity.UserEntity;
+import com.spring.nuqta.usermanagement.Projection.UserAuthProjection;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -21,12 +21,12 @@ public class JwtUtilsUser extends JwtUtils {
      * @param expiration  The expiration time for the token (in milliseconds).
      * @return The generated JWT token.
      */
-    private String buildToken(Map<String, Object> extraClaims, UserEntity user,
+    private String buildToken(Map<String, Object> extraClaims, UserAuthProjection user,
                               long expiration) {
         return Jwts.builder()
                 .setClaims(extraClaims) // Set additional claims
-                .setSubject(user.getUsername()) // Set the subject (username)
-                .claim("scope", user.getScope().toString()) // Add the user's scope as a claim
+                .setSubject(user.username()) // Set the subject (username)
+                .claim("scope", user.scope().toString()) // Add the user's scope as a claim
                 .setIssuedAt(new Date(System.currentTimeMillis())) // Set the token issuance time
                 .setExpiration(new Date(System.currentTimeMillis() + expiration)) // Set the token expiration time
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256) // Sign the token with the signing key
@@ -40,7 +40,7 @@ public class JwtUtilsUser extends JwtUtils {
      * @param user        The user entity for which the token is being generated.
      * @return The generated JWT token.
      */
-    public String generateToken(Map<String, Object> extraClaims, UserEntity user) {
+    public String generateToken(Map<String, Object> extraClaims, UserAuthProjection user) {
         return buildToken(extraClaims, user, getJwtExpiration());
     }
 
@@ -50,7 +50,7 @@ public class JwtUtilsUser extends JwtUtils {
      * @param user The user entity for which the token is being generated.
      * @return The generated JWT token.
      */
-    public String generateToken(UserEntity user) {
+    public String generateToken(UserAuthProjection user) {
         return generateToken(new HashMap<>(), user);
     }
 
