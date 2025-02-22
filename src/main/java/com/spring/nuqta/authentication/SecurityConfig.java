@@ -23,13 +23,14 @@ public class SecurityConfig {
 
     // List of public API endpoints that don't require authentication
     public static final String[] PUBLIC_APIS = {"/swagger-ui/**", "/api/auth/**",
-            "/api-docs/**", "/api/org/register", "/api/user/register", "/api/phone/**"};
+            "/api-docs/**", "/api/org/register", "/api/user/register", "/api/phone/**", "/ws/**"};
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(AbstractHttpConfigurer::disable) // Disable CORS if not required
+//                .cors(AbstractHttpConfigurer::disable) // Disable CORS if not required
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for APIs
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(PUBLIC_APIS).permitAll() // Allow requests to public APIs
