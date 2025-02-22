@@ -7,8 +7,10 @@ import com.spring.nuqta.forgotPassword.Services.ResetPasswordService;
 import com.spring.nuqta.mail.Services.EmailService;
 import com.spring.nuqta.mail.template.ForgotPasswordWithOtp;
 import com.spring.nuqta.organization.Entity.OrgEntity;
+import com.spring.nuqta.organization.Projection.OrgAuthProjection;
 import com.spring.nuqta.organization.Repo.OrgRepo;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
+import com.spring.nuqta.usermanagement.Projection.UserAuthProjection;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
@@ -116,7 +118,7 @@ public class GeneralReset {
 
             if (verify.getUser() != null) {
                 Optional<UserEntity> userOpt = userRepo.findById(verify.getUser().getId());
-                Optional<UserEntity> entity = userRepo.findByEmail(mail);
+                Optional<UserAuthProjection> entity = userRepo.findUserAuthProjectionByEmail(mail);
 
                 if (userOpt.isPresent() && entity.isPresent()) {
                     UserEntity user = userOpt.get();
@@ -127,7 +129,7 @@ public class GeneralReset {
                 }
             } else if (verify.getOrganization() != null) {
                 Optional<OrgEntity> orgOpt = organizationRepo.findById(verify.getOrganization().getId());
-                Optional<OrgEntity> entity = organizationRepo.findByEmail(mail);
+                Optional<OrgAuthProjection> entity = organizationRepo.findOrgAuthProjectionByEmail(mail);
 
                 if (orgOpt.isPresent() && entity.isPresent()) {
                     OrgEntity org = orgOpt.get();
