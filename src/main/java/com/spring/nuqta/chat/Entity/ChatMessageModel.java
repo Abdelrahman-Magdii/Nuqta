@@ -1,28 +1,27 @@
 package com.spring.nuqta.chat.Entity;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
+@Table(name = "Chat_message")
 public class ChatMessageModel implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "message_id")
+    private Long messageId;
 
-    private Long userId;
-    private String message;
     private String sender;
-    private Date creationDate;
-    private String messageType;
 
+    private String recipient;
 
+    private String content;
+
+    private LocalDateTime timestamp;
 }
