@@ -17,7 +17,7 @@ import java.time.LocalDate;
 @ContextConfiguration(classes = {VerificationToken.class})
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
-class VerificationTokenDiffblueTest {
+class VerificationTokenTest {
     @Autowired
     private VerificationToken verificationToken;
 

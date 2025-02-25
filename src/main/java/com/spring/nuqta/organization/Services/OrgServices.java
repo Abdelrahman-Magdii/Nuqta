@@ -46,7 +46,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     @Override
     @Cacheable(value = "org")
     public List<OrgEntity> findAll() throws GlobalException {
-        List<OrgEntity> organizations = super.findAll();
+        List<OrgEntity> organizations = organizationRepository.findAll();
         if (organizations.isEmpty()) {
             throw new GlobalException("No organizations found", HttpStatus.NOT_FOUND);
         }
@@ -64,11 +64,11 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     @Override
     @Cacheable(value = "org", key = "#id")
     public OrgEntity findById(Long id) throws GlobalException {
-        OrgEntity organization = super.findById(id);
-        if (organization == null) {
+        Optional<OrgEntity> organization = organizationRepository.findById(id);
+        if (organization.isEmpty()) {
             throw new GlobalException("Organization not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
-        return organization;
+        return organization.get();
     }
 
     /**
@@ -85,11 +85,13 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         if (entity == null || entity.getId() == null) {
             throw new GlobalException("Organization ID cannot be null", HttpStatus.BAD_REQUEST);
         }
-        OrgEntity existingOrganization = super.findById(entity.getId());
-        if (existingOrganization == null) {
+        Optional<OrgEntity> organizationOptional = organizationRepository.findById(entity.getId());
+
+        if (organizationOptional.isEmpty()) {
             throw new GlobalException("Organization not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND);
         }
 
+        OrgEntity existingOrganization = organizationOptional.get();
         // Updating only selected fields to maintain data integrity
         existingOrganization.setOrgName(entity.getOrgName());
         existingOrganization.setLocation(entity.getLocation());
@@ -98,7 +100,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         existingOrganization.setModifiedDate(LocalDate.now());
         existingOrganization.setModifiedUser(entity.getOrgName());
 
-        return super.update(existingOrganization);
+        return organizationRepository.save(existingOrganization);
     }
 
     /**
@@ -111,11 +113,11 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     @Override
     @CacheEvict(value = "org", key = "#id")
     public void deleteById(Long id) throws GlobalException {
-        OrgEntity organization = super.findById(id);
-        if (organization == null) {
+        Optional<OrgEntity> organization = organizationRepository.findById(id);
+        if (organization.isEmpty()) {
             throw new GlobalException("Organization not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
-        super.deleteById(id);
+        organizationRepository.deleteById(id);
     }
 
     /**
@@ -169,19 +171,20 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      */
     @CacheEvict(value = "org", key = "#orgId")
     public void changeOrgPassword(Long orgId, String oldPassword, String newPassword) {
-        OrgEntity org = findById(orgId);
-        if (org == null) {
+        Optional<OrgEntity> org = organizationRepository.findById(orgId);
+
+        if (org.isEmpty()) {
             throw new GlobalException("Organization not found with ID: " + orgId, HttpStatus.NOT_FOUND);
         }
 
         // Verify old password before changing it
-        if (!passwordEncoder.matches(oldPassword, org.getPassword())) {
+        if (!passwordEncoder.matches(oldPassword, org.get().getPassword())) {
             throw new GlobalException("Old password is incorrect.", HttpStatus.BAD_REQUEST);
         }
 
         // Update and encode the new password
-        org.setPassword(passwordEncoder.encode(newPassword));
-        organizationRepository.save(org);
+        org.get().setPassword(passwordEncoder.encode(newPassword));
+        organizationRepository.save(org.get());
     }
 
     /**
@@ -211,7 +214,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      * @param params Organization entity to validate.
      * @throws GlobalException if any required field is missing or incorrect.
      */
-    private void validateOrganizationFields(OrgEntity params) {
+    void validateOrganizationFields(OrgEntity params) {
         if (Objects.isNull(params.getLicenseNumber())) {
             throw new GlobalException("License Number is required.", HttpStatus.BAD_REQUEST);
         }

@@ -60,6 +60,7 @@ public interface OrgMapper extends BaseMapper<OrgEntity, OrgDto> {
                     dto.setId(req.getId());
                     dto.setAddress(req.getAddress());
                     dto.setStatus(req.getStatus());
+                    dto.setAmount(req.getAmount());
                     dto.setRequestDate(req.getRequestDate());
                     dto.setPaymentAvailable(req.getPaymentAvailable());
                     dto.setUrgencyLevel(req.getUrgencyLevel());
@@ -81,6 +82,7 @@ public interface OrgMapper extends BaseMapper<OrgEntity, OrgDto> {
                 .map(dto -> {
                     ReqEntity entity = new ReqEntity();
                     entity.setId(dto.getId());
+                    entity.setAmount(dto.getAmount());
                     entity.setAddress(dto.getAddress());
                     entity.setStatus(dto.getStatus());
                     entity.setRequestDate(dto.getRequestDate());

@@ -19,9 +19,9 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.CoordinateArraySequence;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -40,16 +40,16 @@ class GeneralVerificationDiffblueTest {
     @Autowired
     private GeneralVerification generalVerification;
 
-    @MockBean
+    @Mock
     private VerificationTokenService verificationTokenService;
 
-    @MockBean
+    @Mock
     private EmailService emailService;
 
-    @MockBean
+    @Mock
     private OrgRepo orgRepo;
 
-    @MockBean
+    @Mock
     private UserRepo userRepo;
 
     /**

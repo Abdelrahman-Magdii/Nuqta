@@ -1,5 +1,6 @@
 package com.spring.nuqta.request.Controller;
 
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.spring.nuqta.request.Dto.AddReqDto;
 import com.spring.nuqta.request.Dto.ReqDto;
 import com.spring.nuqta.request.Entity.ReqEntity;
@@ -60,7 +61,7 @@ public class ReqController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = AddReqDto.class)))
     @PostMapping("/{userId}")
-    public ResponseEntity<?> addReq(@PathVariable Long userId, @RequestBody AddReqDto addReqDto) {
+    public ResponseEntity<?> addReq(@PathVariable Long userId, @RequestBody AddReqDto addReqDto) throws FirebaseMessagingException {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
         entity = reqServices.addRequest(userId, entity);
         AddReqDto dto = addReqMapper.map(entity);
@@ -73,7 +74,7 @@ public class ReqController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = AddReqDto.class)))
     @PostMapping("org/{orgId}")
-    public ResponseEntity<?> addReqForOrg(@PathVariable Long orgId, @RequestBody AddReqDto addReqDto) {
+    public ResponseEntity<?> addReqForOrg(@PathVariable Long orgId, @RequestBody AddReqDto addReqDto) throws FirebaseMessagingException {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
         entity = reqServices.addRequestForOrg(orgId, entity);
         AddReqDto dto = addReqMapper.map(entity);

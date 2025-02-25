@@ -1,5 +1,6 @@
 package com.spring.nuqta.request.Services;
 
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.spring.nuqta.base.Services.BaseServices;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.donation.Repo.DonRepo;
@@ -16,6 +17,7 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Geometry;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -55,7 +57,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     @Override
     @Cacheable(value = "requests")
     public List<ReqEntity> findAll() throws GlobalException {
-        List<ReqEntity> requests = super.findAll();
+        List<ReqEntity> requests = reqRepo.findAll();
         if (requests.isEmpty()) {
             throw new GlobalException("No requests found", HttpStatus.NOT_FOUND);
         }
@@ -92,7 +94,13 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
             throw new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
         reqRepo.hardDeleteById(id);
-        Objects.requireNonNull(cacheManager.getCache("requests")).clear();
+        // Invalidate cache
+        if (cacheManager != null) {
+            Cache cache = cacheManager.getCache("requests");
+            if (cache != null) {
+                cache.evict(id);
+            }
+        }
     }
 
 
@@ -132,7 +140,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
 
             } // Caches the new request by ID
     )
-    public ReqEntity addRequest(Long userId, ReqEntity reqEntity) throws GlobalException {
+    public ReqEntity addRequest(Long userId, ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
         UserEntity user = userRepo.findById(userId)
                 .orElseThrow(() -> new GlobalException("User not found with ID: " + userId, HttpStatus.NOT_FOUND));
         reqEntity.setUser(user);
@@ -169,7 +177,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
                     @CachePut(value = "requests", key = "#result.id"),
             }// Caches the new request by ID
     )
-    public ReqEntity addRequestForOrg(Long orgId, ReqEntity reqEntity) throws GlobalException {
+    public ReqEntity addRequestForOrg(Long orgId, ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
         OrgEntity org = orgRepo.findById(orgId)
                 .orElseThrow(() -> new GlobalException("Organization not found with ID: " + orgId, HttpStatus.NOT_FOUND));
         reqEntity.setOrganization(org);
@@ -221,9 +229,12 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         // Set modified user based on existing user or organization
         if (existingEntity.getUser() != null) {
             existingEntity.setModifiedUser(existingEntity.getUser().getUsername());
-        } else {
+        } else if (existingEntity.getOrganization() != null) {
             existingEntity.setModifiedUser(existingEntity.getOrganization().getOrgName());
+        } else {
+            existingEntity.setModifiedUser("Unknown"); // Or handle it appropriately
         }
+
 
         return reqRepo.save(existingEntity);
     }
@@ -234,7 +245,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
      * @param reqEntity The request entity
      * @throws GlobalException if any error occurs while sending notifications
      */
-    public void SendNotification(ReqEntity reqEntity) throws GlobalException {
+    public void SendNotification(ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
         List<DonEntity> nearbyDonors = findNearbyDonors(reqEntity.getLocation());
 
         for (DonEntity donor : nearbyDonors) {

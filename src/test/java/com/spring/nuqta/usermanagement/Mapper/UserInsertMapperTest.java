@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.mapstruct.factory.Mappers;
 
 import java.time.LocalDate;
 
@@ -21,7 +22,7 @@ class UserInsertMapperTest {
 
     @BeforeEach
     void setUp() {
-        userInsertMapper = new UserInsertMapperImpl(); // Assuming MapStruct generates an implementation
+        userInsertMapper = Mappers.getMapper(UserInsertMapper.class); // Assuming MapStruct generates an implementation
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.spring.nuqta.donation.Services;
 
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.spring.nuqta.base.Services.BaseServices;
 import com.spring.nuqta.donation.Dto.AcceptDonationRequestDto;
 import com.spring.nuqta.donation.Entity.DonEntity;
@@ -65,7 +66,6 @@ public class DonServices extends BaseServices<DonEntity, Long> {
      */
     @Cacheable(value = "nearestLocations", key = "#latitude + '-' + #longitude")
     public List<DonEntity> findNearestLocations(double latitude, double longitude) {
-        log.info("Fetching nearest donation locations for coordinates: {}, {}", latitude, longitude);
         return donRepository.findNearestLocationWithin100km(latitude, longitude);
     }
 
@@ -99,14 +99,26 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
         Optional.ofNullable(request.getUser())
                 .map(UserEntity::getFcmToken)
-                .ifPresent(token -> sendNotification(token, message));
+                .ifPresent(token -> {
+                    try {
+                        sendNotification(token, message);
+                    } catch (FirebaseMessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
         Optional.ofNullable(request.getOrganization())
                 .map(OrgEntity::getFcmToken)
-                .ifPresent(token -> sendNotification(token, message));
+                .ifPresent(token -> {
+                    try {
+                        sendNotification(token, message);
+                    } catch (FirebaseMessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
-    private void sendNotification(String fcmToken, String message) {
+    private void sendNotification(String fcmToken, String message) throws FirebaseMessagingException {
         notificationService.sendNotification(new NotificationRequest(fcmToken, "Request Accepted", message));
     }
 }
