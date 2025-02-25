@@ -14,7 +14,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -193,16 +192,16 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      * @return ResponseEntity with success or failure message.
      */
     @CachePut(value = "org", key = "#id")
-    public ResponseEntity<String> updateFcmToken(Long id, String fcmToken) {
+    public String updateFcmToken(Long id, String fcmToken) {
         Optional<OrgEntity> orgOptional = organizationRepository.findById(id);
 
         if (orgOptional.isPresent()) {
             OrgEntity org = orgOptional.get();
             org.setFcmToken(fcmToken);
             organizationRepository.save(org);
-            return ResponseEntity.ok("FCM token updated successfully");
+            return "FCM token updated successfully";
         } else {
-            return ResponseEntity.badRequest().body("Organization not found");
+            return "Organization not found";
         }
     }
 

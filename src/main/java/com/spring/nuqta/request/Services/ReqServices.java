@@ -16,14 +16,17 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Geometry;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Service class to handle CRUD operations for blood donation requests.
@@ -40,6 +43,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     private final OrgRepo orgRepo;
     private final NotificationService notificationService;
     private final DonRepo donRepo;
+    private final CacheManager cacheManager;
 
     /**
      * Retrieves all requests from the database.
@@ -83,16 +87,28 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
      */
     @Override
     @Transactional
-    @CacheEvict(value = "requests", key = "#id")
     public void deleteById(Long id) throws GlobalException {
+        if (!reqRepo.existsById(id)) {
+            throw new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND);
+        }
+        reqRepo.hardDeleteById(id);
+        Objects.requireNonNull(cacheManager.getCache("requests")).clear();
+    }
+
+
+    public void ReCache(Long id) throws GlobalException {
         ReqEntity request = reqRepo.findById(id)
                 .orElseThrow(() -> new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND));
 
-        // Unlink associated user and organization before deletion
         request.setUser(null);
         request.setOrganization(null);
+        reqRepo.save(request);
+        log.warn("Removed relations in ReCache for request ID: " + request.getId());
 
-        reqRepo.deleteById(id);
+        // Manually clear the cache
+        Objects.requireNonNull(cacheManager.getCache("requests")).evict(id);
+        Objects.requireNonNull(cacheManager.getCache("users")).clear();
+        Objects.requireNonNull(cacheManager.getCache("org")).clear();
     }
 
     /**
@@ -105,7 +121,17 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
      * @return The saved request entity
      * @throws GlobalException if the user is not found
      */
-    @CacheEvict(value = "requests", allEntries = true)
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "requests", allEntries = true),
+                    @CacheEvict(value = "users", allEntries = true)
+
+            },
+            put = {
+                    @CachePut(value = "requests", key = "#result.id"),
+
+            } // Caches the new request by ID
+    )
     public ReqEntity addRequest(Long userId, ReqEntity reqEntity) throws GlobalException {
         UserEntity user = userRepo.findById(userId)
                 .orElseThrow(() -> new GlobalException("User not found with ID: " + userId, HttpStatus.NOT_FOUND));
@@ -133,7 +159,16 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
      * @return The saved request entity
      * @throws GlobalException if the organization is not found
      */
-    @CacheEvict(value = "requests", allEntries = true)
+
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "requests", allEntries = true),
+                    @CacheEvict(value = "org", allEntries = true)
+            },
+            put = {
+                    @CachePut(value = "requests", key = "#result.id"),
+            }// Caches the new request by ID
+    )
     public ReqEntity addRequestForOrg(Long orgId, ReqEntity reqEntity) throws GlobalException {
         OrgEntity org = orgRepo.findById(orgId)
                 .orElseThrow(() -> new GlobalException("Organization not found with ID: " + orgId, HttpStatus.NOT_FOUND));

@@ -71,10 +71,18 @@ public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
         donation.setBloodType(donationDto.getBloodType());
         donation.setWeight(donationDto.getWeight());
         donation.setLocation(new GeometryFactory().createPoint(new Coordinate(donationDto.getLatitude(), donationDto.getLongitude())));
+
+        // **Null Check Added**
+        if (donationDto.getUser() != null) {
+            donation.setCreatedUser(donationDto.getUser().getUsername());
+            donation.setModifiedUser(donationDto.getUser().getUsername());
+        } else {
+            donation.setCreatedUser("Unknown"); // Default value or handle accordingly
+            donation.setModifiedUser("Unknown");
+        }
+
         donation.setCreatedDate(LocalDate.now());
-        donation.setCreatedUser(donationDto.getUser().getUsername());
         donation.setModifiedDate(LocalDate.now());
-        donation.setModifiedUser(donationDto.getUser().getUsername());
         return donation;
     }
 
@@ -92,6 +100,7 @@ public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
                     ReqDto dto = new ReqDto();
                     dto.setId(req.getId());
                     dto.setAddress(req.getAddress());
+                    dto.setAmount(req.getAmount());
                     dto.setStatus(req.getStatus());
                     dto.setRequestDate(req.getRequestDate());
                     dto.setPaymentAvailable(req.getPaymentAvailable());
@@ -114,6 +123,7 @@ public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
                 .map(dto -> {
                     ReqEntity entity = new ReqEntity();
                     entity.setId(dto.getId());
+                    entity.setAmount(dto.getAmount());
                     entity.setAddress(dto.getAddress());
                     entity.setStatus(dto.getStatus());
                     entity.setRequestDate(dto.getRequestDate());
@@ -122,7 +132,7 @@ public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
                     entity.setBloodTypeNeeded(dto.getBloodTypeNeeded());
 
                     entity.setLocation(dto.getLongitude() != null && dto.getLatitude() != null
-                            ? new GeometryFactory().createPoint(new Coordinate(dto.getLongitude(), dto.getLatitude()))
+                            ? new GeometryFactory().createPoint(new Coordinate(dto.getLatitude(), dto.getLongitude()))
                             : null);
                     return entity;
                 })

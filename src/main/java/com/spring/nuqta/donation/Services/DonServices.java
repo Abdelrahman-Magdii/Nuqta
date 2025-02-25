@@ -73,7 +73,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
      * Accepts a donation request and updates the cache.
      */
     @Transactional
-    @CacheEvict(value = "donation", key = "#dto.getDonationId()")
+    @CacheEvict(value = "donation", key = "#dto.getDonationId()", allEntries = true)
     public DonEntity acceptDonationRequest(AcceptDonationRequestDto dto) {
         DonEntity donation = donRepository.findById(dto.getDonationId())
                 .orElseThrow(() -> new GlobalException("Donation not found", HttpStatus.NOT_FOUND));

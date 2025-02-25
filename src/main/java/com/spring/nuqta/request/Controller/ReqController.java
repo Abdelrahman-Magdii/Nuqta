@@ -5,6 +5,7 @@ import com.spring.nuqta.request.Dto.ReqDto;
 import com.spring.nuqta.request.Entity.ReqEntity;
 import com.spring.nuqta.request.Mapper.AddReqMapper;
 import com.spring.nuqta.request.Mapper.ReqMapper;
+import com.spring.nuqta.request.Repo.ReqRepo;
 import com.spring.nuqta.request.Services.ReqServices;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,6 +32,7 @@ public class ReqController {
     private final ReqServices reqServices;
     private final ReqMapper reqMapper;
     private final AddReqMapper addReqMapper;
+    private final ReqRepo reqRepo;
 
     @Operation(summary = "Get All Requests", description = "Retrieve a list of all requests")
     @ApiResponse(responseCode = "200", description = "Requests get successfully",
@@ -93,6 +95,7 @@ public class ReqController {
     @Operation(summary = "Delete Request by ID", description = "Delete a request by its ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteReqById(@PathVariable Long id) {
+        reqServices.ReCache(id);
         reqServices.deleteById(id);
         Map<String, String> response = new HashMap<>();
         response.put("message", "Request deleted successfully");

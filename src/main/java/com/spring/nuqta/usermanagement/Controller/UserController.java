@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Tag(name = "User", description = "APIs for managing users")
@@ -108,8 +109,16 @@ public class UserController {
 
     
     @PutMapping("fcmToken/{id}")
-    public ResponseEntity<String> updateFcmToken(@PathVariable Long id, @RequestBody Map<String, String> request) {
+    public ResponseEntity<?> updateFcmToken(@PathVariable Long id, @RequestBody Map<String, String> request) {
         String fcmToken = request.get("fcmToken");
-        return userServices.updateFcmToken(id, fcmToken);
+        String res = userServices.updateFcmToken(id, fcmToken);
+        Map<String, String> response = new HashMap<>();
+        if (Objects.equals(res, "User not found")) {
+            response.put("message", "User not found");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } else {
+            response.put("message", "User updated successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
     }
 }

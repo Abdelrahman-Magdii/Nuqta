@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Tag(name = "Organization", description = "APIs for managing organizations")
 @RequiredArgsConstructor
@@ -105,8 +106,16 @@ public class OrgController {
     }
 
     @PutMapping("fcmToken/{id}")
-    public ResponseEntity<String> updateFcmToken(@PathVariable Long id, @RequestBody Map<String, String> request) {
+    public ResponseEntity<?> updateFcmToken(@PathVariable Long id, @RequestBody Map<String, String> request) {
         String fcmToken = request.get("fcmToken");
-        return orgServices.updateFcmToken(id, fcmToken);
+        String res = orgServices.updateFcmToken(id, fcmToken);
+        Map<String, String> response = new HashMap<>();
+        if (Objects.equals(res, "Organization not found")) {
+            response.put("message", "Organization not found");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } else {
+            response.put("message", "Organization updated successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
     }
 }

@@ -14,7 +14,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -79,7 +78,6 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         if (users.isEmpty()) {
             throw new GlobalException("No users found", HttpStatus.NOT_FOUND);
         }
-        log.info("Finding User Services: *******************");
         return users;
     }
 
@@ -94,12 +92,11 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     @Override
     @Cacheable(value = "users", key = "#id")
     public UserEntity findById(Long id) throws GlobalException {
-        UserEntity user = super.findById(id);
-        if (user == null) {
+        Optional<UserEntity> user = userRepository.findById(id);
+        if (user.isEmpty()) {
             throw new GlobalException("User not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
-        log.info("Finding User Services : *******************");
-        return user;
+        return user.get();
     }
 
     /**
@@ -116,12 +113,24 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         if (entity == null || entity.getId() == null) {
             throw new GlobalException("User ID cannot be null", HttpStatus.BAD_REQUEST);
         }
-        UserEntity existingUser = super.findById(entity.getId());
-        if (existingUser == null) {
+
+        Optional<UserEntity> user = userRepository.findById(entity.getId());
+        if (user.isEmpty()) {
             throw new GlobalException("User not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND);
         }
 
-        if (existingUser.getDonation().getId() == null || !existingUser.getDonation().getId().equals(entity.getDonation().getId())) {
+        UserEntity existingUser = user.get();
+
+        // Check if existingUser.getDonation() is null before accessing getId()
+        if (existingUser.getDonation() == null) {
+            throw new GlobalException("User does not have a donation record", HttpStatus.NOT_FOUND);
+        }
+
+        if (entity.getDonation() == null || entity.getDonation().getId() == null) {
+            throw new GlobalException("Donation ID cannot be null", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!existingUser.getDonation().getId().equals(entity.getDonation().getId())) {
             throw new GlobalException("Donation not found with ID: " + entity.getDonation().getId(), HttpStatus.NOT_FOUND);
         }
 
@@ -133,8 +142,9 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         existingUser.setModifiedDate(LocalDate.now());
         existingUser.setModifiedUser(entity.getUsername());
 
-        return super.update(existingUser);
+        return userRepository.save(existingUser);
     }
+
 
     /**
      * Deletes a user by their ID.
@@ -146,11 +156,11 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     @Override
     @CacheEvict(value = "users", key = "#id")
     public void deleteById(Long id) throws GlobalException {
-        UserEntity user = super.findById(id);
-        if (user == null) {
+        Optional<UserEntity> user = userRepository.findById(id);
+        if (user.isEmpty()) {
             throw new GlobalException("User not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
-        super.deleteById(id);
+        userRepository.deleteById(id);
     }
 
     /**
@@ -227,16 +237,16 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      * @return A ResponseEntity indicating success or failure.
      */
     @CachePut(value = "users", key = "#id")
-    public ResponseEntity<String> updateFcmToken(Long id, String fcmToken) {
-        Optional<UserEntity> userOptional = Optional.ofNullable(super.findById(id));
+    public String updateFcmToken(Long id, String fcmToken) {
+        Optional<UserEntity> userOptional = userRepository.findById(id);
 
         if (userOptional.isPresent()) {
             UserEntity user = userOptional.get();
             user.setFcmToken(fcmToken);
             userRepository.save(user);
-            return ResponseEntity.ok("FCM token updated successfully");
+            return "FCM token updated successfully";
         } else {
-            return ResponseEntity.badRequest().body("User not found");
+            return "User not found";
         }
     }
 }
