@@ -5,6 +5,7 @@ import com.spring.nuqta.donation.Dto.DonDto;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.donation.Mapper.DonMapper;
 import com.spring.nuqta.donation.Services.DonServices;
+import com.spring.nuqta.exception.GlobalException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Tag(name = "Donation", description = "APIs for managing donations")
@@ -76,4 +79,19 @@ public class DonController {
         return ResponseEntity.ok(entity);
     }
 
+    @DeleteMapping("/deleteRequest")
+    public ResponseEntity<Map<String, Object>> deleteAcceptedDonationRequest(@RequestBody AcceptDonationRequestDto dto) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            donServices.deleteAcceptedDonationRequest(dto);
+            response.put("message", "Donation request successfully deleted.");
+            return ResponseEntity.ok(response);
+        } catch (GlobalException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(e.getStatus()).body(response);
+        } catch (Exception e) {
+            response.put("message", "An error occurred: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }

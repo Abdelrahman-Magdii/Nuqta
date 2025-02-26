@@ -15,12 +15,13 @@ public interface OrgRepo extends BaseRepo<OrgEntity, Long> {
 
     Optional<OrgEntity> findByEmail(String email);
 
-    Optional<OrgEntity> findByLicenseNumber(String licenseNumber);
-
     Optional<OrgEntity> findByLicenseNumberOrEmail(@NotBlank(message = "License number cannot be blank") @Size(max = 50, message = "License number cannot exceed 50 characters") String licenseNumber, @NotBlank(message = "Email cannot be blank") @Email(message = "Email should be valid") String email);
 
     Optional<OrgAuthProjection> findOrgAuthProjectionByEmail(String email);
 
     Optional<OrgAuthProjection> findOrgAuthProjectionByLicenseNumber(String licenseNumber);
+
+    boolean existsByEmail(String mail);
+
 
 }

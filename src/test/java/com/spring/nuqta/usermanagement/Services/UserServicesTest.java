@@ -331,4 +331,138 @@ class UserServicesTest {
         assertEquals("User not found", userServices.updateFcmToken(1L, "newFcmToken"));
     }
 
+
+    @Test
+    void testValidateUserFields_AllValidFields_NoException() {
+        UserEntity user = new UserEntity();
+        user.setUsername("testuser");
+        user.setPassword("password123");
+        user.setEmail("test@example.com");
+        user.setPhoneNumber("1234567890");
+        user.setScope(Scope.USER);
+
+        DonEntity donation = new DonEntity();
+        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        user.setDonation(donation);
+
+        assertDoesNotThrow(() -> UserServices.validateUserFields(user));
+    }
+
+    @Test
+    void testValidateUserFields_NullUsername_ThrowsException() {
+        UserEntity user = new UserEntity();
+        user.setPassword("password123");
+        user.setEmail("test@example.com");
+        user.setPhoneNumber("1234567890");
+        user.setScope(Scope.USER);
+
+        DonEntity donation = new DonEntity();
+        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        user.setDonation(donation);
+
+        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        assertEquals("Username is required.", ex.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+    }
+
+    @Test
+    void testValidateUserFields_NullPassword_ThrowsException() {
+        UserEntity user = new UserEntity();
+        user.setUsername("testuser");
+        user.setEmail("test@example.com");
+        user.setPhoneNumber("1234567890");
+        user.setScope(Scope.USER);
+
+        DonEntity donation = new DonEntity();
+        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        user.setDonation(donation);
+
+        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        assertEquals("Password is required.", ex.getMessage());
+    }
+
+    @Test
+    void testValidateUserFields_NullEmail_ThrowsException() {
+        UserEntity user = new UserEntity();
+        user.setUsername("testuser");
+        user.setPassword("password123");
+        user.setPhoneNumber("1234567890");
+        user.setScope(Scope.USER);
+
+        DonEntity donation = new DonEntity();
+        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        user.setDonation(donation);
+
+        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        assertEquals("Email is required.", ex.getMessage());
+    }
+
+    @Test
+    void testValidateUserFields_InvalidScope_ThrowsException() {
+        UserEntity user = new UserEntity();
+        user.setUsername("testuser");
+        user.setPassword("password123");
+        user.setEmail("test@example.com");
+        user.setPhoneNumber("1234567890");
+        user.setScope(Scope.ORGANIZATION);  // Invalid scope
+
+        DonEntity donation = new DonEntity();
+        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        user.setDonation(donation);
+
+        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        assertEquals("Invalid scope. Scope must be 'USER'.", ex.getMessage());
+    }
+
+    @Test
+    void testValidateUserFields_NullLocation_ThrowsException() {
+        UserEntity user = new UserEntity();
+        user.setUsername("testuser");
+        user.setPassword("password123");
+        user.setEmail("test@example.com");
+        user.setPhoneNumber("1234567890");
+        user.setScope(Scope.USER);
+
+        DonEntity donation = new DonEntity();
+        user.setDonation(donation); // No location set
+
+        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        assertEquals("Location is required.", ex.getMessage());
+    }
+
+    @Test
+    void testValidateUserFields_NullPhoneNumber_ThrowsException() {
+        UserEntity user = new UserEntity();
+        user.setUsername("testuser");
+        user.setPassword("password123");
+        user.setEmail("test@example.com");
+        user.setScope(Scope.USER);  // Valid scope
+
+        DonEntity donation = new DonEntity();
+        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        user.setDonation(donation);
+
+        // phoneNumber is null
+        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        assertEquals("Mobile phone number is required.", ex.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+    }
+
+    @Test
+    void testValidateUserFields_NullScope_ThrowsException() {
+        UserEntity user = new UserEntity();
+        user.setUsername("testuser");
+        user.setPassword("password123");
+        user.setEmail("test@example.com");
+        user.setPhoneNumber("1234567890"); // Valid phone number
+
+        DonEntity donation = new DonEntity();
+        donation.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        user.setDonation(donation);
+
+        // scope is null
+        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        assertEquals("Scope is required.", ex.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+    }
 }

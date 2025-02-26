@@ -5,15 +5,20 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import com.spring.nuqta.notifications.Dto.NotificationRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class NotificationService {
 
-    private FirebaseMessaging firebaseMessaging;
+    private final FirebaseMessaging firebaseMessaging;
 
+    public NotificationService(FirebaseMessaging firebaseMessaging) {
+        this.firebaseMessaging = firebaseMessaging;
+    }
 
-    public void sendNotification(NotificationRequest request) {
+    public String sendNotification(NotificationRequest request) {
         // Validate input
         if (request.getTitle() == null || request.getTitle().isEmpty()) {
             throw new IllegalArgumentException("Title cannot be empty");
@@ -35,9 +40,12 @@ public class NotificationService {
                 .build();
 
         try {
-            firebaseMessaging.send(message);
+            String messageId = firebaseMessaging.send(message);
+            return messageId;
         } catch (FirebaseMessagingException e) {
+            log.error("Failed to send notification" + e.getMessage());
             throw new RuntimeException("Failed to send notification", e);
+
         }
     }
 }

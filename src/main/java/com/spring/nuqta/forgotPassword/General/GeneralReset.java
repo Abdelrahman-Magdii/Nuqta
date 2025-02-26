@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Slf4j
@@ -46,47 +47,28 @@ public class GeneralReset {
     public String sendOtpEmail(String email) {
 
         // Find user or organization by email
-        Optional<UserEntity> user = userRepo.findByEmail(email);
-        Optional<OrgEntity> organization = organizationRepo.findByEmail(email);
+        Optional<UserAuthProjection> user = userRepo.findUserAuthProjectionByEmail(email);
+        Optional<OrgAuthProjection> organization = organizationRepo.findOrgAuthProjectionByEmail(email);
 
         if (user.isEmpty() && organization.isEmpty()) {
             return "Email not found. Please check the email address and try again.";
         }
 
-
-        if ((user.isPresent() && user.get().isEnabled()) || (organization.isPresent() && organization.get().isEnabled())) {
-
-            // Retrieve or create an OTP entity
-            ResetPasswordEntity resetPasswordEntity = null;
-            if (organization.isPresent()) {
-                resetPasswordEntity = resetPasswordRepo.findByOrganization(organization.get());
-            } else {
-                resetPasswordEntity = resetPasswordRepo.findByUser(user.get());
-            }
-
-            // If no existing OTP entity found, create a new one
-            if (resetPasswordEntity == null) {
-                resetPasswordEntity = new ResetPasswordEntity();
-                if (organization.isPresent()) {
-                    resetPasswordEntity.setOrganization(organization.get());
-                } else {
-                    resetPasswordEntity.setUser(user.get());
-                }
-            }
+        if ((user.isPresent() && user.get().enabled()) || (organization.isPresent() && organization.get().enabled())) {
+            ResetPasswordEntity resetPasswordEntity = retrieveOrCreateOtpEntity(user, organization);
 
             // Generate OTP and store it
             String otp = resetPasswordService.generateOtp();
             resetPasswordEntity.setOtp(otp);
-            resetPasswordEntity.setExpiredAt(LocalDateTime.now().plusMinutes(5)); // Reasonable expiry time
+            resetPasswordEntity.setExpiredAt(LocalDateTime.now().plusMinutes(5));
 
             resetPasswordRepo.save(resetPasswordEntity);
-
 
             // Prepare and send OTP email
             ForgotPasswordWithOtp context = new ForgotPasswordWithOtp();
             if (user.isPresent()) {
                 context.init(user.get());
-            } else {
+            } else if (organization.isPresent()) {
                 context.init(organization.get());
             }
             context.buildVerificationOtp(otp);
@@ -98,12 +80,35 @@ public class GeneralReset {
                 return "Error sending OTP email. Please try again later.";
             }
         } else {
-            return "Email not verify. Please complete sign in.";
+            log.warn("Email not verified: {}", email);
+            return "Email not verified. Please complete sign-in.";
         }
-
-
     }
 
+    public ResetPasswordEntity retrieveOrCreateOtpEntity(Optional<UserAuthProjection> userOpt, Optional<OrgAuthProjection> orgOpt) {
+        String email = orgOpt.map(OrgAuthProjection::email)
+                .or(() -> userOpt.map(UserAuthProjection::email))
+                .orElseThrow(() -> new NoSuchElementException("No user or organization found for email: null"));
+
+        ResetPasswordEntity resetPasswordEntity = Optional.ofNullable(resetPasswordRepo.findByUser_Email(email))
+                .orElseGet(() -> resetPasswordRepo.findByOrganization_Email(email));
+
+        if (resetPasswordEntity == null) {
+            resetPasswordEntity = new ResetPasswordEntity();
+            if (orgOpt.isPresent()) {
+                OrgEntity org = organizationRepo.findByEmail(email)
+                        .orElseThrow(() -> new NoSuchElementException("Organization not found for email: " + email));
+                resetPasswordEntity.setOrganization(org);
+            } else if (userOpt.isPresent()) {
+                UserEntity user = userRepo.findByEmail(email)
+                        .orElseThrow(() -> new NoSuchElementException("User not found for email: " + email));
+                resetPasswordEntity.setUser(user);
+            } else {
+                throw new NoSuchElementException("No user or organization found for email: " + email);
+            }
+        }
+        return resetPasswordEntity;
+    }
 
     public boolean resetPassword(String mail, String otp, String newPassword) {
 
@@ -118,9 +123,9 @@ public class GeneralReset {
 
             if (verify.getUser() != null) {
                 Optional<UserEntity> userOpt = userRepo.findById(verify.getUser().getId());
-                Optional<UserAuthProjection> entity = userRepo.findUserAuthProjectionByEmail(mail);
+                boolean entity = userRepo.existsByEmail(mail);
 
-                if (userOpt.isPresent() && entity.isPresent()) {
+                if (userOpt.isPresent() && entity) {
                     UserEntity user = userOpt.get();
                     user.setPassword(passwordEncoder.encode(newPassword));
                     userRepo.save(user); // Save user (modify if needed)
@@ -129,9 +134,9 @@ public class GeneralReset {
                 }
             } else if (verify.getOrganization() != null) {
                 Optional<OrgEntity> orgOpt = organizationRepo.findById(verify.getOrganization().getId());
-                Optional<OrgAuthProjection> entity = organizationRepo.findOrgAuthProjectionByEmail(mail);
+                boolean entity = organizationRepo.existsByEmail(mail);
 
-                if (orgOpt.isPresent() && entity.isPresent()) {
+                if (orgOpt.isPresent() && entity) {
                     OrgEntity org = orgOpt.get();
                     org.setPassword(passwordEncoder.encode(newPassword));
                     organizationRepo.save(org); // Save organization (modify if needed)
@@ -143,5 +148,4 @@ public class GeneralReset {
         }
         return false; // Token not found or user does not exist
     }
-
 }

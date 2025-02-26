@@ -15,6 +15,8 @@ import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -55,8 +57,7 @@ public class DonEntity extends BaseEntity<Long> {
     @OneToOne(mappedBy = "donation", cascade = CascadeType.ALL)
     private UserEntity user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "request_id", referencedColumnName = "id")
-    private ReqEntity request;
+    @ManyToMany(mappedBy = "donations", fetch = FetchType.EAGER)
+    private Set<ReqEntity> requests = new HashSet<>();
 
 }

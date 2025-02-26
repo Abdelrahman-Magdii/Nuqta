@@ -18,6 +18,7 @@ import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -65,6 +66,12 @@ public class ReqEntity extends BaseEntity<Long> {
     @JoinColumn(name = "org_id", referencedColumnName = "id")
     private OrgEntity organization;
 
-    @OneToMany(mappedBy = "request", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private Set<DonEntity> donation;
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "request_donation",
+            joinColumns = @JoinColumn(name = "request_id"),
+            inverseJoinColumns = @JoinColumn(name = "donation_id")
+    )
+    private Set<DonEntity> donations = new HashSet<>();
+
 }

@@ -11,9 +11,6 @@ import java.util.Optional;
 @Repository
 public interface UserRepo extends BaseRepo<UserEntity, Long> {
 
-
-    Optional<UserEntity> findByUsername(String username);
-
     Optional<UserEntity> findByEmail(String email);
 
     Optional<UserEntity> findByUsernameOrEmail(String username, String email);
@@ -21,4 +18,6 @@ public interface UserRepo extends BaseRepo<UserEntity, Long> {
     Optional<UserAuthProjection> findUserAuthProjectionByUsername(String username);
 
     Optional<UserAuthProjection> findUserAuthProjectionByEmail(String email);
+
+    boolean existsByEmail(String email);
 }

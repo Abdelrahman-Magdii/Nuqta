@@ -73,7 +73,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
      * Accepts a donation request and updates the cache.
      */
     @Transactional
-    @CacheEvict(value = "donation", key = "#dto.getDonationId()", allEntries = true)
+    @CacheEvict(value = "donation", key = "#dto.donationId", allEntries = true)
     public DonEntity acceptDonationRequest(AcceptDonationRequestDto dto) {
         DonEntity donation = donRepository.findById(dto.getDonationId())
                 .orElseThrow(() -> new GlobalException("Donation not found", HttpStatus.NOT_FOUND));
@@ -81,13 +81,45 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         ReqEntity request = reqRepository.findById(dto.getRequestId())
                 .orElseThrow(() -> new GlobalException("Request not found", HttpStatus.NOT_FOUND));
 
-        donation.setRequest(request);
+        if (donation.getRequests().contains(request) || request.getDonations().contains(donation)) {
+            throw new GlobalException("Request already accept", HttpStatus.CONFLICT);
+        }
+
+        donation.getRequests().add(request);
+        request.getDonations().add(donation);
+
+        // Save both entities to persist the relationship
+        reqRepository.save(request);
         DonEntity entity = donRepository.save(donation);
 
-        sendNotificationIfApplicable(donation, request);
+//        sendNotificationIfApplicable(donation, request);
 
         log.info("Donation ID {} accepted for Request ID {}", dto.getDonationId(), dto.getRequestId());
         return entity;
+    }
+
+    @Transactional
+    @CacheEvict(value = "donation", key = "#dto.donationId", allEntries = true)
+    public void deleteAcceptedDonationRequest(AcceptDonationRequestDto dto) {
+        DonEntity donation = donRepository.findById(dto.getDonationId())
+                .orElseThrow(() -> new GlobalException("Donation not found", HttpStatus.NOT_FOUND));
+
+        ReqEntity request = reqRepository.findById(dto.getRequestId())
+                .orElseThrow(() -> new GlobalException("Request not found", HttpStatus.NOT_FOUND));
+
+        if (!donation.getRequests().contains(request) || !request.getDonations().contains(donation)) {
+            throw new GlobalException("Request already deleted", HttpStatus.CONFLICT);
+        }
+
+        // Remove the relationship
+        donation.getRequests().remove(request);
+        request.getDonations().remove(donation);
+
+        // Save both entities to persist the relationship removal
+        reqRepository.save(request);
+        donRepository.save(donation);
+
+        log.info("Donation ID {} removed for Request ID {}", dto.getDonationId(), dto.getRequestId());
     }
 
     /**

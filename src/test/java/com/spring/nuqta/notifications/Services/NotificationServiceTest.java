@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.FileInputStream;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -116,4 +116,62 @@ class NotificationServiceTest {
         assertThrows(IllegalArgumentException.class, () -> notificationService.sendNotification(request));
         verify(firebaseMessaging, never()).send(any(Message.class));
     }
+
+
+    // ✅ Test: Title validation
+    @Test
+    void testSendNotification_TitleIsEmpty_ShouldThrowException() {
+        NotificationRequest request = new NotificationRequest("", "Message", "token");
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            notificationService.sendNotification(request);
+        });
+
+        assertEquals("FCM token cannot be empty", thrown.getMessage());
+    }
+
+    // ✅ Test: Message validation
+    @Test
+    void testSendNotification_MessageIsEmpty_ShouldThrowException() {
+        NotificationRequest request = new NotificationRequest("Title", "", "token");
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            notificationService.sendNotification(request);
+        });
+
+        assertEquals("Title cannot be empty", thrown.getMessage());
+    }
+
+    // ✅ Test: FCM token validation
+    @Test
+    void testSendNotification_TokenIsEmpty_ShouldThrowException() {
+        NotificationRequest request = new NotificationRequest("Title", "Message", "");
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            notificationService.sendNotification(request);
+        });
+
+        assertEquals("Message cannot be empty", thrown.getMessage());
+    }
+
+
+    // ✅ Test: Successful notification sending
+    @Test
+    void testSendNotification_SuccessfulSend_ShouldReturnMessageString() throws FirebaseMessagingException {
+        // Mock Firebase response
+        String mockMessageId = "mock-message-id";
+        when(firebaseMessaging.send(any())).thenReturn(mockMessageId);
+
+        // Call method under test
+        String response = notificationService.sendNotification(notificationRequest);
+
+        // Log the response to debug
+        System.out.println("Response from sendNotification: " + response);
+
+        // Check if response is not null and matches the expected mock message ID
+        assertNotNull(response, "Response should not be null");
+        assertEquals(mockMessageId, response, "Response should match the mocked message ID");
+
+        // Verify that send() was called exactly once
+        verify(firebaseMessaging, times(1)).send(any());
+    }
+
+
 }

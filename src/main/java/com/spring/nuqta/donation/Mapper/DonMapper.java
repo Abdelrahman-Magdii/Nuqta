@@ -24,12 +24,12 @@ public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
     @Mapping(target = "longitude", expression = "java(entity.getLocation() != null ? entity.getLocation().getCoordinate().x : null)")
     @Mapping(target = "latitude", expression = "java(entity.getLocation() != null ? entity.getLocation().getCoordinate().y : null)")
     @Mapping(target = "user", expression = "java(mapUserEntityToDto(entity.getUser()))")
-    @Mapping(target = "request", source = "request", qualifiedByName = "mapReqEntityToDto")
+    @Mapping(target = "requests", source = "requests", qualifiedByName = "mapReqEntityToDto")
     DonDto map(DonEntity entity);
 
     @Override
     @Mapping(target = "location", expression = "java(dto.getLongitude() != null && dto.getLatitude() != null ? createGeometry(dto.getLongitude(), dto.getLatitude()) : null)")
-    @Mapping(target = "request", source = "request", qualifiedByName = "mapReqDtoToEntity")
+    @Mapping(target = "requests", source = "requests", qualifiedByName = "mapReqDtoToEntity")
     DonEntity unMap(DonDto dto);
 
     @Override
@@ -39,8 +39,7 @@ public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
         if (x == null || y == null) {
             return null;
         }
-        GeometryFactory geometryFactory = new GeometryFactory();
-        return geometryFactory.createPoint(new Coordinate(x, y));
+        return new GeometryFactory().createPoint(new Coordinate(x, y));
     }
 
     /// **************** Map Users *************************//
@@ -49,12 +48,17 @@ public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
             return null;
         }
         UserDto userDto = new UserDto();
-        userDto.setId(userEntity.getId()); // Map only essential fields to avoid recursion
+        userDto.setId(userEntity.getId());
         userDto.setUsername(userEntity.getUsername());
         userDto.setEmail(userEntity.getEmail());
-        userDto.setAge(LocalDate.now().getYear() - userEntity.getBirthDate().getYear());
         userDto.setPhoneNumber(userEntity.getPhoneNumber());
         userDto.setScope(userEntity.getScope());
+
+        // Avoid NullPointerException when calculating age
+        if (userEntity.getBirthDate() != null) {
+            userDto.setAge(LocalDate.now().getYear() - userEntity.getBirthDate().getYear());
+        }
+
         return userDto;
     }
 
@@ -67,15 +71,18 @@ public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
         ReqDto reqDto = new ReqDto();
         reqDto.setId(reqEntity.getId());
         reqDto.setAddress(reqEntity.getAddress());
-        reqDto.setLatitude(reqEntity.getLocation().getCoordinate().x);
-        reqDto.setLongitude(reqEntity.getLocation().getCoordinate().y);
         reqDto.setStatus(reqEntity.getStatus());
         reqDto.setAmount(reqEntity.getAmount());
         reqDto.setRequestDate(reqEntity.getRequestDate());
         reqDto.setBloodTypeNeeded(reqEntity.getBloodTypeNeeded());
         reqDto.setPaymentAvailable(reqEntity.getPaymentAvailable());
         reqDto.setUrgencyLevel(reqEntity.getUrgencyLevel());
-//        reqDto.setDonation(reqEntity.getDonation());
+
+        if (reqEntity.getLocation() != null) {
+            reqDto.setLongitude(reqEntity.getLocation().getCoordinate().x);
+            reqDto.setLatitude(reqEntity.getLocation().getCoordinate().y);
+        }
+
         return reqDto;
     }
 
@@ -87,15 +94,17 @@ public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
         ReqEntity req = new ReqEntity();
         req.setId(reqDto.getId());
         req.setAddress(reqDto.getAddress());
-        req.setLocation(new GeometryFactory().createPoint(new Coordinate(reqDto.getLongitude(), reqDto.getLatitude())));
         req.setStatus(reqDto.getStatus());
         req.setAmount(reqDto.getAmount());
         req.setRequestDate(reqDto.getRequestDate());
         req.setBloodTypeNeeded(reqDto.getBloodTypeNeeded());
         req.setPaymentAvailable(reqDto.getPaymentAvailable());
         req.setUrgencyLevel(reqDto.getUrgencyLevel());
+
+        if (reqDto.getLongitude() != null && reqDto.getLatitude() != null) {
+            req.setLocation(new GeometryFactory().createPoint(new Coordinate(reqDto.getLongitude(), reqDto.getLatitude())));
+        }
+
         return req;
     }
-
-
 }

@@ -73,7 +73,7 @@ class ReqMapperTest {
 
         Set<DonEntity> donations = new HashSet<>();
         donations.add(donEntity);
-        reqEntity.setDonation(donations);
+        reqEntity.setDonations(donations);
 
         // Act
         ReqDto reqDto = reqMapper.map(reqEntity);
@@ -101,11 +101,11 @@ class ReqMapperTest {
         assertEquals(30.0, reqDto.getOrganization().getLongitude());
         assertEquals(40.0, reqDto.getOrganization().getLatitude());
 
-        assertNotNull(reqDto.getDonation());
-        assertEquals(1, reqDto.getDonation().size()); // Check the size of the Set
+        assertNotNull(reqDto.getDonations());
+        assertEquals(1, reqDto.getDonations().size()); // Check the size of the Set
 
         // Access the first element in the Set
-        DonDto donDto = reqDto.getDonation().iterator().next();
+        DonDto donDto = reqDto.getDonations().iterator().next();
         assertEquals(1L, donDto.getId());
         assertEquals(LocalDate.now(), donDto.getDonationDate());
         assertEquals(LocalDate.now().minusMonths(6), donDto.getLastDonation());
@@ -159,7 +159,7 @@ class ReqMapperTest {
 
         Set<DonDto> donations = new HashSet<>();
         donations.add(donDto);
-        reqDto.setDonation(donations);
+        reqDto.setDonations(donations);
 
         // Act
         ReqEntity reqEntity = reqMapper.unMap(reqDto);
@@ -188,11 +188,11 @@ class ReqMapperTest {
         assertEquals(30.0, reqEntity.getOrganization().getLocation().getCoordinate().x);
         assertEquals(40.0, reqEntity.getOrganization().getLocation().getCoordinate().y);
 
-        assertNotNull(reqEntity.getDonation());
-        assertEquals(1, reqEntity.getDonation().size()); // Check the size of the Set
+        assertNotNull(reqEntity.getDonations());
+        assertEquals(1, reqEntity.getDonations().size()); // Check the size of the Set
 
         // Access the first element in the Set
-        DonEntity donEntity = reqEntity.getDonation().iterator().next();
+        DonEntity donEntity = reqEntity.getDonations().iterator().next();
         assertEquals(1L, donEntity.getId());
         assertEquals(LocalDate.now(), donEntity.getDonationDate());
         assertEquals(LocalDate.now().minusMonths(6), donEntity.getLastDonation());

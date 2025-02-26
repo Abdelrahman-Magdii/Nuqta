@@ -30,14 +30,14 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
     @Mapping(target = "latitude", expression = "java(entity.getLocation() != null ? entity.getLocation().getCoordinate().y : null)")
     @Mapping(target = "user", source = "user", qualifiedByName = "mapUserEntityToDto")
     @Mapping(target = "organization", source = "organization", qualifiedByName = "mapOrganizationEntityToDto")
-    @Mapping(target = "donation", source = "donation", qualifiedByName = "mapDonationEntityToDto")
+    @Mapping(target = "donations", source = "donations", qualifiedByName = "mapDonationEntityToDto")
     ReqDto map(ReqEntity entity);
 
     @Override
     @Mapping(target = "location", expression = "java(dto.getLongitude() != null && dto.getLatitude() != null ? createGeometry(dto.getLongitude(), dto.getLatitude()) : null)")
     @Mapping(target = "user", source = "user", qualifiedByName = "mapUserDtoToEntity")
     @Mapping(target = "organization", source = "organization", qualifiedByName = "mapOrgDtoToEntity")
-    @Mapping(target = "donation", source = "donation", qualifiedByName = "mapDonationDtoToEntity")
+    @Mapping(target = "donations", source = "donations", qualifiedByName = "mapDonationDtoToEntity")
     ReqEntity unMap(ReqDto dto);
 
     @Override
@@ -91,11 +91,6 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
             entity.setBirthDate(birthDate);
         }
 
-//        // Map nested objects (if needed)
-//        if (userDto.getDonation() != null) {
-//            entity.setDonation(mapDonationDtoToEntity(userDto.getDonation()));
-//        }
-
         return entity;
     }
 
@@ -112,8 +107,8 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         dto.setOrgName(orgEntity.getOrgName());
         dto.setEmail(orgEntity.getEmail());
         dto.setPhoneNumber(orgEntity.getPhoneNumber());
-        dto.setLongitude(orgEntity.getLocation().getCoordinate().x);
-        dto.setLatitude(orgEntity.getLocation().getCoordinate().y);
+        dto.setLongitude(orgEntity.getLocation() != null ? orgEntity.getLocation().getCoordinate().x : null);
+        dto.setLatitude(orgEntity.getLocation() != null ? orgEntity.getLocation().getCoordinate().y : null);
         return dto;
     }
 
@@ -150,8 +145,9 @@ public interface ReqMapper extends BaseMapper<ReqEntity, ReqDto> {
         dto.setBloodType(donEntity.getBloodType());
         dto.setStatus(donEntity.getStatus());
         dto.setPaymentOffered(donEntity.getPaymentOffered());
-        dto.setLongitude(donEntity.getLocation().getCoordinate().x);
-        dto.setLatitude(donEntity.getLocation().getCoordinate().y);
+        dto.setLongitude(donEntity.getLocation() != null ? donEntity.getLocation().getCoordinate().x : null);
+        dto.setLatitude(donEntity.getLocation() != null ? donEntity.getLocation().getCoordinate().y : null);
+
         return dto;
     }
 

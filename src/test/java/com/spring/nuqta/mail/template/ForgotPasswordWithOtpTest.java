@@ -1,56 +1,71 @@
 package com.spring.nuqta.mail.template;
 
-import com.spring.nuqta.organization.Entity.OrgEntity;
-import com.spring.nuqta.usermanagement.Entity.UserEntity;
+import com.spring.nuqta.organization.Projection.OrgAuthProjection;
+import com.spring.nuqta.usermanagement.Projection.UserAuthProjection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-class ForgotPasswordWithOtpTest {
+public class ForgotPasswordWithOtpTest {
 
-    private ForgotPasswordWithOtp emailContext;
+    @InjectMocks
+    private ForgotPasswordWithOtp forgotPasswordWithOtp;
 
     @BeforeEach
-    void setUp() {
-        emailContext = new ForgotPasswordWithOtp();
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testInitWithUserEntity() {
-        UserEntity user = new UserEntity();
-        user.setUsername("testUser");
-        user.setEmail("test@example.com");
+    public void testInitWithUserAuthProjection() {
+        // Arrange
+        UserAuthProjection user = mock(UserAuthProjection.class);
+        when(user.username()).thenReturn("testUser");
+        when(user.email()).thenReturn("testUser@example.com");
 
-        emailContext.init(user);
+        // Act
+        forgotPasswordWithOtp.init(user);
 
-        assertEquals("testUser", emailContext.getContext().get("User"));
-        assertEquals("test@example.com", emailContext.getTo());
-        assertEquals("mailForgotPassword", emailContext.getTemplateLocation());
-        assertEquals("Password Reset", emailContext.getSubject());
-        assertEquals("no-reply@Nuqta.com", emailContext.getFrom());
+        // Assert
+        assertEquals("testUser", forgotPasswordWithOtp.getContext().get("User"));
+        assertEquals("testUser@example.com", forgotPasswordWithOtp.getTo());
+        assertEquals("mailForgotPassword", forgotPasswordWithOtp.getTemplateLocation());
+        assertEquals("Password Reset", forgotPasswordWithOtp.getSubject());
+        assertEquals("no-reply@Nuqta.com", forgotPasswordWithOtp.getFrom());
     }
 
     @Test
-    void testInitWithOrgEntity() {
-        OrgEntity org = new OrgEntity();
-        org.setOrgName("TestOrg");
-        org.setEmail("org@example.com");
+    public void testInitWithOrgAuthProjection() {
+        // Arrange
+        OrgAuthProjection org = mock(OrgAuthProjection.class);
+        when(org.orgName()).thenReturn("testOrg");
+        when(org.email()).thenReturn("testOrg@example.com");
 
-        emailContext.init(org);
+        // Act
+        forgotPasswordWithOtp.init(org);
 
-        assertEquals("TestOrg", emailContext.getContext().get("User"));
-        assertEquals("org@example.com", emailContext.getTo());
-        assertEquals("mailForgotPassword", emailContext.getTemplateLocation());
-        assertEquals("Password Reset", emailContext.getSubject());
-        assertEquals("no-reply@Nuqta.com", emailContext.getFrom());
+        // Assert
+        assertEquals("testOrg", forgotPasswordWithOtp.getContext().get("User"));
+        assertEquals("testOrg@example.com", forgotPasswordWithOtp.getTo());
+        assertEquals("mailForgotPassword", forgotPasswordWithOtp.getTemplateLocation());
+        assertEquals("Password Reset", forgotPasswordWithOtp.getSubject());
+        assertEquals("no-reply@Nuqta.com", forgotPasswordWithOtp.getFrom());
     }
 
     @Test
-    void testBuildVerificationOtp() {
-        String otp = "654321";
-        emailContext.buildVerificationOtp(otp);
+    public void testBuildVerificationOtp() {
+        // Arrange
+        String otp = "123456";
 
-        assertEquals("654321", emailContext.getContext().get("otp"));
+        // Act
+        forgotPasswordWithOtp.buildVerificationOtp(otp);
+
+        // Assert
+        assertEquals("123456", forgotPasswordWithOtp.getContext().get("otp"));
     }
 }

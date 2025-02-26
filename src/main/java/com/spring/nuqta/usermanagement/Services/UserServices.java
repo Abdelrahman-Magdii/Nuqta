@@ -38,7 +38,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      *
      * @param params The UserEntity to validate.
      */
-    private static void validateUserFields(UserEntity params) {
+    static void validateUserFields(UserEntity params) {
         if (Objects.isNull(params.getUsername())) {
             throw new GlobalException("Username is required.", HttpStatus.BAD_REQUEST);
         }

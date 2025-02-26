@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Schema(name = "Donation Entity", description = "Represents a donation request or record with details about the blood type, donation status, location, and other attributes.")
 @Getter
@@ -53,5 +54,5 @@ public class DonDto extends BaseDto<Long> {
     private UserDto user;
 
     @Schema(description = "All Requests that donation Accepts", example = "[]")
-    private ReqDto request;
+    private Set<ReqDto> requests;
 }

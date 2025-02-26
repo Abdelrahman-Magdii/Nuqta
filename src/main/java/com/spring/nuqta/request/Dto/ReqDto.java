@@ -60,6 +60,6 @@ public class ReqDto extends BaseDto<Long> {
     private OrgDto organization;
 
     @Schema(description = "All Donation that accept request", example = "[]")
-    private Set<DonDto> donation;
+    private Set<DonDto> donations;
 
 }

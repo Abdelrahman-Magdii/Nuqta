@@ -34,6 +34,6 @@ public class VerificationToken implements Serializable {
 
 
     public boolean isExpired() {
-        return getExpiredAt().isBefore(LocalDateTime.now());
+        return expiredAt != null && expiredAt.isBefore(LocalDateTime.now());
     }
 }
