@@ -11,7 +11,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 
-@Schema(name = "Request Entity")
+@Schema(name = "Add Request DTO")
 @Getter
 @Setter
 public class AddReqDto extends BaseDto<Long> {
@@ -40,14 +40,12 @@ public class AddReqDto extends BaseDto<Long> {
     @JsonProperty("payment_available")
     private Boolean paymentAvailable;
 
-    @Schema(description = "Physical location of the user", example = "456 Elm Street, Springfield")
-    private String address;
+    @Schema(description = "City where the request is made", example = "New York")
+    @JsonProperty("city")
+    private String city;
 
-    @Schema(description = "X coordinate of the request's location", example = "40.7128")
-    private Double longitude;
-
-    @Schema(description = "Y coordinate of the request's location", example = "74.0060")
-    private Double latitude;
-
+    @Schema(description = "Conservatism level of the request", example = "LOW")
+    @JsonProperty("conservatism")
+    private String conservatism;
 
 }

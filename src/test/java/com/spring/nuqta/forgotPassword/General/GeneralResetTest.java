@@ -176,7 +176,8 @@ public class GeneralResetTest {
 
     @Test
     void testRetrieveOrCreateOtpEntity_NoUserOrOrganizationFound() {
-        assertThrows(NoSuchElementException.class, () -> generalReset.retrieveOrCreateOtpEntity(Optional.empty(), Optional.empty()));
+        assertThrows(NoSuchElementException.class, () ->
+                generalReset.retrieveOrCreateOtpEntity(Optional.empty(), Optional.empty()));
     }
 
     @Test
@@ -229,5 +230,39 @@ public class GeneralResetTest {
         boolean result = generalReset.resetPassword(email, otp, newPassword);
 
         assertFalse(result);
+    }
+
+    @Test
+    void testSendOtpEmail_OrganizationSuccess() throws MessagingException {
+        // Mock organization projection
+        OrgAuthProjection organization = mock(OrgAuthProjection.class);
+        when(organization.enabled()).thenReturn(true);
+        when(organization.email()).thenReturn(email);
+        when(organizationRepo.findOrgAuthProjectionByEmail(email)).thenReturn(Optional.of(organization));
+
+        // Mock organization entity
+        OrgEntity orgEntity = new OrgEntity();
+        when(organizationRepo.findByEmail(email)).thenReturn(Optional.of(orgEntity));
+
+        // Mock OTP generation and saving
+        ResetPasswordEntity resetPasswordEntity = new ResetPasswordEntity();
+        when(resetPasswordService.generateOtp()).thenReturn(otp);
+        when(resetPasswordRepo.save(any(ResetPasswordEntity.class))).thenReturn(resetPasswordEntity);
+
+        // Create the expected email context
+        ForgotPasswordWithOtp expectedContext = new ForgotPasswordWithOtp();
+        expectedContext.init(organization);  // Ensuring this doesn't throw an exception
+        expectedContext.buildVerificationOtp(otp);
+
+        // Mock email sending
+        doNothing().when(emailService).sendMail(expectedContext);
+
+        // Call the method
+        String result = generalReset.sendOtpEmail(email);
+
+        // Assertions
+        assertEquals("Success sent OTP to your email.", result);
+        verify(resetPasswordRepo, times(1)).save(any(ResetPasswordEntity.class));
+        verify(emailService, times(1)).sendMail(expectedContext);
     }
 }

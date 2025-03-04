@@ -55,7 +55,7 @@ public class UserEntity extends BaseEntity<Long> {
     private String fcmToken;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<ReqEntity> requests;
+    private Set<ReqEntity> uploadedRequests;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "donation_id", referencedColumnName = "id")

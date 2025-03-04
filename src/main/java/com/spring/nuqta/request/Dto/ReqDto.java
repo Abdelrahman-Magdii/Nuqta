@@ -2,11 +2,11 @@ package com.spring.nuqta.request.Dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.nuqta.base.Dto.BaseDto;
-import com.spring.nuqta.donation.Dto.DonDto;
+import com.spring.nuqta.donation.Dto.DonResponseReqDto;
 import com.spring.nuqta.enums.Level;
 import com.spring.nuqta.enums.Status;
-import com.spring.nuqta.organization.Dto.OrgDto;
-import com.spring.nuqta.usermanagement.Dto.UserDto;
+import com.spring.nuqta.organization.Dto.OrgRequestReqDto;
+import com.spring.nuqta.usermanagement.Dto.UserResponseToReqDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -15,7 +15,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.Set;
 
-@Schema(name = "Request Entity")
+@Schema(name = "Request DTO")
 @Getter
 @Setter
 public class ReqDto extends BaseDto<Long> {
@@ -44,22 +44,22 @@ public class ReqDto extends BaseDto<Long> {
     @JsonProperty("payment_available")
     private Boolean paymentAvailable;
 
-    @Schema(description = "Physical location of the user", example = "456 Elm Street, Springfield")
-    private String address;
+    @Schema(description = "City where the request is made", example = "New York")
+    @JsonProperty("city")
+    private String city;
 
-    @Schema(description = "X coordinate of the request's location", example = "40.7128")
-    private Double longitude;
-
-    @Schema(description = "Y coordinate of the request's location", example = "74.0060")
-    private Double latitude;
+    @Schema(description = "Conservatism level of the request", example = "LOW")
+    @JsonProperty("conservatism")
+    private String conservatism;
 
     @Schema(description = "User details", example = "{}")
-    private UserDto user;
+    private UserResponseToReqDto user;
 
     @Schema(description = "Organization details", example = "{}")
-    private OrgDto organization;
+    private OrgRequestReqDto organization;
 
-    @Schema(description = "All Donation that accept request", example = "[]")
-    private Set<DonDto> donations;
+    @Schema(description = "All donations that accept the request", example = "[]")
+    private Set<DonResponseReqDto> donations;
+
 
 }

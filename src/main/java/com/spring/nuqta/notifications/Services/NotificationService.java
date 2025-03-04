@@ -20,13 +20,13 @@ public class NotificationService {
 
     public String sendNotification(NotificationRequest request) {
         // Validate input
-        if (request.getTitle() == null || request.getTitle().isEmpty()) {
+        if (request.getTitle().isEmpty()) {
             throw new IllegalArgumentException("Title cannot be empty");
         }
-        if (request.getMessage() == null || request.getMessage().isEmpty()) {
+        if (request.getMessage().isEmpty()) {
             throw new IllegalArgumentException("Message cannot be empty");
         }
-        if (request.getTargetFcmToken() == null || request.getTargetFcmToken().isEmpty()) {
+        if (request.getTargetFcmToken().isEmpty()) {
             throw new IllegalArgumentException("FCM token cannot be empty");
         }
 

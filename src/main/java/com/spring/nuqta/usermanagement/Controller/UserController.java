@@ -2,9 +2,11 @@ package com.spring.nuqta.usermanagement.Controller;
 
 import com.spring.nuqta.usermanagement.Dto.UserDto;
 import com.spring.nuqta.usermanagement.Dto.UserInsertDto;
+import com.spring.nuqta.usermanagement.Dto.UserUpdateDto;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Mapper.UserInsertMapper;
 import com.spring.nuqta.usermanagement.Mapper.UserMapper;
+import com.spring.nuqta.usermanagement.Mapper.UserUpdateMapper;
 import com.spring.nuqta.usermanagement.Services.UserServices;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,6 +34,7 @@ public class UserController {
     private final UserServices userServices;
     private final UserMapper userMapper;
     private final UserInsertMapper userInsertMapper;
+    private final UserUpdateMapper userUpdateMapper;
 
     @Operation(summary = "Get All Users", description = "Retrieve a list of all users")
     @ApiResponse(responseCode = "200", description = "User get successfully",
@@ -75,10 +78,10 @@ public class UserController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = UserInsertDto.class)))
     @PutMapping("")
-    public ResponseEntity<UserDto> updateUser(@RequestBody UserInsertDto userDto) {
+    public ResponseEntity<UserUpdateDto> updateUser(@RequestBody UserInsertDto userDto) {
         UserEntity entity = userInsertMapper.unMap(userDto);
         entity = userServices.update(entity);
-        UserDto dto = userMapper.map(entity);
+        UserUpdateDto dto = userUpdateMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
@@ -107,7 +110,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    
+
     @PutMapping("fcmToken/{id}")
     public ResponseEntity<?> updateFcmToken(@PathVariable Long id, @RequestBody Map<String, String> request) {
         String fcmToken = request.get("fcmToken");

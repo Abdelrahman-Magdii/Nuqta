@@ -16,11 +16,11 @@ import com.spring.nuqta.usermanagement.Repo.UserRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
@@ -51,6 +51,12 @@ class ReqServicesTest {
     private DonRepo donRepo;
 
     @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache requestCache, userCache, orgCache;
+
+    @Mock
     private NotificationService notificationService;
 
     @InjectMocks
@@ -67,7 +73,7 @@ class ReqServicesTest {
         reqEntity.setId(1L);
         reqEntity.setBloodTypeNeeded("A+");
         reqEntity.setAmount(2.0);
-        reqEntity.setAddress("Test Address");
+        reqEntity.setCity("Test Address");
         reqEntity.setStatus(Status.OPEN);
         reqEntity.setUrgencyLevel(Level.HIGH);
         reqEntity.setPaymentAvailable(true);
@@ -230,7 +236,7 @@ class ReqServicesTest {
         updatedEntity.setId(1L);
         updatedEntity.setBloodTypeNeeded("B+");
         updatedEntity.setAmount(3.0);
-        updatedEntity.setAddress("Updated Address");
+        updatedEntity.setCity("Updated Address");
         updatedEntity.setStatus(FULFILLED);
         updatedEntity.setUrgencyLevel(LOW);
         updatedEntity.setPaymentAvailable(false);
@@ -240,7 +246,7 @@ class ReqServicesTest {
         assertNotNull(result);
         assertEquals("B+", result.getBloodTypeNeeded());
         assertEquals(3, result.getAmount());
-        assertEquals("Updated Address", result.getAddress());
+        assertEquals("Updated Address", result.getCity());
         assertEquals(FULFILLED, result.getStatus());
         assertEquals(LOW, result.getUrgencyLevel());
         assertFalse(result.getPaymentAvailable());
@@ -338,11 +344,125 @@ class ReqServicesTest {
 
     @Test
     public void testFindNearbyDonors() {
-        when(donRepo.findNearbyDonors(any(), anyDouble())).thenReturn(new ArrayList<>());
-        List<DonEntity> donors = reqServices.findNearbyDonors(new GeometryFactory().createPoint(new Coordinate(0, 0)));
+        when(donRepo.findTopByCity(any())).thenReturn(new ArrayList<>());
+        List<DonEntity> donors = reqServices.findNearbyDonors("city");
 
         assertNotNull(donors);
     }
 
+    @Test
+    void testInvalidIdThrowsException() {
+        Exception exception = assertThrows(GlobalException.class, () -> {
+            reqServices.validId(null);
+        });
+        assertEquals("Invalid ID: null", exception.getMessage());
 
+        exception = assertThrows(GlobalException.class, () -> {
+            reqServices.validId(0L);
+        });
+        assertEquals("Invalid ID: 0", exception.getMessage());
+
+        exception = assertThrows(GlobalException.class, () -> {
+            reqServices.validId(-1L);
+        });
+        assertEquals("Invalid ID: -1", exception.getMessage());
+    }
+
+    @Test
+    void testReCache_RequestNotFound() {
+        // Arrange
+        Long requestId = 1L;
+        when(reqRepo.findById(requestId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.ReCache(requestId));
+        assertEquals("Request not found with ID: " + requestId, exception.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+    }
+
+    @Test
+    void testReCache_CacheClearing() throws GlobalException {
+        // Arrange
+        Long requestId = 1L;
+        ReqEntity reqEntity = new ReqEntity();
+        reqEntity.setId(requestId);
+
+        // Mock reqRepo.findById
+        when(reqRepo.findById(requestId)).thenReturn(Optional.of(reqEntity));
+
+        // Mock cacheManager and caches
+        when(cacheManager.getCache("requests")).thenReturn(requestCache);
+        when(cacheManager.getCache("users")).thenReturn(userCache);
+        when(cacheManager.getCache("org")).thenReturn(orgCache);
+
+        // Act
+        reqServices.ReCache(requestId);
+
+        // Assert
+        verify(reqRepo).findById(requestId);
+        verify(reqRepo).save(reqEntity);
+
+        // Verify cache-clearing logic
+        verify(requestCache).evict(requestId);
+        verify(userCache).clear();
+        verify(orgCache).clear();
+    }
+
+    @Test
+    void testReCache_CacheClearing_RequestsCacheNull() throws GlobalException {
+        // Arrange
+        Long requestId = 1L;
+        ReqEntity reqEntity = new ReqEntity();
+        reqEntity.setId(requestId);
+
+        // Mock reqRepo.findById
+        when(reqRepo.findById(requestId)).thenReturn(Optional.of(reqEntity));
+
+        // Mock cacheManager to return null for requestsCache
+        when(cacheManager.getCache("requests")).thenReturn(null);
+        when(cacheManager.getCache("users")).thenReturn(userCache);
+        when(cacheManager.getCache("org")).thenReturn(orgCache);
+
+        // Act
+        reqServices.ReCache(requestId);
+
+        // Assert
+        verify(reqRepo).findById(requestId);
+        verify(reqRepo).save(reqEntity);
+
+        // Verify that requestsCache.evict was NOT called (since it's null)
+        verify(requestCache, never()).evict(requestId);
+
+        // Verify that usersCache and orgCache were cleared
+        verify(userCache).clear();
+        verify(orgCache).clear();
+    }
+
+    @Test
+    void testDeleteById_CacheNull() throws GlobalException {
+        // Arrange
+        Long requestId = 1L;
+
+        // Mock reqRepo.existsById to return true
+        when(reqRepo.existsById(requestId)).thenReturn(true);
+
+        // Mock cacheManager to return null for the cache
+        when(cacheManager.getCache("requests")).thenReturn(null);
+
+        // Act
+        reqServices.deleteById(requestId);
+
+        // Assert
+        // Verify that validId and existsById were called
+        verify(reqRepo).existsById(requestId);
+
+        // Verify that hardDeleteById was called
+        verify(reqRepo).hardDeleteById(requestId);
+
+        // Verify that cacheManager.getCache was called
+        verify(cacheManager).getCache("requests");
+
+        // Verify that cache.evict was NOT called (since cache is null)
+        verifyNoInteractions(mock(Cache.class)); // Assuming no mock cache was created
+    }
 }

@@ -5,62 +5,21 @@ import com.spring.nuqta.donation.Dto.DonDto;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.request.Dto.ReqDto;
 import com.spring.nuqta.request.Entity.ReqEntity;
-import com.spring.nuqta.usermanagement.Dto.UserDto;
-import com.spring.nuqta.usermanagement.Entity.UserEntity;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
+import com.spring.nuqta.usermanagement.Mapper.UserMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
-import java.time.LocalDate;
-
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {UserMapper.class})
 public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
 
     @Override
-    @Mapping(target = "longitude", expression = "java(entity.getLocation() != null ? entity.getLocation().getCoordinate().x : null)")
-    @Mapping(target = "latitude", expression = "java(entity.getLocation() != null ? entity.getLocation().getCoordinate().y : null)")
-    @Mapping(target = "user", expression = "java(mapUserEntityToDto(entity.getUser()))")
-    @Mapping(target = "requests", source = "requests", qualifiedByName = "mapReqEntityToDto")
+    @Mapping(target = "acceptedRequests", source = "acceptedRequests", qualifiedByName = "mapReqEntityToDto")
     DonDto map(DonEntity entity);
 
     @Override
-    @Mapping(target = "location", expression = "java(dto.getLongitude() != null && dto.getLatitude() != null ? createGeometry(dto.getLongitude(), dto.getLatitude()) : null)")
-    @Mapping(target = "requests", source = "requests", qualifiedByName = "mapReqDtoToEntity")
+    @Mapping(target = "acceptedRequests", source = "acceptedRequests", qualifiedByName = "mapReqDtoToEntity")
     DonEntity unMap(DonDto dto);
-
-    @Override
-    DonEntity unMap(@MappingTarget DonEntity entity, DonDto dto);
-
-    default Geometry createGeometry(Double x, Double y) {
-        if (x == null || y == null) {
-            return null;
-        }
-        return new GeometryFactory().createPoint(new Coordinate(x, y));
-    }
-
-    /// **************** Map Users *************************//
-    default UserDto mapUserEntityToDto(UserEntity userEntity) {
-        if (userEntity == null) {
-            return null;
-        }
-        UserDto userDto = new UserDto();
-        userDto.setId(userEntity.getId());
-        userDto.setUsername(userEntity.getUsername());
-        userDto.setEmail(userEntity.getEmail());
-        userDto.setPhoneNumber(userEntity.getPhoneNumber());
-        userDto.setScope(userEntity.getScope());
-
-        // Avoid NullPointerException when calculating age
-        if (userEntity.getBirthDate() != null) {
-            userDto.setAge(LocalDate.now().getYear() - userEntity.getBirthDate().getYear());
-        }
-
-        return userDto;
-    }
 
     /// **************** Map Req *************************//
     @Named("mapReqEntityToDto")
@@ -70,18 +29,14 @@ public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
         }
         ReqDto reqDto = new ReqDto();
         reqDto.setId(reqEntity.getId());
-        reqDto.setAddress(reqEntity.getAddress());
         reqDto.setStatus(reqEntity.getStatus());
         reqDto.setAmount(reqEntity.getAmount());
         reqDto.setRequestDate(reqEntity.getRequestDate());
         reqDto.setBloodTypeNeeded(reqEntity.getBloodTypeNeeded());
         reqDto.setPaymentAvailable(reqEntity.getPaymentAvailable());
         reqDto.setUrgencyLevel(reqEntity.getUrgencyLevel());
-
-        if (reqEntity.getLocation() != null) {
-            reqDto.setLongitude(reqEntity.getLocation().getCoordinate().x);
-            reqDto.setLatitude(reqEntity.getLocation().getCoordinate().y);
-        }
+        reqDto.setConservatism(reqEntity.getConservatism());
+        reqDto.setCity(reqEntity.getCity());
 
         return reqDto;
     }
@@ -93,17 +48,14 @@ public interface DonMapper extends BaseMapper<DonEntity, DonDto> {
         }
         ReqEntity req = new ReqEntity();
         req.setId(reqDto.getId());
-        req.setAddress(reqDto.getAddress());
         req.setStatus(reqDto.getStatus());
         req.setAmount(reqDto.getAmount());
         req.setRequestDate(reqDto.getRequestDate());
         req.setBloodTypeNeeded(reqDto.getBloodTypeNeeded());
         req.setPaymentAvailable(reqDto.getPaymentAvailable());
         req.setUrgencyLevel(reqDto.getUrgencyLevel());
-
-        if (reqDto.getLongitude() != null && reqDto.getLatitude() != null) {
-            req.setLocation(new GeometryFactory().createPoint(new Coordinate(reqDto.getLongitude(), reqDto.getLatitude())));
-        }
+        req.setConservatism(reqDto.getConservatism());
+        req.setCity(reqDto.getCity());
 
         return req;
     }

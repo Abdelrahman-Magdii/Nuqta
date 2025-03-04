@@ -3,6 +3,7 @@ package com.spring.nuqta.forgotPassword.Services;
 import com.spring.nuqta.forgotPassword.Entity.ResetPasswordEntity;
 import com.spring.nuqta.forgotPassword.Repo.ResetPasswordRepo;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,6 +53,19 @@ class ResetPasswordServiceTest {
         assertTrue(otp.matches("\\d{6}"), "OTP should contain only digits");
         assertTrue(Integer.parseInt(otp) >= 0 && Integer.parseInt(otp) <= 999999,
                 "OTP should be a valid 6-digit number");
+    }
+
+    //    @Test
+    @RepeatedTest(10)
+    void testGenerateOtpLength() {
+        String otp = resetPasswordService.generateOtp();
+        String otp2 = resetPasswordService.generateOtp();
+
+        // OTP should always be exactly 6 characters long
+        assertEquals(6, otp.length(), "OTP length should be 6");
+        assertTrue(otp.matches("\\d{6}"), "OTP should be a 6-digit numeric string");
+        assertNotEquals(otp, otp2, "Two consecutive OTPs should not be the same");
+
     }
 
 }

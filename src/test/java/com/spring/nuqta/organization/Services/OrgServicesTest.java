@@ -4,13 +4,12 @@ import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.exception.GlobalException;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.organization.Repo.OrgRepo;
+import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
 import com.spring.nuqta.verificationToken.General.GeneralVerification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -52,7 +51,6 @@ public class OrgServicesTest {
         orgEntity.setId(1L);
         orgEntity.setOrgName("Test Org");
         orgEntity.setEmail("test@org.com");
-        orgEntity.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
         orgEntity.setPhoneNumber("1234567890");
         orgEntity.setScope(Scope.ORGANIZATION);
         orgEntity.setPassword("password");
@@ -61,11 +59,13 @@ public class OrgServicesTest {
         orgEntity.setCreatedUser("Test User");
         orgEntity.setModifiedDate(LocalDate.now());
         orgEntity.setModifiedUser("Test User");
+        orgEntity.setConservatism("conservatism");
+        orgEntity.setCity("city");
     }
 
     @Test
     void testFindAll() {
-        when(organizationRepository.findAll()).thenReturn(Collections.singletonList(orgEntity));
+        when(organizationRepository.findAllByEnabledTrue()).thenReturn(Collections.singletonList(orgEntity));
 
         List<OrgEntity> result = orgServices.findAll();
 
@@ -73,44 +73,45 @@ public class OrgServicesTest {
         assertEquals(1, result.size());
         assertEquals(orgEntity, result.get(0));
 
-        verify(organizationRepository, times(1)).findAll();
+        verify(organizationRepository, times(1)).findAllByEnabledTrue();
     }
 
     @Test
     void testFindAllThrowsException() {
-        when(organizationRepository.findAll()).thenReturn(Collections.emptyList());
+        when(organizationRepository.findAllByEnabledTrue()).thenReturn(Collections.emptyList()); // ✅ Mock the correct method
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.findAll());
 
         assertEquals("No organizations found", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
 
-        verify(organizationRepository, times(1)).findAll();
+        verify(organizationRepository, times(1)).findAllByEnabledTrue();  // ✅ Verify the correct method
     }
 
     @Test
     void testFindById() {
-        when(organizationRepository.findById(1L)).thenReturn(Optional.of(orgEntity));
+        when(organizationRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.of(orgEntity));
 
         OrgEntity result = orgServices.findById(1L);
 
         assertNotNull(result);
         assertEquals(orgEntity, result);
 
-        verify(organizationRepository, times(1)).findById(1L);
+        verify(organizationRepository, times(1)).findByIdAndEnabledTrue(1L);
     }
 
     @Test
     void testFindByIdThrowsException() {
-        when(organizationRepository.findById(1L)).thenReturn(Optional.empty());
+        when(organizationRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.empty());  // ✅ Mock the correct method
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.findById(1L));
 
         assertEquals("Organization not found with ID: 1", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
 
-        verify(organizationRepository, times(1)).findById(1L);
+        verify(organizationRepository, times(1)).findByIdAndEnabledTrue(1L);  // ✅ Verify the correct method
     }
+
 
     @Test
     void testUpdate() {
@@ -120,8 +121,8 @@ public class OrgServicesTest {
         OrgEntity updatedEntity = new OrgEntity();
         updatedEntity.setId(1L);
         updatedEntity.setOrgName("Updated Org");
-        updatedEntity.setLocation(new GeometryFactory().createPoint(new Coordinate(12.44, 56.88)));
-
+        updatedEntity.setCity("New City");
+        updatedEntity.setConservatism("New Conservatism");
         updatedEntity.setPhoneNumber("0987654321");
         updatedEntity.setScope(Scope.ORGANIZATION);
 
@@ -129,8 +130,8 @@ public class OrgServicesTest {
 
         assertNotNull(result);
         assertEquals("Updated Org", result.getOrgName());
-        assertEquals(12.44, result.getLocation().getCoordinate().getX());
-        assertEquals(56.88, result.getLocation().getCoordinate().getY());
+        assertEquals("New City", result.getCity());
+        assertEquals("New Conservatism", result.getConservatism());
         assertEquals("0987654321", result.getPhoneNumber());
 
         verify(organizationRepository, times(1)).findById(1L);
@@ -178,25 +179,25 @@ public class OrgServicesTest {
 
     @Test
     void testDeleteById() {
-        when(organizationRepository.findById(1L)).thenReturn(Optional.of(orgEntity));
+        when(organizationRepository.existsById(1L)).thenReturn(true);
 
         orgServices.deleteById(1L);
 
-        verify(organizationRepository, times(1)).findById(1L);
+        verify(organizationRepository, times(1)).existsById(1L);
         verify(organizationRepository, times(1)).deleteById(1L);
     }
 
     @Test
     void testDeleteByIdThrowsException() {
-        when(organizationRepository.findById(1L)).thenReturn(Optional.empty());
+        when(organizationRepository.existsById(1L)).thenReturn(false);  // Mock existsById instead of findById
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.deleteById(1L));
 
         assertEquals("Organization not found with ID: 1", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
 
-        verify(organizationRepository, times(1)).findById(1L);
-        verify(organizationRepository, never()).deleteById(1L);
+        verify(organizationRepository, times(1)).existsById(1L);  // Verify correct method call
+        verify(organizationRepository, never()).deleteById(1L);  // Ensure deleteById is never called
     }
 
     @Test
@@ -305,7 +306,8 @@ public class OrgServicesTest {
         orgEntity.setPassword("password");
         orgEntity.setPhoneNumber("1234567890");
         orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        orgEntity.setConservatism("conservatism");
+        orgEntity.setCity("city");
 
         // No exception should be thrown
         assertDoesNotThrow(() -> orgServices.validateOrganizationFields(orgEntity));
@@ -318,7 +320,8 @@ public class OrgServicesTest {
         orgEntity.setPassword("password");
         orgEntity.setPhoneNumber("1234567890");
         orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        orgEntity.setConservatism("conservatism");
+        orgEntity.setCity("city");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
 
@@ -333,7 +336,8 @@ public class OrgServicesTest {
         orgEntity.setPassword("password");
         orgEntity.setPhoneNumber("1234567890");
         orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        orgEntity.setConservatism("conservatism");
+        orgEntity.setCity("city");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
 
@@ -348,7 +352,8 @@ public class OrgServicesTest {
         orgEntity.setOrgName("Test Org");
         orgEntity.setPhoneNumber("1234567890");
         orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        orgEntity.setConservatism("conservatism");
+        orgEntity.setCity("city");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
 
@@ -363,7 +368,8 @@ public class OrgServicesTest {
         orgEntity.setOrgName("Test Org");
         orgEntity.setPassword("password");
         orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        orgEntity.setConservatism("conservatism");
+        orgEntity.setCity("city");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
 
@@ -378,7 +384,8 @@ public class OrgServicesTest {
         orgEntity.setOrgName("Test Org");
         orgEntity.setPassword("password");
         orgEntity.setPhoneNumber("1234567890");
-        orgEntity.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        orgEntity.setConservatism("conservatism");
+        orgEntity.setCity("city");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
 
@@ -394,7 +401,8 @@ public class OrgServicesTest {
         orgEntity.setPassword("password");
         orgEntity.setPhoneNumber("1234567890");
         orgEntity.setScope(Scope.USER);
-        orgEntity.setLocation(new GeometryFactory().createPoint(new Coordinate(12.34, 56.78)));
+        orgEntity.setConservatism("conservatism");
+        orgEntity.setCity("city");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
 
@@ -403,17 +411,144 @@ public class OrgServicesTest {
     }
 
     @Test
-    void testValidateOrganizationFields_LocationMissing() {
+    void testValidateOrganizationFields_ConservatismMissing() {
         OrgEntity orgEntity = new OrgEntity();
         orgEntity.setLicenseNumber("LIC123");
         orgEntity.setOrgName("Test Org");
         orgEntity.setPassword("password");
         orgEntity.setPhoneNumber("1234567890");
         orgEntity.setScope(Scope.ORGANIZATION);
+        orgEntity.setCity("city");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
 
-        assertEquals("Location is required.", exception.getMessage());
+        assertEquals("Conservatism is required.", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
+
+    @Test
+    void testValidateOrganizationFields_CityMissing() {
+        OrgEntity orgEntity = new OrgEntity();
+        orgEntity.setLicenseNumber("LIC123");
+        orgEntity.setOrgName("Test Org");
+        orgEntity.setPassword("password");
+        orgEntity.setPhoneNumber("1234567890");
+        orgEntity.setScope(Scope.ORGANIZATION);
+        orgEntity.setConservatism("city");
+
+        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
+
+        assertEquals("City is required.", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+    }
+
+    @Test
+    void testUpdateOrgThrowsExceptionWhenNameExists() {
+        // Given: An organization with the same name but a different ID already exists
+        OrgEntity entity = new OrgEntity();
+        entity.setId(2L);
+        entity.setOrgName("ExistingOrg");
+
+        // Ensure organization exists before checking for duplicate name
+        when(organizationRepository.findById(2L)).thenReturn(Optional.of(entity));
+        when(organizationRepository.existsByOrgNameAndIdNot("ExistingOrg", 2L)).thenReturn(true);
+
+        // When & Then: Expect an exception when calling the update method
+        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.update(entity));
+
+        assertEquals("Organization name already exists", exception.getMessage());
+        assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+
+        verify(organizationRepository, times(1)).findById(2L);
+        verify(organizationRepository, times(1)).existsByOrgNameAndIdNot("ExistingOrg", 2L);
+    }
+
+    @Test
+    void testUpdateOrgSuccessWhenNameDoesNotExist() {
+        OrgEntity entity = new OrgEntity();
+        entity.setId(2L);
+        entity.setOrgName("UniqueOrg");
+
+        // Ensure the organization exists in the database
+        when(organizationRepository.findById(2L)).thenReturn(Optional.of(entity));
+        when(organizationRepository.existsByOrgNameAndIdNot("UniqueOrg", 2L)).thenReturn(false);
+        when(organizationRepository.save(any(OrgEntity.class))).thenReturn(entity);
+
+        OrgEntity updatedEntity = orgServices.update(entity);
+
+        assertNotNull(updatedEntity);
+        assertEquals("UniqueOrg", updatedEntity.getOrgName());
+
+        verify(organizationRepository, times(1)).findById(2L);
+        verify(organizationRepository, times(1)).existsByOrgNameAndIdNot("UniqueOrg", 2L);
+        verify(organizationRepository, times(1)).save(entity);
+    }
+
+
+    @Test
+    void shouldThrowExceptionWhenOrganizationAlreadyExists() {
+        // Mock: Organization already exists
+        when(organizationRepository.findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail()))
+                .thenReturn(Optional.of(orgEntity));
+
+        when(userRepo.findByEmail(orgEntity.getEmail()))
+                .thenReturn(Optional.empty());
+
+        // Test and assert exception
+        GlobalException exception = assertThrows(GlobalException.class, () -> {
+            orgServices.saveOrg(orgEntity);
+        });
+
+        assertEquals("Organization Email or License Number already exists", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+
+        // Verify repository interactions
+        verify(organizationRepository, times(1)).findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail());
+        verify(userRepo, times(1)).findByEmail(orgEntity.getEmail());
+        verifyNoMoreInteractions(organizationRepository, userRepo);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserAlreadyExists() {
+        // Mock: User already exists
+        when(organizationRepository.findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail()))
+                .thenReturn(Optional.empty());
+
+        when(userRepo.findByEmail(orgEntity.getEmail()))
+                .thenReturn(Optional.of(new UserEntity()));
+
+        // Test and assert exception
+        GlobalException exception = assertThrows(GlobalException.class, () -> {
+            orgServices.saveOrg(orgEntity);
+        });
+
+        assertEquals("Organization Email or License Number already exists", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+
+        // Verify repository interactions
+        verify(organizationRepository, times(1)).findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail());
+        verify(userRepo, times(1)).findByEmail(orgEntity.getEmail());
+        verifyNoMoreInteractions(organizationRepository, userRepo);
+    }
+
+    @Test
+    void shouldSaveOrganizationWhenNoDuplicateExists() {
+        // Mock: No existing organization or user
+        when(organizationRepository.findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail()))
+                .thenReturn(Optional.empty());
+        when(userRepo.findByEmail(orgEntity.getEmail()))
+                .thenReturn(Optional.empty());
+        when(passwordEncoder.encode(orgEntity.getPassword())).thenReturn("encodedPassword");
+        when(organizationRepository.save(any(OrgEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Test
+        assertDoesNotThrow(() -> orgServices.saveOrg(orgEntity));
+
+        // Verify repository interactions
+        verify(organizationRepository, times(1)).findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail());
+        verify(userRepo, times(1)).findByEmail(orgEntity.getEmail());
+        verify(organizationRepository, times(1)).save(any(OrgEntity.class));
+        verify(generalVerification, times(1)).sendOtpEmail(any(OrgEntity.class));
+    }
+
 }

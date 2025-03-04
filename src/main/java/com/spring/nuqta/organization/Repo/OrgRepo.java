@@ -8,10 +8,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface OrgRepo extends BaseRepo<OrgEntity, Long> {
+
+    List<OrgEntity> findAllByEnabledTrue();
+
+    Optional<OrgEntity> findByIdAndEnabledTrue(Long id);
 
     Optional<OrgEntity> findByEmail(String email);
 
@@ -23,5 +28,7 @@ public interface OrgRepo extends BaseRepo<OrgEntity, Long> {
 
     boolean existsByEmail(String mail);
 
+    boolean existsById(Long id);
 
+    boolean existsByOrgNameAndIdNot(@NotBlank(message = "Organization name cannot be blank") @Size(max = 100, message = "Organization name cannot exceed 100 characters") String orgName, Long id);
 }

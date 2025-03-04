@@ -1,7 +1,9 @@
 package com.spring.nuqta.exception;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+@Getter
 public class GlobalException extends RuntimeException {
 
     private final HttpStatus status;
@@ -11,7 +13,4 @@ public class GlobalException extends RuntimeException {
         this.status = status;
     }
 
-    public HttpStatus getStatus() {
-        return status;
-    }
 }

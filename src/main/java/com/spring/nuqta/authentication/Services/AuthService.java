@@ -16,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -73,14 +72,11 @@ public class AuthService {
 
 
     public <T> Optional<T> authByToken(final String token) {
-        String scope = jwtUtilsUser.getScope(token);
-
-        if (Objects.equals(scope, "USER")) {
+        if ("USER".equals(jwtUtilsUser.getScope(token))) {
             return authenticateUser(token);
-        } else if (Objects.equals(scope, "ORGANIZATION")) {
+        } else if ("ORGANIZATION".equals(jwtUtilsOrganization.getScope(token))) {
             return authenticateOrganization(token);
         }
-
         return Optional.empty();
     }
 
@@ -118,7 +114,7 @@ public class AuthService {
 
     // -------------------- Validation and Auth Logic --------------------
 
-    private void validateUserParams(String username, String email, String password) {
+    public void validateUserParams(String username, String email, String password) {
         log.info("Validating user params: username = {}, email = {}, password = {}",
                 username, email, password != null ? "******" : null);
         if ((username == null || username.trim().isEmpty())
@@ -130,14 +126,12 @@ public class AuthService {
         }
     }
 
-    private UserAuthProjection validateUserAuth(String username, String email, String password) {
+    public UserAuthProjection validateUserAuth(String username, String email, String password) {
         UserAuthProjection user = (username != null)
-                ? userRepository.findUserAuthProjectionByUsername(username)
-                .orElseThrow(() -> new GlobalException(
-                        "Username Or Email invalid.", HttpStatus.BAD_REQUEST))
-                : userRepository.findUserAuthProjectionByEmail(email)
-                .orElseThrow(() -> new GlobalException(
-                        "Username Or Email invalid.", HttpStatus.BAD_REQUEST));
+                ? userRepository.findUserAuthProjectionByUsername(username) // First call
+                .orElseThrow(() -> new GlobalException("Username Or Email invalid.", HttpStatus.BAD_REQUEST))
+                : userRepository.findUserAuthProjectionByEmail(email) // Second call (if username is null)
+                .orElseThrow(() -> new GlobalException("Username Or Email invalid.", HttpStatus.BAD_REQUEST));
 
         if (user.enabled()) {
             Optional<UserAuthProjection> user1 = userRepository.findUserAuthProjectionByUsername(username);
@@ -160,7 +154,7 @@ public class AuthService {
 
     }
 
-    private void validateOrganizationParams(String licenseNumber, String email, String password) {
+    public void validateOrganizationParams(String licenseNumber, String email, String password) {
         if ((licenseNumber == null || licenseNumber.trim().isEmpty())
                 && (email == null || email.trim().isEmpty())) {
             throw new GlobalException("License Number or Email required", HttpStatus.BAD_REQUEST);
@@ -171,37 +165,28 @@ public class AuthService {
     }
 
 
-    private OrgAuthProjection validateOrganizationAuth(String licenseNumber, String password, String email) {
-        OrgAuthProjection organization = (email != null) ?
-                organizationRepository.findOrgAuthProjectionByEmail(email)
-                        .orElseThrow(() -> new GlobalException(
-                                "Organization Email invalid", HttpStatus.BAD_REQUEST)) :
-                organizationRepository.findOrgAuthProjectionByLicenseNumber(licenseNumber)
-                        .orElseThrow(() -> new GlobalException(
-                                "License Number invalid", HttpStatus.BAD_REQUEST));
+    public OrgAuthProjection validateOrganizationAuth(String licenseNumber, String password, String email) {
+        OrgAuthProjection organization = (email != null)
+                ? organizationRepository.findOrgAuthProjectionByEmail(email)
+                .orElseThrow(() -> new GlobalException("Organization Email invalid", HttpStatus.BAD_REQUEST))
+                : organizationRepository.findOrgAuthProjectionByLicenseNumber(licenseNumber)
+                .orElseThrow(() -> new GlobalException("License Number invalid", HttpStatus.BAD_REQUEST));
 
         if (organization.enabled()) {
             Optional<OrgAuthProjection> org1 = organizationRepository.findOrgAuthProjectionByLicenseNumber(licenseNumber);
             Optional<OrgAuthProjection> org2 = organizationRepository.findOrgAuthProjectionByEmail(email);
 
-            if (org1.isPresent()
-                    && passwordEncoder.matches(password, org1.get().password())) {
-                return (OrgAuthProjection) org1.get();
-            } else if (org2.isPresent()
-                    && passwordEncoder.matches(password, org2.get().password())) {
-                return (OrgAuthProjection) org2.get();
-            } else if (!passwordEncoder.matches(password, org1.get().password())) {
-                throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);
+            if (org1.isPresent() && passwordEncoder.matches(password, org1.get().password())) {
+                return org1.get();
+            } else if (org2.isPresent() && passwordEncoder.matches(password, org2.get().password())) {
+                return org2.get();
             } else {
-                throw new GlobalException("License Number Or Email invalid.", HttpStatus.BAD_REQUEST);
+                throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);
             }
         } else if (organization.email() == null) {
             throw new GlobalException("Organization Not Found", HttpStatus.NOT_FOUND);
         } else {
             throw new GlobalException("Check Organization verification sent", HttpStatus.NOT_FOUND);
         }
-
     }
-
-
 }

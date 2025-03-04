@@ -10,9 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -46,18 +43,19 @@ public class DonEntity extends BaseEntity<Long> {
     @Enumerated(EnumType.STRING)
     private DonStatus status;
 
-    @JdbcTypeCode(SqlTypes.GEOGRAPHY)
-    @Column(name = "location", columnDefinition = "GEOGRAPHY")
-    private Geometry location;
-
     @Column(name = "weight")
     private Double weight;
 
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "conservatism")
+    private String conservatism;
 
     @OneToOne(mappedBy = "donation", cascade = CascadeType.ALL)
     private UserEntity user;
 
     @ManyToMany(mappedBy = "donations", fetch = FetchType.EAGER)
-    private Set<ReqEntity> requests = new HashSet<>();
+    private Set<ReqEntity> acceptedRequests = new HashSet<>();
 
 }

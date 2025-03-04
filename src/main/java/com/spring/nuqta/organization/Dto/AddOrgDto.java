@@ -1,12 +1,13 @@
 package com.spring.nuqta.organization.Dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.nuqta.base.Dto.BaseDto;
 import com.spring.nuqta.enums.Scope;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
-@Schema(name = "Organization Entity", description = "Represents the details of an organization.")
+@Schema(name = "Add Organization DTO", description = "Represents the details required to add a new organization.")
 @Getter
 @Setter
 public class AddOrgDto extends BaseDto<Long> {
@@ -20,11 +21,11 @@ public class AddOrgDto extends BaseDto<Long> {
     @Schema(description = "Password of the organization", example = "*******")
     private String password;
 
-    @Schema(description = "Longitude coordinate of the donation request's location.", example = "-74.0060")
-    private Double longitude;
+    @Schema(description = "City where the organization is located", example = "New York")
+    private String city;
 
-    @Schema(description = "Latitude coordinate of the donation request's location.", example = "40.7128")
-    private Double latitude;
+    @Schema(description = "Conservatism level of the organization", example = "Moderate")
+    private String conservatism;
 
     @Schema(description = "Phone number of the organization", example = "+1234567890")
     private String phoneNumber;
@@ -34,5 +35,9 @@ public class AddOrgDto extends BaseDto<Long> {
 
     @Schema(description = "Operational scope of the organization", example = "ORGANIZATION")
     private Scope scope;
+
+    @Schema(description = "FCM Token for push notifications", example = "abc123xyz")
+    @JsonProperty("fcmToken")
+    private String fcmToken;
 
 }

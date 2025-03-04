@@ -1,15 +1,15 @@
 package com.spring.nuqta.usermanagement.Dto;
 
 import com.spring.nuqta.base.Dto.BaseDto;
-import com.spring.nuqta.donation.Dto.DonDto;
+import com.spring.nuqta.donation.Dto.DonResponseUserDto;
 import com.spring.nuqta.enums.Gender;
 import com.spring.nuqta.enums.Scope;
-import com.spring.nuqta.request.Dto.ReqDto;
+import com.spring.nuqta.request.Dto.AddReqDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.Set;
 
 @Schema(name = "User Entity", description = "Represents the details of a user.")
 @Getter
@@ -36,9 +36,9 @@ public class UserDto extends BaseDto<Long> {
     private Scope scope;
 
     @Schema(description = "Donation details associated with the user", example = "{}")
-    private DonDto donation;
+    private DonResponseUserDto donation;
 
-    @Schema(description = "Requests details associated with the user", example = "[]")
-    private List<ReqDto> requests;
+    @Schema(description = "Requests that user uploaded it", example = "[]")
+    private Set<AddReqDto> uploadedRequests;
 
 }

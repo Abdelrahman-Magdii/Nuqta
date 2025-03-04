@@ -15,9 +15,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-import org.locationtech.jts.geom.Geometry;
 
 import java.util.Set;
 
@@ -44,10 +41,13 @@ public class OrgEntity extends BaseEntity<Long> {
     @Size(min = 8, message = "Password must be at least 8 characters long")
     private String password;
 
-    @NotNull(message = "Location cannot be null")
-    @JdbcTypeCode(SqlTypes.GEOMETRY)
-    @Column(name = "location", columnDefinition = "GEOGRAPHY")
-    private Geometry location;
+    @NotBlank(message = "City cannot be blank")
+    @Size(max = 100, message = "City name cannot exceed 100 characters")
+    private String city;
+
+    @NotBlank(message = "Conservatism level cannot be blank")
+    @Size(max = 50, message = "Conservatism level cannot exceed 50 characters")
+    private String conservatism;
 
     @NotBlank(message = "Phone number cannot be blank")
     @Size(max = 15, message = "Phone number cannot exceed 15 characters")
@@ -68,7 +68,7 @@ public class OrgEntity extends BaseEntity<Long> {
     private String fcmToken;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<ReqEntity> requests;
+    private Set<ReqEntity> uploadedRequests;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
     private Set<VerificationToken> verificationTokens;
@@ -76,13 +76,4 @@ public class OrgEntity extends BaseEntity<Long> {
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
     private Set<ResetPasswordEntity> resetPasswordEntities;
 
-    public OrgEntity(String org_name, String email, String password, Geometry location, String phoneNumber, String licenseNumber, Scope scope) {
-        this.orgName = org_name;
-        this.email = email;
-        this.password = password;
-        this.location = location;
-        this.phoneNumber = phoneNumber;
-        this.licenseNumber = licenseNumber;
-        this.scope = scope;
-    }
 }

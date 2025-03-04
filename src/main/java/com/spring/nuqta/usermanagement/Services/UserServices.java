@@ -11,7 +11,6 @@ import com.spring.nuqta.verificationToken.General.GeneralVerification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -59,8 +58,12 @@ public class UserServices extends BaseServices<UserEntity, Long> {
             throw new GlobalException("Invalid scope. Scope must be 'USER'.", HttpStatus.BAD_REQUEST);
         }
 
-        if (Objects.isNull(params.getDonation().getLocation())) {
-            throw new GlobalException("Location is required.", HttpStatus.BAD_REQUEST);
+        if (Objects.isNull(params.getDonation().getConservatism())) {
+            throw new GlobalException("Conservatism is required.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (Objects.isNull(params.getDonation().getCity())) {
+            throw new GlobalException("City is required.", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -72,9 +75,9 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      * @throws GlobalException If no users are found.
      */
     @Override
-    @Cacheable(value = "users")
+    @Cacheable(value = "users", key = "'allUsers'")
     public List<UserEntity> findAll() throws GlobalException {
-        List<UserEntity> users = userRepository.findAll();
+        List<UserEntity> users = userRepository.findAllByEnabledTrue();
         if (users.isEmpty()) {
             throw new GlobalException("No users found", HttpStatus.NOT_FOUND);
         }
@@ -92,7 +95,9 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     @Override
     @Cacheable(value = "users", key = "#id")
     public UserEntity findById(Long id) throws GlobalException {
-        Optional<UserEntity> user = userRepository.findById(id);
+        validId(id);
+
+        Optional<UserEntity> user = userRepository.findByIdAndEnabledTrue(id);
         if (user.isEmpty()) {
             throw new GlobalException("User not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
@@ -108,15 +113,19 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      * @throws GlobalException If the user ID is null or the user is not found.
      */
     @Override
-    @CachePut(value = "users", key = "#entity.id")
+    @CacheEvict(value = "users", allEntries = true) // Clear all cached users
     public UserEntity update(UserEntity entity) throws GlobalException {
-        if (entity == null || entity.getId() == null) {
+        if (entity.getId() == null) {
             throw new GlobalException("User ID cannot be null", HttpStatus.BAD_REQUEST);
         }
 
         Optional<UserEntity> user = userRepository.findById(entity.getId());
         if (user.isEmpty()) {
             throw new GlobalException("User not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND);
+        }
+
+        if (userRepository.existsByUsernameAndIdNot(entity.getUsername(), entity.getId())) {
+            throw new GlobalException("User name already exists", HttpStatus.CONFLICT);
         }
 
         UserEntity existingUser = user.get();
@@ -126,7 +135,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
             throw new GlobalException("User does not have a donation record", HttpStatus.NOT_FOUND);
         }
 
-        if (entity.getDonation() == null || entity.getDonation().getId() == null) {
+        if (entity.getDonation().getId() == null) {
             throw new GlobalException("Donation ID cannot be null", HttpStatus.BAD_REQUEST);
         }
 
@@ -139,9 +148,11 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         existingUser.setPhoneNumber(entity.getPhoneNumber());
         existingUser.setScope(entity.getScope());
         existingUser.setDonation(entity.getDonation());
+        existingUser.setFcmToken(entity.getFcmToken());
+        existingUser.setBirthDate(entity.getBirthDate());
+
         existingUser.setModifiedDate(LocalDate.now());
         existingUser.setModifiedUser(entity.getUsername());
-
         return userRepository.save(existingUser);
     }
 
@@ -156,8 +167,9 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     @Override
     @CacheEvict(value = "users", key = "#id")
     public void deleteById(Long id) throws GlobalException {
-        Optional<UserEntity> user = userRepository.findById(id);
-        if (user.isEmpty()) {
+        validId(id);
+        boolean user = userRepository.existsById(id);
+        if (!user) {
             throw new GlobalException("User not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
         userRepository.deleteById(id);
@@ -213,19 +225,20 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      */
     @CacheEvict(value = "users", key = "#userId")
     public void changeUserPassword(Long userId, String oldPassword, String newPassword) {
-        UserEntity user = findById(userId);
-        if (user == null) {
+        validId(userId);
+        Optional<UserEntity> user = userRepository.findByIdAndEnabledTrue(userId);
+        if (user.isEmpty()) {
             throw new GlobalException("User not found with ID: " + userId, HttpStatus.NOT_FOUND);
         }
 
         // Verify old password
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+        if (!passwordEncoder.matches(oldPassword, user.get().getPassword())) {
             throw new GlobalException("Old password is incorrect.", HttpStatus.BAD_REQUEST);
         }
 
         // Encode and update new password
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
+        user.get().setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user.get());
     }
 
     /**
@@ -236,9 +249,11 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      * @param fcmToken The new FCM token to set.
      * @return A ResponseEntity indicating success or failure.
      */
-    @CachePut(value = "users", key = "#id")
+    @CacheEvict(value = "users", key = "#id")
     public String updateFcmToken(Long id, String fcmToken) {
-        Optional<UserEntity> userOptional = userRepository.findById(id);
+        validId(id);
+
+        Optional<UserEntity> userOptional = userRepository.findByIdAndEnabledTrue(id);
 
         if (userOptional.isPresent()) {
             UserEntity user = userOptional.get();
@@ -247,6 +262,12 @@ public class UserServices extends BaseServices<UserEntity, Long> {
             return "FCM token updated successfully";
         } else {
             return "User not found";
+        }
+    }
+
+    public void validId(Long id) {
+        if (id == null || id <= 0) {
+            throw new GlobalException("Invalid ID: " + id, HttpStatus.BAD_REQUEST);
         }
     }
 }

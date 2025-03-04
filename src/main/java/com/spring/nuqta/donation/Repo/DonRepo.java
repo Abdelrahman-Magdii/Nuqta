@@ -2,7 +2,6 @@ package com.spring.nuqta.donation.Repo;
 
 import com.spring.nuqta.base.Repo.BaseRepo;
 import com.spring.nuqta.donation.Entity.DonEntity;
-import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -19,9 +18,5 @@ public interface DonRepo extends BaseRepo<DonEntity, Long> {
             nativeQuery = true)
     List<DonEntity> findNearestLocationWithin100km(@Param("longitude") double longitude, @Param("latitude") double latitude);
 
-
-    @Query(value = "SELECT * FROM donation r " +
-            "WHERE ST_DWithin(r.location, :requestLocation, :radius)",
-            nativeQuery = true)
-    List<DonEntity> findNearbyDonors(Geometry requestLocation, double radius);
+    List<DonEntity> findTopByCity(String City);
 }

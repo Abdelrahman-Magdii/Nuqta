@@ -10,99 +10,118 @@ import com.spring.nuqta.usermanagement.Repo.UserRepo;
 import com.spring.nuqta.verificationToken.Entity.VerificationToken;
 import com.spring.nuqta.verificationToken.Services.VerificationTokenService;
 import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Slf4j
-@Component
+@Service
+@RequiredArgsConstructor
 public class GeneralVerification {
 
     private final EmailService emailService;
     private final VerificationTokenService verificationTokenService;
-    private final OrgRepo organizationRepository;
-    private final UserRepo userRepository;
+    private final OrgRepo orgRepo;
+    private final UserRepo userRepo;
 
-
-    @Value("${site.base.url.http}")
+    @Value("${token.base.url}")
     private String baseUrl;
 
-
-    @Autowired
-    public GeneralVerification(EmailService emailService, VerificationTokenService verificationTokenService, OrgRepo organizationRepository, UserRepo userRepository) {
-        this.organizationRepository = organizationRepository;
-        this.userRepository = userRepository;
-        this.emailService = emailService;
-        this.verificationTokenService = verificationTokenService;
-    }
-
+    /**
+     * Sends OTP email to either a UserEntity or OrgEntity.
+     *
+     * @param entity the recipient entity (User or Org)
+     */
     public <T> void sendOtpEmail(T entity) {
         VerificationToken token = verificationTokenService.createToken();
 
-        token.setToken(token.getToken());
-
-        if (entity instanceof UserEntity) {
-            token.setUser((UserEntity) entity);
-        } else if (entity instanceof OrgEntity) {
-            token.setOrganization((OrgEntity) entity);
+        if (entity instanceof UserEntity user) {
+            token.setUser(user);
+        } else if (entity instanceof OrgEntity org) {
+            token.setOrganization(org);
         } else {
             throw new IllegalArgumentException("Unsupported entity type");
         }
-        verificationTokenService.saveToken(token);
 
+        verificationTokenService.saveToken(token);
 
         AccountVerificationEmailContext context = new AccountVerificationEmailContext();
         context.init(entity);
         String email = (entity instanceof UserEntity user) ? user.getEmail() : ((OrgEntity) entity).getEmail();
         context.buildVerificationUrl(baseUrl, token.getToken(), email);
 
-
         try {
             emailService.sendMail(context);
+            log.info("OTP email sent to {}", email);
         } catch (MessagingException e) {
-            e.printStackTrace();
+            log.error("Failed to send OTP email to {}: {}", email, e.getMessage(), e);
         }
     }
 
-    public boolean verifyRegistration(String token, String mail) {
-        Optional<VerificationToken> tokenOpt = Optional.ofNullable(verificationTokenService.findByToken(token));
+    /**
+     * Verifies user or organization registration using a token.
+     *
+     * @param tokenValue the verification token
+     * @param email      the email associated with the entity
+     * @return true if verification succeeds, false otherwise
+     */
+    public boolean verifyRegistration(String tokenValue, String email) {
+        VerificationToken token = verificationTokenService.findByToken(tokenValue);
 
-        if (tokenOpt.isPresent()) {
-            VerificationToken verificationToken = tokenOpt.get();
-
-            if (verificationToken.isExpired()) {
-                throw new GlobalException("Expired verification token.", HttpStatus.BAD_REQUEST);
-            }
-
-            if (verificationToken.getUser() != null) {
-                Optional<UserEntity> userOpt = userRepository.findById(verificationToken.getUser().getId());
-                Optional<UserEntity> entity = userRepository.findByEmail(mail);
-                verificationToken.getUser().getEmail();
-                if (userOpt.isPresent() && entity.isPresent()) {
-                    UserEntity user = userOpt.get();
-                    user.setEnabled(true);
-                    userRepository.save(user); // Save user (modify if needed)
-                    verificationTokenService.removeToken(verificationToken);
-                    return true;
-                }
-            } else if (verificationToken.getOrganization() != null) {
-                Optional<OrgEntity> orgOpt = organizationRepository.findById(verificationToken.getOrganization().getId());
-                Optional<OrgEntity> entity = organizationRepository.findByEmail(mail);
-                if (orgOpt.isPresent() && entity.isPresent()) {
-                    OrgEntity org = orgOpt.get();
-                    org.setEnabled(true);
-                    organizationRepository.save(org); // Save organization (modify if needed)
-                    verificationTokenService.removeToken(verificationToken);
-                    return true;
-                }
-            }
-
+        if (token == null) {
+            log.warn("Invalid verification token: {}", tokenValue);
+            return false;
         }
-        return false; // Token not found or user does not exist
+
+        if (token.getExpiredAt() != null && token.getExpiredAt().isBefore(LocalDateTime.now())) {
+            log.warn("Expired verification token: {}", tokenValue);
+            throw new GlobalException("Expired verification token.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (token.getUser() != null) {
+            return verifyUser(token, email);
+        } else if (token.getOrganization() != null) {
+            return verifyOrganization(token, email);
+        }
+
+        log.error("Verification failed: No associated entity for token {}", tokenValue);
+        return false;
     }
 
+    private boolean verifyUser(VerificationToken token, String email) {
+        UserEntity user = token.getUser();
+
+        Optional<UserEntity> existingUser = userRepo.findByEmail(email);
+        if (existingUser.isEmpty() || !existingUser.get().getId().equals(user.getId())) {
+            log.warn("Verification failed: User not found or mismatch for email {}", email);
+            return false;
+        }
+
+        user.setEnabled(true);
+        userRepo.save(user);
+        verificationTokenService.removeToken(token);
+        log.info("User {} successfully verified", email);
+        return true;
+    }
+
+    private boolean verifyOrganization(VerificationToken token, String email) {
+        OrgEntity org = token.getOrganization();
+
+        Optional<OrgEntity> existingOrg = orgRepo.findByEmail(email);
+        if (existingOrg.isEmpty() || !existingOrg.get().getId().equals(org.getId())) {
+            log.warn("Verification failed: Organization not found or mismatch for email {}", email);
+            return false;
+        }
+
+        org.setEnabled(true);
+        orgRepo.save(org);
+        verificationTokenService.removeToken(token);
+        log.info("Organization {} successfully verified", email);
+        return true;
+    }
 }

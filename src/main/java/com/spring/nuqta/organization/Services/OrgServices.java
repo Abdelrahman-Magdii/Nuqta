@@ -11,7 +11,6 @@ import com.spring.nuqta.verificationToken.General.GeneralVerification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,9 +43,9 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      * @throws GlobalException if no organizations are found.
      */
     @Override
-    @Cacheable(value = "org")
+    @Cacheable(value = "org", key = "'allOrg'")
     public List<OrgEntity> findAll() throws GlobalException {
-        List<OrgEntity> organizations = organizationRepository.findAll();
+        List<OrgEntity> organizations = organizationRepository.findAllByEnabledTrue();
         if (organizations.isEmpty()) {
             throw new GlobalException("No organizations found", HttpStatus.NOT_FOUND);
         }
@@ -64,7 +63,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     @Override
     @Cacheable(value = "org", key = "#id")
     public OrgEntity findById(Long id) throws GlobalException {
-        Optional<OrgEntity> organization = organizationRepository.findById(id);
+        Optional<OrgEntity> organization = organizationRepository.findByIdAndEnabledTrue(id);
         if (organization.isEmpty()) {
             throw new GlobalException("Organization not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
@@ -80,7 +79,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      * @throws GlobalException if the entity or its ID is null, or if the organization is not found.
      */
     @Override
-    @CachePut(value = "org", key = "#entity.id")
+    @CacheEvict(value = "org", allEntries = true) // Clear all cached users
     public OrgEntity update(OrgEntity entity) throws GlobalException {
         if (entity == null || entity.getId() == null) {
             throw new GlobalException("Organization ID cannot be null", HttpStatus.BAD_REQUEST);
@@ -91,12 +90,20 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
             throw new GlobalException("Organization not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND);
         }
 
+        if (organizationRepository.existsByOrgNameAndIdNot(entity.getOrgName(), entity.getId())) {
+            throw new GlobalException("Organization name already exists", HttpStatus.CONFLICT);
+        }
+
+
         OrgEntity existingOrganization = organizationOptional.get();
         // Updating only selected fields to maintain data integrity
         existingOrganization.setOrgName(entity.getOrgName());
-        existingOrganization.setLocation(entity.getLocation());
+        existingOrganization.setCity(entity.getCity());
+        existingOrganization.setConservatism(entity.getConservatism());
         existingOrganization.setPhoneNumber(entity.getPhoneNumber());
         existingOrganization.setScope(entity.getScope());
+        existingOrganization.setFcmToken(entity.getFcmToken());
+
         existingOrganization.setModifiedDate(LocalDate.now());
         existingOrganization.setModifiedUser(entity.getOrgName());
 
@@ -113,8 +120,8 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     @Override
     @CacheEvict(value = "org", key = "#id")
     public void deleteById(Long id) throws GlobalException {
-        Optional<OrgEntity> organization = organizationRepository.findById(id);
-        if (organization.isEmpty()) {
+        boolean organization = organizationRepository.existsById(id);
+        if (!organization) {
             throw new GlobalException("Organization not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
         organizationRepository.deleteById(id);
@@ -144,7 +151,8 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         OrgEntity organizationCreation = new OrgEntity();
         organizationCreation.setOrgName(params.getOrgName());
         organizationCreation.setEmail(params.getEmail());
-        organizationCreation.setLocation(params.getLocation());
+        organizationCreation.setCity(params.getCity());
+        organizationCreation.setConservatism(params.getConservatism());
         organizationCreation.setPhoneNumber(params.getPhoneNumber());
         organizationCreation.setScope(params.getScope());
         organizationCreation.setPassword(passwordEncoder.encode(params.getPassword()));
@@ -194,7 +202,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      * @param fcmToken New FCM token.
      * @return ResponseEntity with success or failure message.
      */
-    @CachePut(value = "org", key = "#id")
+    @CacheEvict(value = "org", key = "#id")
     public String updateFcmToken(Long id, String fcmToken) {
         Optional<OrgEntity> orgOptional = organizationRepository.findById(id);
 
@@ -230,8 +238,11 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         if (Objects.isNull(params.getScope()) || !Scope.ORGANIZATION.equals(params.getScope())) {
             throw new GlobalException("Scope must be set to 'organization'.", HttpStatus.BAD_REQUEST);
         }
-        if (Objects.isNull(params.getLocation())) {
-            throw new GlobalException("Location is required.", HttpStatus.BAD_REQUEST);
+        if (Objects.isNull(params.getCity())) {
+            throw new GlobalException("City is required.", HttpStatus.BAD_REQUEST);
+        }
+        if (Objects.isNull(params.getConservatism())) {
+            throw new GlobalException("Conservatism is required.", HttpStatus.BAD_REQUEST);
         }
     }
 }

@@ -13,9 +13,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -37,36 +34,35 @@ public class ReqEntity extends BaseEntity<Long> {
     @Column(name = "amount")
     private Double amount;
 
-    @JdbcTypeCode(SqlTypes.GEOMETRY)
-    @Column(name = "location", columnDefinition = "GEOGRAPHY")
-    private Geometry location;
-
-    @Column(name = "address")
-    private String address;
-
-    @Column(name = "request_date")
-    private LocalDate requestDate;
+    @Column(name = "request_date", nullable = false, updatable = false)
+    private LocalDate requestDate = LocalDate.now();
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "urgency_level")
+    @Column(name = "urgency_level", nullable = false)
     private Level urgencyLevel;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private Status status;
 
     @Column(name = "payment_available")
     private Boolean paymentAvailable;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @Column(name = "city", nullable = false)
+    private String city;
+
+    @Column(name = "conservatism", nullable = false)
+    private String conservatism;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private UserEntity user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "org_id", referencedColumnName = "id")
     private OrgEntity organization;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE})
     @JoinTable(
             name = "request_donation",
             joinColumns = @JoinColumn(name = "request_id"),

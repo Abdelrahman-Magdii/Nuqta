@@ -2,8 +2,10 @@ package com.spring.nuqta.donation.Controller;
 
 import com.spring.nuqta.donation.Dto.AcceptDonationRequestDto;
 import com.spring.nuqta.donation.Dto.DonDto;
+import com.spring.nuqta.donation.Dto.DonResponseDto;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.donation.Mapper.DonMapper;
+import com.spring.nuqta.donation.Mapper.DonResponseMapper;
 import com.spring.nuqta.donation.Services.DonServices;
 import com.spring.nuqta.exception.GlobalException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,6 +32,7 @@ public class DonController {
 
     private final DonServices donServices;
     private final DonMapper donMapper;
+    private final DonResponseMapper donResponseMapper;
 
 
     @Operation(summary = "Get All Donations", description = "Retrieve a list of all donations")
@@ -38,7 +41,7 @@ public class DonController {
                     schema = @Schema(implementation = DonDto.class)))
     @GetMapping()
     public ResponseEntity<?> getAllDonation() {
-        List<DonDto> dtos = donMapper.map(donServices.findAll());
+        List<DonResponseDto> dtos = donResponseMapper.map(donServices.findAll());
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 
@@ -48,7 +51,7 @@ public class DonController {
                     schema = @Schema(implementation = DonDto.class)))
     @GetMapping("/{id}")
     public ResponseEntity<?> getDonationById(@PathVariable Long id) {
-        DonDto result = donMapper.map(donServices.findById(id));
+        DonResponseDto result = donResponseMapper.map(donServices.findById(id));
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -75,7 +78,7 @@ public class DonController {
     @PostMapping("/acceptRequest")
     public ResponseEntity<?> acceptDonationRequest(@RequestBody AcceptDonationRequestDto dto) {
         DonEntity updatedDonation = donServices.acceptDonationRequest(dto);
-        DonDto entity = donMapper.map(updatedDonation);
+        DonResponseDto entity = donResponseMapper.map(updatedDonation);
         return ResponseEntity.ok(entity);
     }
 

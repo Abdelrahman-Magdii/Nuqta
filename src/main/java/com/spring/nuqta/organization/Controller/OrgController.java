@@ -2,9 +2,11 @@ package com.spring.nuqta.organization.Controller;
 
 import com.spring.nuqta.organization.Dto.AddOrgDto;
 import com.spring.nuqta.organization.Dto.OrgDto;
+import com.spring.nuqta.organization.Dto.OrgRequestDto;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.organization.Mapper.AddOrgMapper;
 import com.spring.nuqta.organization.Mapper.OrgMapper;
+import com.spring.nuqta.organization.Mapper.OrgRequestMapper;
 import com.spring.nuqta.organization.Services.OrgServices;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,6 +32,7 @@ public class OrgController {
     private final OrgServices orgServices;
     private final OrgMapper orgMapper;
     private final AddOrgMapper addOrgMapper;
+    private final OrgRequestMapper orgRequestMapper;
 
     @Operation(summary = "Get All Organizations", description = "Retrieve a list of all organizations")
     @ApiResponse(responseCode = "200", description = "Organization get successfully",
@@ -75,10 +78,10 @@ public class OrgController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = AddOrgDto.class)))
     @PutMapping("")
-    public ResponseEntity<OrgDto> updateOrg(@RequestBody AddOrgDto addOrgDto) {
+    public ResponseEntity<OrgRequestDto> updateOrg(@RequestBody AddOrgDto addOrgDto) {
         OrgEntity entity = addOrgMapper.unMap(addOrgDto);
         entity = orgServices.update(entity);
-        OrgDto dto = orgMapper.map(entity);
+        OrgRequestDto dto = orgRequestMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
@@ -86,7 +89,9 @@ public class OrgController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrgById(@PathVariable Long id) {
         orgServices.deleteById(id);
-        return new ResponseEntity<>("Success Delete Organization", HttpStatus.OK);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Organization deleted successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @Operation(summary = "Change Organization Password", description = "Allow Organizations to change their password")
@@ -114,7 +119,7 @@ public class OrgController {
             response.put("message", "Organization not found");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } else {
-            response.put("message", "Organization updated successfully");
+            response.put("message", "Organization fcm token updated successfully");
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
     }

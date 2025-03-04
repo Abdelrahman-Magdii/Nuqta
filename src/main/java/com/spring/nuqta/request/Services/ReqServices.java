@@ -16,7 +16,6 @@ import com.spring.nuqta.usermanagement.Repo.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.locationtech.jts.geom.Geometry;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -28,7 +27,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Service class to handle CRUD operations for blood donation requests.
@@ -75,6 +73,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     @Override
     @Cacheable(value = "requests", key = "#id")
     public ReqEntity findById(Long id) throws GlobalException {
+        validId(id);
         return reqRepo.findById(id)
                 .orElseThrow(() -> new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND));
     }
@@ -90,6 +89,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     @Override
     @Transactional
     public void deleteById(Long id) throws GlobalException {
+        validId(id);
         if (!reqRepo.existsById(id)) {
             throw new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
@@ -105,18 +105,24 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
 
 
     public void ReCache(Long id) throws GlobalException {
+        // Fetch the request entity
         ReqEntity request = reqRepo.findById(id)
                 .orElseThrow(() -> new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND));
 
+        // Remove relations
         request.setUser(null);
         request.setOrganization(null);
         reqRepo.save(request);
         log.warn("Removed relations in ReCache for request ID: " + request.getId());
 
         // Manually clear the cache
-        Objects.requireNonNull(cacheManager.getCache("requests")).evict(id);
-        Objects.requireNonNull(cacheManager.getCache("users")).clear();
-        Objects.requireNonNull(cacheManager.getCache("org")).clear();
+        Cache requestsCache = cacheManager.getCache("requests");
+        Cache usersCache = cacheManager.getCache("users");
+        Cache orgCache = cacheManager.getCache("org");
+
+        if (requestsCache != null) requestsCache.evict(id);
+        if (usersCache != null) usersCache.clear();
+        if (orgCache != null) orgCache.clear();
     }
 
     /**
@@ -141,6 +147,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
             } // Caches the new request by ID
     )
     public ReqEntity addRequest(Long userId, ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
+        validId(userId);
         UserEntity user = userRepo.findById(userId)
                 .orElseThrow(() -> new GlobalException("User not found with ID: " + userId, HttpStatus.NOT_FOUND));
         reqEntity.setUser(user);
@@ -178,6 +185,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
             }// Caches the new request by ID
     )
     public ReqEntity addRequestForOrg(Long orgId, ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
+        validId(orgId);
         OrgEntity org = orgRepo.findById(orgId)
                 .orElseThrow(() -> new GlobalException("Organization not found with ID: " + orgId, HttpStatus.NOT_FOUND));
         reqEntity.setOrganization(org);
@@ -217,8 +225,8 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         // Update request details (excluding relationships)
         existingEntity.setBloodTypeNeeded(entity.getBloodTypeNeeded());
         existingEntity.setAmount(entity.getAmount());
-        existingEntity.setLocation(entity.getLocation());
-        existingEntity.setAddress(entity.getAddress());
+        existingEntity.setCity(entity.getCity());
+        existingEntity.setConservatism(entity.getConservatism());
         existingEntity.setRequestDate(entity.getRequestDate());
         existingEntity.setStatus(entity.getStatus());
         existingEntity.setUrgencyLevel(entity.getUrgencyLevel());
@@ -246,7 +254,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
      * @throws GlobalException if any error occurs while sending notifications
      */
     public void SendNotification(ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
-        List<DonEntity> nearbyDonors = findNearbyDonors(reqEntity.getLocation());
+        List<DonEntity> nearbyDonors = findNearbyDonors(reqEntity.getCity());
 
         for (DonEntity donor : nearbyDonors) {
             if (donor.getUser().getFcmToken() != null) {
@@ -262,11 +270,16 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     /**
      * Finds nearby donors within a given radius.
      *
-     * @param requestLocation The location of the request
+     * @param city The location of the request
      * @return List of nearby donors
      */
-    public List<DonEntity> findNearbyDonors(Geometry requestLocation) {
-        return donRepo.findNearbyDonors(requestLocation, SEARCH_RADIUS);
+    public List<DonEntity> findNearbyDonors(String city) {
+        return donRepo.findTopByCity(city);
     }
 
+    public void validId(Long id) {
+        if (id == null || id <= 0) {
+            throw new GlobalException("Invalid ID: " + id, HttpStatus.BAD_REQUEST);
+        }
+    }
 }

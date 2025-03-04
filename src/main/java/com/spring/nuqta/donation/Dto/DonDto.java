@@ -12,7 +12,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.Set;
 
-@Schema(name = "Donation Entity", description = "Represents a donation request or record with details about the blood type, donation status, location, and other attributes.")
+@Schema(name = "Donation Entity", description = "Represents a donation request or record with details about the blood type, donation status, and other attributes.")
 @Getter
 @Setter
 //@JsonInclude(JsonInclude.Include.NON_NULL)  // Exclude null fields from serialization
@@ -40,19 +40,18 @@ public class DonDto extends BaseDto<Long> {
     @Schema(description = "Current status of the donation process.", example = "PENDING")
     private DonStatus status;
 
-    @Schema(description = "Longitude coordinate of the donation request's location.", example = "-74.0060")
-    private Double longitude;
-
-    @Schema(description = "Latitude coordinate of the donation request's location.", example = "40.7128")
-    private Double latitude;
-
-    @Schema(description = "weight of the donation", example = "80")
+    @Schema(description = "Weight of the donor", example = "80")
     private Double weight;
 
+    @Schema(description = "City where the donation is happening", example = "New York")
+    private String city;
+
+    @Schema(description = "Conservatism level of the donation", example = "Moderate")
+    private String conservatism;
 
     @Schema(description = "User details associated with the donation.", example = "[]")
     private UserDto user;
 
     @Schema(description = "All Requests that donation Accepts", example = "[]")
-    private Set<ReqDto> requests;
+    private Set<ReqDto> acceptedRequests;
 }

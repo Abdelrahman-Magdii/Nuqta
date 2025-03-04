@@ -1,5 +1,6 @@
 package com.spring.nuqta.usermanagement.Dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.nuqta.base.Dto.BaseDto;
 import com.spring.nuqta.donation.Dto.DonDto;
 import com.spring.nuqta.enums.Gender;
@@ -39,4 +40,8 @@ public class UserInsertDto extends BaseDto<Long> {
 
     @Schema(description = "Donation details associated with the user")
     private DonDto donation;
+
+    @Schema(description = "FCM Token for push notifications", example = "abc123xyz")
+    @JsonProperty("fcmToken")
+    private String fcmToken;
 }

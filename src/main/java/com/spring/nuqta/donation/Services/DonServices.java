@@ -1,6 +1,5 @@
 package com.spring.nuqta.donation.Services;
 
-import com.google.firebase.messaging.FirebaseMessagingException;
 import com.spring.nuqta.base.Services.BaseServices;
 import com.spring.nuqta.donation.Dto.AcceptDonationRequestDto;
 import com.spring.nuqta.donation.Entity.DonEntity;
@@ -38,8 +37,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
     @Override
     @Cacheable(value = "donation")
     public List<DonEntity> findAll() {
-        log.info("Fetching all donations from DB");
-        return super.findAll();
+        return donRepository.findAll();
     }
 
     /**
@@ -52,13 +50,13 @@ public class DonServices extends BaseServices<DonEntity, Long> {
             throw new GlobalException("Invalid ID: " + id, HttpStatus.BAD_REQUEST);
         }
 
-        DonEntity entity = super.findById(id);
-        if (entity == null) {
+        Optional<DonEntity> entity = donRepository.findById(id);
+        if (entity.isEmpty()) {
             throw new GlobalException("Donation not found for ID: " + id, HttpStatus.NOT_FOUND);
         }
 
         log.info("Fetching donation with ID: {}", id);
-        return entity;
+        return entity.get();
     }
 
     /**
@@ -81,20 +79,19 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         ReqEntity request = reqRepository.findById(dto.getRequestId())
                 .orElseThrow(() -> new GlobalException("Request not found", HttpStatus.NOT_FOUND));
 
-        if (donation.getRequests().contains(request) || request.getDonations().contains(donation)) {
+        if (donation.getAcceptedRequests().contains(request) || request.getDonations().contains(donation)) {
             throw new GlobalException("Request already accept", HttpStatus.CONFLICT);
         }
 
-        donation.getRequests().add(request);
+        donation.getAcceptedRequests().add(request);
         request.getDonations().add(donation);
 
         // Save both entities to persist the relationship
         reqRepository.save(request);
         DonEntity entity = donRepository.save(donation);
 
-//        sendNotificationIfApplicable(donation, request);
+        sendNotificationIfApplicable(donation, request);
 
-        log.info("Donation ID {} accepted for Request ID {}", dto.getDonationId(), dto.getRequestId());
         return entity;
     }
 
@@ -107,12 +104,12 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         ReqEntity request = reqRepository.findById(dto.getRequestId())
                 .orElseThrow(() -> new GlobalException("Request not found", HttpStatus.NOT_FOUND));
 
-        if (!donation.getRequests().contains(request) || !request.getDonations().contains(donation)) {
+        if (!donation.getAcceptedRequests().contains(request)) {
             throw new GlobalException("Request already deleted", HttpStatus.CONFLICT);
         }
 
         // Remove the relationship
-        donation.getRequests().remove(request);
+        donation.getAcceptedRequests().remove(request);
         request.getDonations().remove(donation);
 
         // Save both entities to persist the relationship removal
@@ -125,32 +122,33 @@ public class DonServices extends BaseServices<DonEntity, Long> {
     /**
      * Sends a notification when a donation request is accepted.
      */
-    private void sendNotificationIfApplicable(DonEntity donation, ReqEntity request) {
-        String donorName = donation.getUser().getUsername();
+    void sendNotificationIfApplicable(DonEntity donation, ReqEntity request) {
+        if (donation == null || request == null) {
+            log.warn("Donation or request is null. Notification not sent.");
+            return;
+        }
+
+        UserEntity donor = donation.getUser();
+        if (donor == null || donor.getFcmToken() == null) {
+            log.warn("Donor or FCM token is null. Notification not sent.");
+            return;
+        }
+
+        String donorName = donor.getUsername();
         String message = "Your blood donation request has been accepted by " + donorName;
 
+        // Send notification to the request user (if user exists and has an FCM token)
         Optional.ofNullable(request.getUser())
                 .map(UserEntity::getFcmToken)
                 .ifPresent(token -> {
-                    try {
-                        sendNotification(token, message);
-                    } catch (FirebaseMessagingException e) {
-                        throw new RuntimeException(e);
-                    }
+                    notificationService.sendNotification(new NotificationRequest(token, "Request Accepted", message));
                 });
 
+        // Send notification to the request organization (if organization exists and has an FCM token)
         Optional.ofNullable(request.getOrganization())
                 .map(OrgEntity::getFcmToken)
                 .ifPresent(token -> {
-                    try {
-                        sendNotification(token, message);
-                    } catch (FirebaseMessagingException e) {
-                        throw new RuntimeException(e);
-                    }
+                    notificationService.sendNotification(new NotificationRequest(token, "Request Accepted", message));
                 });
-    }
-
-    private void sendNotification(String fcmToken, String message) throws FirebaseMessagingException {
-        notificationService.sendNotification(new NotificationRequest(fcmToken, "Request Accepted", message));
     }
 }

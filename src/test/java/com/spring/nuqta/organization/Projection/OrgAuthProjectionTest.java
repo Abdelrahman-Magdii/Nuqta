@@ -9,7 +9,7 @@ class OrgAuthProjectionTest {
 
     @Test
     void testObjectCreation() {
-        OrgAuthProjection org = new OrgAuthProjection(1L, "org@example.com", "securePass123", "orgName", "LIC-98765", Scope.ORGANIZATION, true);
+        OrgAuthProjection org = new OrgAuthProjection(1L, "org@example.com", "securePass123", "orgName", Scope.ORGANIZATION, true, "LIC-98765");
 
         assertNotNull(org);
         assertEquals(1L, org.id());
@@ -22,9 +22,9 @@ class OrgAuthProjectionTest {
 
     @Test
     void testEqualityAndHashCode() {
-        OrgAuthProjection org1 = new OrgAuthProjection(1L, "org@example.com", "securePass123", "orgName", "LIC-98765", Scope.ORGANIZATION, true);
-        OrgAuthProjection org2 = new OrgAuthProjection(1L, "org@example.com", "securePass123", "orgName", "LIC-98765", Scope.ORGANIZATION, true);
-        OrgAuthProjection org3 = new OrgAuthProjection(2L, "other@example.com", "diffPass", "orgName", "LIC-54321", Scope.USER, false);
+        OrgAuthProjection org1 = new OrgAuthProjection(1L, "org@example.com", "securePass123", "orgName", Scope.ORGANIZATION, true, "LIC-98765");
+        OrgAuthProjection org2 = new OrgAuthProjection(1L, "org@example.com", "securePass123", "orgName", Scope.ORGANIZATION, true, "LIC-98765");
+        OrgAuthProjection org3 = new OrgAuthProjection(2L, "other@example.com", "diffPass", "orgName", Scope.USER, false, "LIC-98765");
 
         assertEquals(org1, org2);
         assertNotEquals(org1, org3);
@@ -35,7 +35,7 @@ class OrgAuthProjectionTest {
 
     @Test
     void testToString() {
-        OrgAuthProjection org = new OrgAuthProjection(1L, "org@example.com", "securePass123", "orgName", "LIC-98765", Scope.ORGANIZATION, true);
+        OrgAuthProjection org = new OrgAuthProjection(1L, "org@example.com", "securePass123", "orgName", Scope.ORGANIZATION, true, "LIC-98765");
 
         String result = org.toString();
         assertTrue(result.contains("OrgAuthProjection"));

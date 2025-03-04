@@ -68,7 +68,7 @@ public class GeneralReset {
             ForgotPasswordWithOtp context = new ForgotPasswordWithOtp();
             if (user.isPresent()) {
                 context.init(user.get());
-            } else if (organization.isPresent()) {
+            } else {
                 context.init(organization.get());
             }
             context.buildVerificationOtp(otp);
@@ -99,12 +99,10 @@ public class GeneralReset {
                 OrgEntity org = organizationRepo.findByEmail(email)
                         .orElseThrow(() -> new NoSuchElementException("Organization not found for email: " + email));
                 resetPasswordEntity.setOrganization(org);
-            } else if (userOpt.isPresent()) {
+            } else {
                 UserEntity user = userRepo.findByEmail(email)
                         .orElseThrow(() -> new NoSuchElementException("User not found for email: " + email));
                 resetPasswordEntity.setUser(user);
-            } else {
-                throw new NoSuchElementException("No user or organization found for email: " + email);
             }
         }
         return resetPasswordEntity;
