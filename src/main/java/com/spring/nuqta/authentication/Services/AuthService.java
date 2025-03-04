@@ -82,8 +82,9 @@ public class AuthService {
 
     private <T> Optional<T> authenticateUser(String token) {
         String subject = jwtUtilsUser.getSubject(token);
+        String email = jwtUtilsUser.getEmail(token);
 
-        return userRepository.findUserAuthProjectionByUsername(subject)
+        return userRepository.findUserAuthProjectionByUsernameOrEmail(subject, email)
                 .map(user -> {
                     AuthUserDto authuserDto = createUserDto(user, token);
                     return (T) authuserDto;
@@ -92,11 +93,14 @@ public class AuthService {
 
     private <T> Optional<T> authenticateOrganization(String token) {
         String subject = jwtUtilsOrganization.getSubject(token);
-        return organizationRepository.findOrgAuthProjectionByEmail(subject)
+        String email = jwtUtilsOrganization.getEmail(token);
+
+        return organizationRepository.findOrgAuthProjectionByLicenseNumberOrEmail(subject, email)
                 .map(organization -> {
                     AuthOrgDto authOrgDto = createOrgDto(organization, token);
                     return (T) authOrgDto;
                 });
+
     }
 
 
@@ -136,11 +140,9 @@ public class AuthService {
         if (user.enabled()) {
             Optional<UserAuthProjection> user1 = userRepository.findUserAuthProjectionByUsername(username);
             Optional<UserAuthProjection> user2 = userRepository.findUserAuthProjectionByEmail(email);
-            if (user1.isPresent()
-                    && passwordEncoder.matches(password, user1.get().password())) {
+            if (user1.isPresent() && passwordEncoder.matches(password, user1.get().password())) {
                 return (UserAuthProjection) user1.get();
-            } else if (user2.isPresent()
-                    && passwordEncoder.matches(password, user2.get().password())) {
+            } else if (user2.isPresent() && passwordEncoder.matches(password, user2.get().password())) {
                 return (UserAuthProjection) user2.get();
             } else if (!passwordEncoder.matches(password, user1.get().password())) {
                 throw new GlobalException("Password invalid.", HttpStatus.BAD_REQUEST);

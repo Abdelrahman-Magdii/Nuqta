@@ -31,4 +31,6 @@ public interface OrgRepo extends BaseRepo<OrgEntity, Long> {
     boolean existsById(Long id);
 
     boolean existsByOrgNameAndIdNot(@NotBlank(message = "Organization name cannot be blank") @Size(max = 100, message = "Organization name cannot exceed 100 characters") String orgName, Long id);
+
+    Optional<OrgAuthProjection> findOrgAuthProjectionByLicenseNumberOrEmail(@NotBlank(message = "License number cannot be blank") @Size(max = 50, message = "License number cannot exceed 50 characters") String licenseNumber, @NotBlank(message = "Email cannot be blank") @Email(message = "Email should be valid") String email);
 }
