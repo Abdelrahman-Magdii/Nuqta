@@ -53,6 +53,7 @@ class UserServicesTest {
         mockUser.setPassword("encodedPassword");
         mockUser.setScope(Scope.USER);
         mockUser.setCreatedDate(LocalDate.now());
+        mockUser.setFcmToken("token");
 
         // Create a mock DonEntity
         DonEntity donation = new DonEntity();
@@ -355,6 +356,7 @@ class UserServicesTest {
         user.setEmail("test@example.com");
         user.setPhoneNumber("1234567890");
         user.setScope(Scope.USER);
+        user.setFcmToken("oldFcmToken");
 
         DonEntity donation = new DonEntity();
         donation.setCity("city");

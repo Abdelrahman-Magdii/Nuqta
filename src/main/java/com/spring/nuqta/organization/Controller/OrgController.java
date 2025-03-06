@@ -55,24 +55,6 @@ public class OrgController {
     }
 
 
-    @Operation(summary = "Sign in Organization", description = "Create a new organization")
-    @ApiResponse(responseCode = "201", description = "Organization added successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = AddOrgDto.class)))
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AddOrgDto addOrgDto) {
-        OrgEntity entity = addOrgMapper.unMap(addOrgDto);
-        orgServices.saveOrg(entity);
-
-        // Create a map for the JSON response
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Organization registered successfully. Please verify your email.");
-
-        // Return the response as JSON
-        return ResponseEntity.ok(response);
-    }
-
-
     @Operation(summary = "Update an Organization", description = "Update an existing organization's details")
     @ApiResponse(responseCode = "200", description = "Organization update successfully",
             content = @Content(mediaType = "application/json",

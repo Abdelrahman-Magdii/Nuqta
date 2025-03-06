@@ -25,8 +25,7 @@ public class JwtUtilsOrganization extends JwtUtils {
                               long expiration) {
         return Jwts.builder()
                 .setClaims(extraClaims) // Set additional claims
-                .setSubject(organization.licenseNumber())
-                .claim("email", organization.email())
+                .setSubject(organization.email())
                 .claim("scope", organization.scope().toString()) // Add the organization's scope as a claim
                 .setIssuedAt(new Date(System.currentTimeMillis())) // Set the token issuance time
                 .setExpiration(new Date(System.currentTimeMillis() + expiration)) // Set the token expiration time
@@ -79,9 +78,6 @@ public class JwtUtilsOrganization extends JwtUtils {
         return extractClaim(token, claims -> claims.get("scope", String.class));
     }
 
-    public String getEmail(String token) {
-        return extractClaim(token, claims -> claims.get("email", String.class));
-    }
 
     /**
      * Helper method to get the JWT expiration time from the parent class.

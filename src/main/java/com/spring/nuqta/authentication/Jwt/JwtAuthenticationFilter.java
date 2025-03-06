@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -131,9 +133,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Scope scope = (dto instanceof AuthUserDto) ? ((AuthUserDto) dto).getScope()
                 : ((AuthOrgDto) dto).getScope();
 
+        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(scope.name()));
+
         // Create an authentication token with the scope and DTO as the principal
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(scope, dto, null);
+                new UsernamePasswordAuthenticationToken(scope, dto, authorities);
 
         // Set additional details from the request (e.g., IP address, session ID)
         authenticationToken.setDetails(

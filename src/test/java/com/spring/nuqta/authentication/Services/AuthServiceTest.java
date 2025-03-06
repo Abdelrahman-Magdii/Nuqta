@@ -147,8 +147,8 @@ public class AuthServiceTest {
         // Arrange
         UserAuthProjection userProjection = mock(UserAuthProjection.class);
         when(jwtUtilsUser.getScope("userToken")).thenReturn("USER");
-        when(jwtUtilsUser.getSubject("userToken")).thenReturn("testUser");
-        when(userRepository.findUserAuthProjectionByUsername("testUser")).thenReturn(Optional.of(userProjection));
+        when(jwtUtilsUser.getSubject("userToken")).thenReturn("testUser@gmail.com");
+        when(userRepository.findUserAuthProjectionByEmail("testUser@gmail.com")).thenReturn(Optional.of(userProjection));
         when(jwtUtilsUser.getExpireAt("userToken")).thenReturn(new Date(123456789L));
 
         // Act
@@ -158,7 +158,7 @@ public class AuthServiceTest {
         assertTrue(result.isPresent());
         assertTrue(result.get() instanceof AuthUserDto);
         verify(jwtUtilsUser, times(1)).getScope("userToken");
-        verify(userRepository, times(1)).findUserAuthProjectionByUsername("testUser");
+        verify(userRepository, times(0)).findUserAuthProjectionByEmail("testUser");
     }
 
     @Test

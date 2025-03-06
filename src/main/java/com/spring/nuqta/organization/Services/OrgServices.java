@@ -244,5 +244,8 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         if (Objects.isNull(params.getConservatism())) {
             throw new GlobalException("Conservatism is required.", HttpStatus.BAD_REQUEST);
         }
+        if (Objects.isNull(params.getFcmToken())) {
+            throw new GlobalException("Fcm Token is required.", HttpStatus.BAD_REQUEST);
+        }
     }
 }

@@ -4,6 +4,14 @@ import com.spring.nuqta.authentication.Dto.AuthOrgDto;
 import com.spring.nuqta.authentication.Dto.AuthUserDto;
 import com.spring.nuqta.authentication.Services.AuthService;
 import com.spring.nuqta.forgotPassword.General.GeneralReset;
+import com.spring.nuqta.organization.Dto.AddOrgDto;
+import com.spring.nuqta.organization.Entity.OrgEntity;
+import com.spring.nuqta.organization.Mapper.AddOrgMapper;
+import com.spring.nuqta.organization.Services.OrgServices;
+import com.spring.nuqta.usermanagement.Dto.UserInsertDto;
+import com.spring.nuqta.usermanagement.Entity.UserEntity;
+import com.spring.nuqta.usermanagement.Mapper.UserInsertMapper;
+import com.spring.nuqta.usermanagement.Services.UserServices;
 import com.spring.nuqta.verificationToken.General.GeneralVerification;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.SystemException;
@@ -26,7 +34,35 @@ public class AuthController {
     private final AuthService authService;
     private final GeneralReset generalReset;
     private final GeneralVerification generalVerification;
+    private final UserServices userServices;
+    private final UserInsertMapper userInsertMapper;
+    private final OrgServices orgServices;
+    private final AddOrgMapper addOrgMapper;
 
+    @PostMapping("/user/register")
+    public ResponseEntity<Map<String, String>> register(@RequestBody UserInsertDto userDto) {
+        UserEntity entity = userInsertMapper.unMap(userDto);
+        userServices.saveUser(entity);
+
+        // Create a map with the message
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User registered successfully. Please verify your email.");
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/org/register")
+    public ResponseEntity<?> register(@RequestBody AddOrgDto addOrgDto) {
+        OrgEntity entity = addOrgMapper.unMap(addOrgDto);
+        orgServices.saveOrg(entity);
+
+        // Create a map for the JSON response
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Organization registered successfully. Please verify your email.");
+
+        // Return the response as JSON
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/login/user")
     public ResponseEntity<AuthUserDto> loginUser(@RequestBody Map<String, Object> input) throws SystemException {

@@ -30,5 +30,4 @@ public interface UserRepo extends BaseRepo<UserEntity, Long> {
 
     boolean existsByUsernameAndIdNot(String username, Long id);
 
-    Optional<UserAuthProjection> findUserAuthProjectionByUsernameOrEmail(String username, String email);
 }

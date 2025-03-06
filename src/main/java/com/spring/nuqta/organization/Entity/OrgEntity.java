@@ -64,7 +64,7 @@ public class OrgEntity extends BaseEntity<Long> {
 
     private boolean enabled = false;
 
-    @Column(name = "fcm_token")
+    @Column(name = "fcm_token", nullable = false)
     private String fcmToken;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

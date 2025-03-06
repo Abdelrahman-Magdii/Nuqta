@@ -61,6 +61,8 @@ public class OrgServicesTest {
         orgEntity.setModifiedUser("Test User");
         orgEntity.setConservatism("conservatism");
         orgEntity.setCity("city");
+        orgEntity.setFcmToken("fcmToken");
+
     }
 
     @Test
@@ -308,6 +310,7 @@ public class OrgServicesTest {
         orgEntity.setScope(Scope.ORGANIZATION);
         orgEntity.setConservatism("conservatism");
         orgEntity.setCity("city");
+        orgEntity.setFcmToken("fcmToken");
 
         // No exception should be thrown
         assertDoesNotThrow(() -> orgServices.validateOrganizationFields(orgEntity));

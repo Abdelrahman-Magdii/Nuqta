@@ -90,7 +90,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         reqRepository.save(request);
         DonEntity entity = donRepository.save(donation);
 
-        sendNotificationIfApplicable(donation, request);
+//        sendNotificationIfApplicable(donation, request);
 
         return entity;
     }

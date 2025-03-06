@@ -65,6 +65,10 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         if (Objects.isNull(params.getDonation().getCity())) {
             throw new GlobalException("City is required.", HttpStatus.BAD_REQUEST);
         }
+
+        if (Objects.isNull(params.getFcmToken())) {
+            throw new GlobalException("Fcm Token is required.", HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**

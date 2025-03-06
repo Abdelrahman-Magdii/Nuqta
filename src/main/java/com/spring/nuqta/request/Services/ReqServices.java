@@ -153,7 +153,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         reqEntity.setUser(user);
 
         // Send notifications to nearby donors
-        this.SendNotification(reqEntity);
+//        this.SendNotification(reqEntity);
 
         // Set timestamps and user details
         reqEntity.setCreatedDate(LocalDate.now());
@@ -191,7 +191,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         reqEntity.setOrganization(org);
 
         // Send notifications to nearby donors
-        this.SendNotification(reqEntity);
+//        this.SendNotification(reqEntity);
 
         // Set timestamps and organization details
         reqEntity.setCreatedDate(LocalDate.now());
@@ -255,13 +255,12 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
      */
     public void SendNotification(ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
         List<DonEntity> nearbyDonors = findNearbyDonors(reqEntity.getCity());
-
         for (DonEntity donor : nearbyDonors) {
             if (donor.getUser().getFcmToken() != null) {
                 notificationService.sendNotification(new NotificationRequest(
                         donor.getUser().getFcmToken(),
                         "Urgent Blood Request!",
-                        "A new blood donation request has been posted near you from " + reqEntity.getUser().getUsername()
+                        "A new blood donation request has been posted near you from " + donor.getUser().getUsername()
                 ));
             }
         }

@@ -56,22 +56,6 @@ public class UserController {
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
-    @Operation(summary = "Sign in User", description = "Sign in a new user")
-    @ApiResponse(responseCode = "201", description = "User Sign in successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = UserInsertDto.class)))
-    @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> register(@RequestBody UserInsertDto userDto) {
-        UserEntity entity = userInsertMapper.unMap(userDto);
-        userServices.saveUser(entity);
-
-        // Create a map with the message
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "User registered successfully. Please verify your email.");
-
-        return ResponseEntity.ok(response);
-    }
-
 
     @Operation(summary = "Update an Existing User", description = "Update the details of an existing user")
     @ApiResponse(responseCode = "200", description = "User updated successfully",
