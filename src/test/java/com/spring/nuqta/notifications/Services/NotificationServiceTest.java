@@ -32,14 +32,6 @@ class NotificationServiceTest {
 
     private NotificationRequest notificationRequest;
 
-    @BeforeEach
-    void setUp() {
-        notificationRequest = new NotificationRequest();
-        notificationRequest.setTargetFcmToken("testToken");
-        notificationRequest.setTitle("Test Title");
-        notificationRequest.setMessage("Test Message");
-    }
-
     @BeforeAll
     static void setup() throws Exception {
         if (FirebaseApp.getApps().isEmpty()) {
@@ -51,6 +43,14 @@ class NotificationServiceTest {
 
             FirebaseApp.initializeApp(options);
         }
+    }
+
+    @BeforeEach
+    void setUp() {
+        notificationRequest = new NotificationRequest();
+        notificationRequest.setTargetFcmToken("testToken");
+        notificationRequest.setTitle("Test Title");
+        notificationRequest.setMessage("Test Message");
     }
 
     @Test
@@ -71,7 +71,7 @@ class NotificationServiceTest {
 
         // Act
         notificationService.sendNotification(request);
-        
+
         // Assert
         verify(firebaseMessaging, times(1)).send(any(Message.class));
     }
@@ -126,7 +126,7 @@ class NotificationServiceTest {
             notificationService.sendNotification(request);
         });
 
-        assertEquals("FCM token cannot be empty", thrown.getMessage());
+        assertEquals("notification.fcm.empty", thrown.getMessage());
     }
 
     // ✅ Test: Message validation
@@ -137,7 +137,7 @@ class NotificationServiceTest {
             notificationService.sendNotification(request);
         });
 
-        assertEquals("Title cannot be empty", thrown.getMessage());
+        assertEquals("notification.title.empty", thrown.getMessage());
     }
 
     // ✅ Test: FCM token validation
@@ -148,7 +148,7 @@ class NotificationServiceTest {
             notificationService.sendNotification(request);
         });
 
-        assertEquals("Message cannot be empty", thrown.getMessage());
+        assertEquals("notification.message.empty", thrown.getMessage());
     }
 
 

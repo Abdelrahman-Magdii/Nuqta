@@ -22,6 +22,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -37,13 +39,13 @@ import java.util.List;
 @AllArgsConstructor
 public class ReqServices extends BaseServices<ReqEntity, Long> {
 
-    private static final double SEARCH_RADIUS = 10.000; // Defines a 10 KM search radius for nearby donors
     private final ReqRepo reqRepo;
     private final UserRepo userRepo;
     private final OrgRepo orgRepo;
     private final NotificationService notificationService;
     private final DonRepo donRepo;
     private final CacheManager cacheManager;
+    private final MessageSource ms;
 
     /**
      * Retrieves all requests from the database.
@@ -57,7 +59,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     public List<ReqEntity> findAll() throws GlobalException {
         List<ReqEntity> requests = reqRepo.findAll();
         if (requests.isEmpty()) {
-            throw new GlobalException("No requests found", HttpStatus.NOT_FOUND);
+            throw new GlobalException("error.request.no_requests", HttpStatus.NOT_FOUND);
         }
         return requests;
     }
@@ -74,8 +76,9 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     @Cacheable(value = "requests", key = "#id")
     public ReqEntity findById(Long id) throws GlobalException {
         validId(id);
+        String msg = messageParam(id, "error.request.notfound");
         return reqRepo.findById(id)
-                .orElseThrow(() -> new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new GlobalException(msg, HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -91,7 +94,9 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     public void deleteById(Long id) throws GlobalException {
         validId(id);
         if (!reqRepo.existsById(id)) {
-            throw new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND);
+            String msg = messageParam(id, "error.request.notfound");
+
+            throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
         reqRepo.hardDeleteById(id);
         // Invalidate cache
@@ -106,14 +111,15 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
 
     public void ReCache(Long id) throws GlobalException {
         // Fetch the request entity
+        String msg = messageParam(id, "error.request.notfound");
+
         ReqEntity request = reqRepo.findById(id)
-                .orElseThrow(() -> new GlobalException("Request not found with ID: " + id, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new GlobalException(msg, HttpStatus.NOT_FOUND));
 
         // Remove relations
         request.setUser(null);
         request.setOrganization(null);
         reqRepo.save(request);
-        log.warn("Removed relations in ReCache for request ID: " + request.getId());
 
         // Manually clear the cache
         Cache requestsCache = cacheManager.getCache("requests");
@@ -148,12 +154,14 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     )
     public ReqEntity addRequest(Long userId, ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
         validId(userId);
+        String msg = messageParam(userId, "error.request.notfound");
+
         UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new GlobalException("User not found with ID: " + userId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new GlobalException(msg, HttpStatus.NOT_FOUND));
         reqEntity.setUser(user);
 
         // Send notifications to nearby donors
-//        this.SendNotification(reqEntity);
+        this.SendNotification(reqEntity);
 
         // Set timestamps and user details
         reqEntity.setCreatedDate(LocalDate.now());
@@ -186,12 +194,13 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     )
     public ReqEntity addRequestForOrg(Long orgId, ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
         validId(orgId);
+        String msg = messageParam(orgId, "error.org.notfound");
         OrgEntity org = orgRepo.findById(orgId)
-                .orElseThrow(() -> new GlobalException("Organization not found with ID: " + orgId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new GlobalException(msg, HttpStatus.NOT_FOUND));
         reqEntity.setOrganization(org);
 
         // Send notifications to nearby donors
-//        this.SendNotification(reqEntity);
+        this.SendNotification(reqEntity);
 
         // Set timestamps and organization details
         reqEntity.setCreatedDate(LocalDate.now());
@@ -215,12 +224,14 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     @CachePut(value = "requests", key = "#entity.id")
     public ReqEntity update(ReqEntity entity) throws GlobalException {
         if (entity == null || entity.getId() == null) {
-            throw new GlobalException("Request ID cannot be null", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.request.id.null", HttpStatus.BAD_REQUEST);
         }
+
+        String msg = messageParam(entity.getId(), "error.request.notfound");
 
         // Fetch the existing request entity
         ReqEntity existingEntity = reqRepo.findById(entity.getId())
-                .orElseThrow(() -> new GlobalException("Request not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new GlobalException(msg, HttpStatus.NOT_FOUND));
 
         // Update request details (excluding relationships)
         existingEntity.setBloodTypeNeeded(entity.getBloodTypeNeeded());
@@ -254,13 +265,28 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
      * @throws GlobalException if any error occurs while sending notifications
      */
     public void SendNotification(ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
-        List<DonEntity> nearbyDonors = findNearbyDonors(reqEntity.getCity());
+        // Ensure reqEntity has a user or organization
+        if (reqEntity.getUser() == null && reqEntity.getOrganization() == null) {
+            throw new GlobalException("error.request.no_user_or_org", HttpStatus.BAD_REQUEST);
+        }
+
+        // Find nearby donors
+        List<DonEntity> nearbyDonors = findNearbyDonors(reqEntity.getCity(), reqEntity.getConservatism());
+
+        // Get sender name
+        String senderName = (reqEntity.getUser() != null)
+                ? reqEntity.getUser().getUsername()
+                : reqEntity.getOrganization().getOrgName();
+
+        // Send notifications to nearby donors
         for (DonEntity donor : nearbyDonors) {
             if (donor.getUser().getFcmToken() != null) {
+                String[] msParam = {senderName};
+                String msg = ms.getMessage("notification.bloodRequest.message", msParam, LocaleContextHolder.getLocale());
+
                 notificationService.sendNotification(new NotificationRequest(
                         donor.getUser().getFcmToken(),
-                        "Urgent Blood Request!",
-                        "A new blood donation request has been posted near you from " + donor.getUser().getUsername()
+                        "notification.bloodRequest.title", msg
                 ));
             }
         }
@@ -272,13 +298,19 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
      * @param city The location of the request
      * @return List of nearby donors
      */
-    public List<DonEntity> findNearbyDonors(String city) {
-        return donRepo.findTopByCity(city);
+    public List<DonEntity> findNearbyDonors(String city, String conservatism) {
+        return donRepo.findTopByCityOrConservatism(city, conservatism);
     }
 
     public void validId(Long id) {
         if (id == null || id <= 0) {
-            throw new GlobalException("Invalid ID: " + id, HttpStatus.BAD_REQUEST);
+            String msg = messageParam(id, "error.user.invalid.id");
+            throw new GlobalException(msg, HttpStatus.BAD_REQUEST);
         }
+    }
+
+    public String messageParam(Long id, String message) {
+        String[] msParam = {id != null ? id.toString() : "null"};
+        return ms.getMessage(message, msParam, LocaleContextHolder.getLocale());
     }
 }

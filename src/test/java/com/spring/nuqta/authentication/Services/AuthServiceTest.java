@@ -126,7 +126,7 @@ public class AuthServiceTest {
 
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class, () -> authService.authUser(userParams));
-        assertEquals("Username Or Email invalid.", exception.getMessage());
+        assertEquals("error.auth.usernameOrEmailInvalid", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -138,7 +138,7 @@ public class AuthServiceTest {
 
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class, () -> authService.authOrganization(orgParams));
-        assertEquals("Organization Email invalid", exception.getMessage());
+        assertEquals("error.org.emailInvalid", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -215,7 +215,7 @@ public class AuthServiceTest {
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> authService.validateUserParams(username, email, password));
-        assertEquals("Email Or Username required", exception.getMessage());
+        assertEquals("error.auth.emailOrUsernameRequired", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -229,7 +229,7 @@ public class AuthServiceTest {
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> authService.validateUserParams(username, email, password));
-        assertEquals("Password required", exception.getMessage());
+        assertEquals("error.auth.passwordRequired", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -247,7 +247,7 @@ public class AuthServiceTest {
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> authService.validateUserAuth(username, email, password));
-        assertEquals("Username Or Email invalid.", exception.getMessage());
+        assertEquals("error.auth.usernameOrEmailInvalid", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -266,7 +266,7 @@ public class AuthServiceTest {
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> authService.validateUserAuth(username, email, password));
-        assertEquals("Password invalid.", exception.getMessage());
+        assertEquals("error.auth.passwordInvalid", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -293,7 +293,7 @@ public class AuthServiceTest {
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> authService.validateOrganizationParams(licenseNumber, email, password));
-        assertEquals("License Number or Email required", exception.getMessage());
+        assertEquals("error.org.licenseOrEmailRequired", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -307,7 +307,7 @@ public class AuthServiceTest {
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> authService.validateOrganizationParams(licenseNumber, email, password));
-        assertEquals("Password required.", exception.getMessage());
+        assertEquals("error.org.passwordRequired", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -346,7 +346,7 @@ public class AuthServiceTest {
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> authService.validateOrganizationAuth(licenseNumber, password, email));
-        assertEquals("Organization Email invalid", exception.getMessage());
+        assertEquals("error.org.emailInvalid", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -388,7 +388,7 @@ public class AuthServiceTest {
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> authService.validateOrganizationAuth(licenseNumber, password, email));
-        assertEquals("Password invalid.", exception.getMessage());
+        assertEquals("error.auth.passwordInvalid", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 }

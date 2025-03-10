@@ -46,7 +46,7 @@ public class AuthController {
 
         // Create a map with the message
         Map<String, String> response = new HashMap<>();
-        response.put("message", "User registered successfully. Please verify your email.");
+        response.put("message", "user.register.success");
 
         return ResponseEntity.ok(response);
     }
@@ -58,7 +58,7 @@ public class AuthController {
 
         // Create a map for the JSON response
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Organization registered successfully. Please verify your email.");
+        response.put("message", "organization.register.success");
 
         // Return the response as JSON
         return ResponseEntity.ok(response);
@@ -81,10 +81,10 @@ public class AuthController {
         Map<String, String> response = new HashMap<>();
 
         if (verified) {
-            response.put("messing", "Email verified successfully!");
+            response.put("messing", "email.verify.success");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            response.put("messing", "Invalid verification code.");
+            response.put("messing", "email.verify.invalid");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
@@ -92,33 +92,7 @@ public class AuthController {
 
     @PostMapping("/forgotPassword")
     public ResponseEntity<Map<String, String>> forgotPassword(@RequestParam("email") String email) {
-        String result = generalReset.sendOtpEmail(email);
-        Map<String, String> response = new HashMap<>();
-
-        return switch (result) {
-            case "Success sent OTP to your email." -> {
-                response.put("message", result);
-                yield ResponseEntity.ok(response);
-            }
-            case "Error sending OTP email. Please try again later." -> {
-                response.put("message", result);
-                yield ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-            }
-            case "Email not found. Please check the email address and try again." -> {
-                response.put("message", result);
-                yield ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            }
-            case "Email not verify. Please complete sign in." -> {
-                response.put("message", result);
-                yield ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
-            default -> {
-                response.put("message", "Unexpected error occurred.");
-                yield ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-            }
-        };
-
-
+        return generalReset.sendOtpEmail(email);
     }
 
 
@@ -130,10 +104,10 @@ public class AuthController {
         Map<String, String> response = new HashMap<>();
 
         if (verified) {
-            response.put("messing", "Password reset successfully!");
+            response.put("messing", "password.reset.success");
             return ResponseEntity.ok(response);
         } else {
-            response.put("messing", "Invalid reset password code.");
+            response.put("messing", "password.reset.invalid");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }

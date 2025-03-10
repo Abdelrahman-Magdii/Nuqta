@@ -16,10 +16,13 @@ import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -44,14 +47,16 @@ public class GeneralReset {
         this.resetPasswordRepo = resetPasswordRepo;
     }
 
-    public String sendOtpEmail(String email) {
+    public ResponseEntity<Map<String, String>> sendOtpEmail(String email) {
+        Map<String, String> response = new HashMap<>();
 
         // Find user or organization by email
         Optional<UserAuthProjection> user = userRepo.findUserAuthProjectionByEmail(email);
         Optional<OrgAuthProjection> organization = organizationRepo.findOrgAuthProjectionByEmail(email);
 
         if (user.isEmpty() && organization.isEmpty()) {
-            return "Email not found. Please check the email address and try again.";
+            response.put("message", "email.not.found");
+            return ResponseEntity.ok(response);
         }
 
         if ((user.isPresent() && user.get().enabled()) || (organization.isPresent() && organization.get().enabled())) {
@@ -75,13 +80,16 @@ public class GeneralReset {
 
             try {
                 emailService.sendMail(context);
-                return "Success sent OTP to your email.";
+                response.put("message", "otp.success");
+                return ResponseEntity.ok(response);
             } catch (MessagingException e) {
-                return "Error sending OTP email. Please try again later.";
+                response.put("message", "otp.send.error");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         } else {
             log.warn("Email not verified: {}", email);
-            return "Email not verified. Please complete sign-in.";
+            response.put("message", "email.not.verified");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
@@ -109,14 +117,13 @@ public class GeneralReset {
     }
 
     public boolean resetPassword(String mail, String otp, String newPassword) {
-
         Optional<ResetPasswordEntity> tokenOpt = Optional.ofNullable(resetPasswordRepo.findByOtp(otp));
 
         if (tokenOpt.isPresent()) {
             ResetPasswordEntity verify = tokenOpt.get();
 
             if (verify.isExpired()) {
-                throw new GlobalException("Verification code expired. Please request a new code.", HttpStatus.BAD_REQUEST);
+                throw new GlobalException("verification.code.expired", HttpStatus.BAD_REQUEST);
             }
 
             if (verify.getUser() != null) {
@@ -126,7 +133,7 @@ public class GeneralReset {
                 if (userOpt.isPresent() && entity) {
                     UserEntity user = userOpt.get();
                     user.setPassword(passwordEncoder.encode(newPassword));
-                    userRepo.save(user); // Save user (modify if needed)
+                    userRepo.save(user);
                     resetPasswordService.deleteOtp(verify);
                     return true;
                 }
@@ -137,13 +144,12 @@ public class GeneralReset {
                 if (orgOpt.isPresent() && entity) {
                     OrgEntity org = orgOpt.get();
                     org.setPassword(passwordEncoder.encode(newPassword));
-                    organizationRepo.save(org); // Save organization (modify if needed)
+                    organizationRepo.save(org);
                     resetPasswordService.deleteOtp(verify);
                     return true;
                 }
             }
-
         }
-        return false; // Token not found or user does not exist
+        return false;
     }
 }

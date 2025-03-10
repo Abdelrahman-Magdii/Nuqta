@@ -21,13 +21,13 @@ public class NotificationService {
     public String sendNotification(NotificationRequest request) {
         // Validate input
         if (request.getTitle().isEmpty()) {
-            throw new IllegalArgumentException("Title cannot be empty");
+            throw new IllegalArgumentException("notification.title.empty");
         }
         if (request.getMessage().isEmpty()) {
-            throw new IllegalArgumentException("Message cannot be empty");
+            throw new IllegalArgumentException("notification.message.empty");
         }
         if (request.getTargetFcmToken().isEmpty()) {
-            throw new IllegalArgumentException("FCM token cannot be empty");
+            throw new IllegalArgumentException("notification.fcm.empty");
         }
 
         // Build and send the message
@@ -44,7 +44,7 @@ public class NotificationService {
             return messageId;
         } catch (FirebaseMessagingException e) {
             log.error("Failed to send notification" + e.getMessage());
-            throw new RuntimeException("Failed to send notification", e);
+            throw new RuntimeException("notification.failed.send", e);
 
         }
     }

@@ -44,7 +44,7 @@ public class FirebaseConfig {
     private FirebaseApp initializeFirebaseApp() throws IOException {
         InputStream serviceAccount = loadFirebaseServiceAccount();
         if (serviceAccount == null) {
-            throw new IOException("Firebase service account file not found.");
+            throw new IOException("firebase.file.notFound");
         }
 
         FirebaseOptions options = FirebaseOptions.builder()

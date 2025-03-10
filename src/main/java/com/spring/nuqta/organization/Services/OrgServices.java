@@ -12,14 +12,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Service class for handling Organization-related operations.
@@ -35,6 +36,9 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     private final GeneralVerification generalVerification;
     private final UserRepo userRepo;
 
+    private final MessageSource ms;
+
+
     /**
      * Retrieves all organizations from the database.
      * Uses caching to optimize retrieval performance.
@@ -47,7 +51,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     public List<OrgEntity> findAll() throws GlobalException {
         List<OrgEntity> organizations = organizationRepository.findAllByEnabledTrue();
         if (organizations.isEmpty()) {
-            throw new GlobalException("No organizations found", HttpStatus.NOT_FOUND);
+            throw new GlobalException("org.no.organizations", HttpStatus.NOT_FOUND);
         }
         return organizations;
     }
@@ -65,7 +69,8 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     public OrgEntity findById(Long id) throws GlobalException {
         Optional<OrgEntity> organization = organizationRepository.findByIdAndEnabledTrue(id);
         if (organization.isEmpty()) {
-            throw new GlobalException("Organization not found with ID: " + id, HttpStatus.NOT_FOUND);
+            String msg = messageParam(id, "org.not.found");
+            throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
         return organization.get();
     }
@@ -82,16 +87,17 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     @CacheEvict(value = "org", allEntries = true) // Clear all cached users
     public OrgEntity update(OrgEntity entity) throws GlobalException {
         if (entity == null || entity.getId() == null) {
-            throw new GlobalException("Organization ID cannot be null", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.id.null", HttpStatus.BAD_REQUEST);
         }
         Optional<OrgEntity> organizationOptional = organizationRepository.findById(entity.getId());
 
         if (organizationOptional.isEmpty()) {
-            throw new GlobalException("Organization not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND);
+            String msg = messageParam(entity.getId(), "org.not.found");
+            throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
 
         if (organizationRepository.existsByOrgNameAndIdNot(entity.getOrgName(), entity.getId())) {
-            throw new GlobalException("Organization name already exists", HttpStatus.CONFLICT);
+            throw new GlobalException("org.name.exists", HttpStatus.CONFLICT);
         }
 
 
@@ -122,7 +128,9 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     public void deleteById(Long id) throws GlobalException {
         boolean organization = organizationRepository.existsById(id);
         if (!organization) {
-            throw new GlobalException("Organization not found with ID: " + id, HttpStatus.NOT_FOUND);
+            String msg = messageParam(id, "org.not.found");
+
+            throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
         organizationRepository.deleteById(id);
     }
@@ -145,7 +153,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
                 userRepo.findByEmail(params.getEmail());
 
         if (existingOrganization.isPresent() || existingUser.isPresent()) {
-            throw new GlobalException("Organization Email or License Number already exists", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.email.license.exists", HttpStatus.BAD_REQUEST);
         }
 
         OrgEntity organizationCreation = new OrgEntity();
@@ -182,12 +190,13 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         Optional<OrgEntity> org = organizationRepository.findById(orgId);
 
         if (org.isEmpty()) {
-            throw new GlobalException("Organization not found with ID: " + orgId, HttpStatus.NOT_FOUND);
+            String msg = messageParam(orgId, "org.not.found");
+            throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
 
         // Verify old password before changing it
         if (!passwordEncoder.matches(oldPassword, org.get().getPassword())) {
-            throw new GlobalException("Old password is incorrect.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.old.password.incorrect", HttpStatus.BAD_REQUEST);
         }
 
         // Update and encode the new password
@@ -203,16 +212,19 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      * @return ResponseEntity with success or failure message.
      */
     @CacheEvict(value = "org", key = "#id")
-    public String updateFcmToken(Long id, String fcmToken) {
+    public ResponseEntity<?> updateFcmToken(Long id, String fcmToken) {
         Optional<OrgEntity> orgOptional = organizationRepository.findById(id);
+        Map<String, String> response = new HashMap<>();
 
         if (orgOptional.isPresent()) {
             OrgEntity org = orgOptional.get();
             org.setFcmToken(fcmToken);
             organizationRepository.save(org);
-            return "FCM token updated successfully";
+            response.put("message", "error.user.fcmToken.update");
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            return "Organization not found";
+            response.put("message", "error.user.notFound");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -224,28 +236,33 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      */
     void validateOrganizationFields(OrgEntity params) {
         if (Objects.isNull(params.getLicenseNumber())) {
-            throw new GlobalException("License Number is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.license.required", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getOrgName())) {
-            throw new GlobalException("Organization name is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.name.required", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getPassword())) {
-            throw new GlobalException("Password is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.password.required", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getPhoneNumber())) {
-            throw new GlobalException("Mobile phone number is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.phone.required", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getScope()) || !Scope.ORGANIZATION.equals(params.getScope())) {
-            throw new GlobalException("Scope must be set to 'organization'.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.scope.required", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getCity())) {
-            throw new GlobalException("City is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.city.required", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getConservatism())) {
-            throw new GlobalException("Conservatism is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.conservatism.required", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getFcmToken())) {
-            throw new GlobalException("Fcm Token is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("org.fcm.token.required", HttpStatus.BAD_REQUEST);
         }
+    }
+
+    public String messageParam(Long id, String message) {
+        String[] msParam = {id != null ? id.toString() : "null"};
+        return ms.getMessage(message, msParam, LocaleContextHolder.getLocale());
     }
 }

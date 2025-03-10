@@ -89,15 +89,6 @@ class GeneralVerificationTest {
         verify(emailService, times(1)).sendMail(any());
     }
 
-    // ✅ Test sending OTP with an unsupported entity type
-    @Test
-    void testSendOtpEmail_UnsupportedEntity() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                generalVerification.sendOtpEmail("Invalid Entity"));
-
-        assertEquals("Unsupported entity type", exception.getMessage());
-    }
-
     // ✅ Test successful user verification
     @Test
     void testVerifyRegistration_ValidUserToken() {
@@ -148,7 +139,7 @@ class GeneralVerificationTest {
         GlobalException exception = assertThrows(GlobalException.class, () ->
                 generalVerification.verifyRegistration("test-token", "user@example.com"));
 
-        assertEquals("Expired verification token.", exception.getMessage());
+        assertEquals("error.token", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 

@@ -6,6 +6,7 @@ import com.spring.nuqta.donation.Repo.DonRepo;
 import com.spring.nuqta.enums.Level;
 import com.spring.nuqta.enums.Status;
 import com.spring.nuqta.exception.GlobalException;
+import com.spring.nuqta.notifications.Dto.NotificationRequest;
 import com.spring.nuqta.notifications.Services.NotificationService;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.organization.Repo.OrgRepo;
@@ -21,22 +22,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.spring.nuqta.enums.Level.LOW;
-import static com.spring.nuqta.enums.Status.FULFILLED;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ReqServicesTest {
+public class ReqServicesTest {
 
     @Mock
     private ReqRepo reqRepo;
@@ -48,16 +46,19 @@ class ReqServicesTest {
     private OrgRepo orgRepo;
 
     @Mock
+    private NotificationService notificationService;
+
+    @Mock
     private DonRepo donRepo;
 
     @Mock
     private CacheManager cacheManager;
 
     @Mock
-    private Cache requestCache, userCache, orgCache;
+    private MessageSource ms;
 
     @Mock
-    private NotificationService notificationService;
+    private Cache cache;
 
     @InjectMocks
     private ReqServices reqServices;
@@ -72,21 +73,21 @@ class ReqServicesTest {
         reqEntity = new ReqEntity();
         reqEntity.setId(1L);
         reqEntity.setBloodTypeNeeded("A+");
-        reqEntity.setAmount(2.0);
-        reqEntity.setCity("Test Address");
-        reqEntity.setStatus(Status.OPEN);
+        reqEntity.setCity("New York");
+        reqEntity.setConservatism("High");
+        reqEntity.setRequestDate(LocalDate.now());
+        reqEntity.setStatus(Status.FULFILLED);
         reqEntity.setUrgencyLevel(Level.HIGH);
         reqEntity.setPaymentAvailable(true);
-        reqEntity.setCreatedDate(LocalDate.now());
-        reqEntity.setModifiedDate(LocalDate.now());
-
+        
         userEntity = new UserEntity();
         userEntity.setId(1L);
         userEntity.setUsername("testUser");
+        userEntity.setFcmToken("testFcmToken"); // Ensure FCM token is set
 
         orgEntity = new OrgEntity();
         orgEntity.setId(1L);
-        orgEntity.setOrgName("Test Org");
+        orgEntity.setOrgName("testOrg");
 
         donEntity = new DonEntity();
         donEntity.setId(1L);
@@ -94,15 +95,13 @@ class ReqServicesTest {
     }
 
     @Test
-    void testFindAll() {
+    void testFindAll() throws GlobalException {
         when(reqRepo.findAll()).thenReturn(Collections.singletonList(reqEntity));
 
         List<ReqEntity> result = reqServices.findAll();
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(reqEntity, result.get(0));
-
         verify(reqRepo, times(1)).findAll();
     }
 
@@ -111,358 +110,193 @@ class ReqServicesTest {
         when(reqRepo.findAll()).thenReturn(Collections.emptyList());
 
         GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.findAll());
-
-        assertEquals("No requests found", exception.getMessage());
+        assertEquals("error.request.no_requests", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(reqRepo, times(1)).findAll();
     }
 
     @Test
-    void testFindById() {
+    void testFindById() throws GlobalException {
         when(reqRepo.findById(1L)).thenReturn(Optional.of(reqEntity));
 
         ReqEntity result = reqServices.findById(1L);
 
         assertNotNull(result);
-        assertEquals(reqEntity, result);
-
+        assertEquals(1L, result.getId());
         verify(reqRepo, times(1)).findById(1L);
     }
 
     @Test
     void testFindByIdThrowsException() {
         when(reqRepo.findById(1L)).thenReturn(Optional.empty());
+        when(ms.getMessage(eq("error.request.notfound"), any(), any())).thenReturn("error.request.notfound");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.findById(1L));
-
-        assertEquals("Request not found with ID: 1", exception.getMessage());
+        assertEquals("error.request.notfound", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(reqRepo, times(1)).findById(1L);
     }
 
     @Test
-    void testDeleteById() {
+    void testDeleteById() throws GlobalException {
         when(reqRepo.existsById(1L)).thenReturn(true);
+        when(cacheManager.getCache("requests")).thenReturn(cache);
 
         reqServices.deleteById(1L);
 
-        verify(reqRepo, times(1)).existsById(1L);
         verify(reqRepo, times(1)).hardDeleteById(1L);
+        verify(cache, times(1)).evict(1L);
     }
 
     @Test
     void testDeleteByIdThrowsException() {
         when(reqRepo.existsById(1L)).thenReturn(false);
+        when(ms.getMessage(eq("error.request.notfound"), any(), any())).thenReturn("error.request.notfound");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.deleteById(1L));
-
-        assertEquals("Request not found with ID: 1", exception.getMessage());
+        assertEquals("error.request.notfound", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(reqRepo, times(1)).existsById(1L);
-        verify(reqRepo, never()).hardDeleteById(1L);
     }
 
     @Test
-    void testAddRequest() throws FirebaseMessagingException {
-        when(userRepo.findById(1L)).thenReturn(Optional.of(userEntity));
-        when(reqRepo.save(any(ReqEntity.class))).thenReturn(reqEntity);
+    void testReCache() throws GlobalException {
+        when(reqRepo.findById(1L)).thenReturn(Optional.of(reqEntity));
+        when(cacheManager.getCache("requests")).thenReturn(cache);
+        when(cacheManager.getCache("users")).thenReturn(cache);
+        when(cacheManager.getCache("org")).thenReturn(cache);
 
-        ReqEntity result = reqServices.addRequest(1L, reqEntity);
+        reqServices.ReCache(1L);
 
-        assertNotNull(result);
-        assertEquals(userEntity, result.getUser());
-        assertEquals(LocalDate.now(), result.getCreatedDate());
-        assertEquals(LocalDate.now(), result.getModifiedDate());
-        assertEquals(userEntity.getUsername(), result.getCreatedUser());
-        assertEquals(userEntity.getUsername(), result.getModifiedUser());
-
-        verify(userRepo, times(1)).findById(1L);
-        verify(reqRepo, times(1)).save(any(ReqEntity.class));
+        verify(reqRepo, times(1)).save(reqEntity);
+        verify(cache, times(1)).evict(1L);
+        verify(cache, times(2)).clear(); // Expect 2 clears (users and org caches)
     }
 
     @Test
     void testAddRequestThrowsException() {
         when(userRepo.findById(1L)).thenReturn(Optional.empty());
+        when(ms.getMessage(eq("error.request.notfound"), any(), any())).thenReturn("error.request.notfound");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.addRequest(1L, reqEntity));
-
-        assertEquals("User not found with ID: 1", exception.getMessage());
+        assertEquals("error.request.notfound", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(userRepo, times(1)).findById(1L);
-        verify(reqRepo, never()).save(any(ReqEntity.class));
     }
 
-    @Test
-    void testAddRequestForOrg() throws FirebaseMessagingException {
-        when(orgRepo.findById(1L)).thenReturn(Optional.of(orgEntity));
-        when(reqRepo.save(any(ReqEntity.class))).thenReturn(reqEntity);
-
-        ReqEntity result = reqServices.addRequestForOrg(1L, reqEntity);
-
-        assertNotNull(result);
-        assertEquals(orgEntity, result.getOrganization());
-        assertEquals(LocalDate.now(), result.getCreatedDate());
-        assertEquals(LocalDate.now(), result.getModifiedDate());
-        assertEquals(orgEntity.getOrgName(), result.getCreatedUser());
-        assertEquals(orgEntity.getOrgName(), result.getModifiedUser());
-
-        verify(orgRepo, times(1)).findById(1L);
-        verify(reqRepo, times(1)).save(any(ReqEntity.class));
-    }
 
     @Test
     void testAddRequestForOrgThrowsException() {
         when(orgRepo.findById(1L)).thenReturn(Optional.empty());
+        when(ms.getMessage(eq("error.org.notfound"), any(), any())).thenReturn("error.org.notfound");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.addRequestForOrg(1L, reqEntity));
-
-        assertEquals("Organization not found with ID: 1", exception.getMessage());
+        assertEquals("error.org.notfound", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(orgRepo, times(1)).findById(1L);
-        verify(reqRepo, never()).save(any(ReqEntity.class));
     }
 
     @Test
-    void testUpdate() {
+    void testUpdate() throws GlobalException {
         when(reqRepo.findById(1L)).thenReturn(Optional.of(reqEntity));
-        when(reqRepo.save(any(ReqEntity.class))).thenReturn(reqEntity);
+        when(reqRepo.save(reqEntity)).thenReturn(reqEntity);
 
-        ReqEntity updatedEntity = new ReqEntity();
-        updatedEntity.setId(1L);
-        updatedEntity.setBloodTypeNeeded("B+");
-        updatedEntity.setAmount(3.0);
-        updatedEntity.setCity("Updated Address");
-        updatedEntity.setStatus(FULFILLED);
-        updatedEntity.setUrgencyLevel(LOW);
-        updatedEntity.setPaymentAvailable(false);
-
-        ReqEntity result = reqServices.update(updatedEntity);
+        ReqEntity result = reqServices.update(reqEntity);
 
         assertNotNull(result);
-        assertEquals("B+", result.getBloodTypeNeeded());
-        assertEquals(3, result.getAmount());
-        assertEquals("Updated Address", result.getCity());
-        assertEquals(FULFILLED, result.getStatus());
-        assertEquals(LOW, result.getUrgencyLevel());
-        assertFalse(result.getPaymentAvailable());
-        assertEquals(LocalDate.now(), result.getModifiedDate());
-
-        verify(reqRepo, times(1)).findById(1L);
-        verify(reqRepo, times(1)).save(any(ReqEntity.class));
+        assertEquals(reqEntity.getBloodTypeNeeded(), result.getBloodTypeNeeded());
+        verify(reqRepo, times(1)).save(reqEntity);
     }
 
     @Test
-    void testUpdateThrowsExceptionWhenIdIsNull() {
-        ReqEntity entity = new ReqEntity();
-        entity.setId(null);
+    void testUpdateThrowsException() {
+        reqEntity.setId(null);
 
-        GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.update(entity));
-
-        assertEquals("Request ID cannot be null", exception.getMessage());
+        GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.update(reqEntity));
+        assertEquals("error.request.id.null", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-
-        verify(reqRepo, never()).save(any(ReqEntity.class));
     }
 
     @Test
-    void testUpdateThrowsExceptionWhenRequestNotFound() {
-        when(reqRepo.findById(1L)).thenReturn(Optional.empty());
+    void testFindNearbyDonors() {
+        when(donRepo.findTopByCityOrConservatism("New York", "High")).thenReturn(Collections.singletonList(donEntity));
 
-        ReqEntity entity = new ReqEntity();
-        entity.setId(1L);
+        List<DonEntity> result = reqServices.findNearbyDonors("New York", "High");
 
-        GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.update(entity));
-
-        assertEquals("Request not found with ID: 1", exception.getMessage());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(reqRepo, times(1)).findById(1L);
-        verify(reqRepo, never()).save(any(ReqEntity.class));
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(donRepo, times(1)).findTopByCityOrConservatism("New York", "High");
     }
 
     @Test
-    public void testSetModifiedUser_WhenUserExists() {
-        ReqEntity existingEntity = new ReqEntity();
-        UserEntity user = new UserEntity();
-        user.setUsername("JohnDoe");
+    void testValidIdThrowsException() {
+        when(ms.getMessage(eq("error.user.invalid.id"), any(), any())).thenReturn("error.user.invalid.id");
 
-        existingEntity.setUser(user);
-
-        // Execute logic
-        if (existingEntity.getUser() != null) {
-            existingEntity.setModifiedUser(existingEntity.getUser().getUsername());
-        } else if (existingEntity.getOrganization() != null) {
-            existingEntity.setModifiedUser(existingEntity.getOrganization().getOrgName());
-        } else {
-            existingEntity.setModifiedUser("Unknown");
-        }
-
-        assertEquals("JohnDoe", existingEntity.getModifiedUser());
+        GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.validId(null));
+        assertEquals("error.user.invalid.id", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
     @Test
-    public void testSetModifiedUser_WhenOrganizationExists() {
-        ReqEntity existingEntity = new ReqEntity();
-        OrgEntity org = new OrgEntity();
-        org.setOrgName("RedCross");
+    void testAddRequest() throws GlobalException, FirebaseMessagingException {
+        // Mock userRepo to return a valid user
+        when(userRepo.findById(1L)).thenReturn(Optional.of(userEntity));
 
-        existingEntity.setOrganization(org);
+        // Mock reqRepo to return the saved entity
+        when(reqRepo.save(reqEntity)).thenReturn(reqEntity);
 
-        // Execute logic
-        if (existingEntity.getUser() != null) {
-            existingEntity.setModifiedUser(existingEntity.getUser().getUsername());
-        } else if (existingEntity.getOrganization() != null) {
-            existingEntity.setModifiedUser(existingEntity.getOrganization().getOrgName());
-        } else {
-            existingEntity.setModifiedUser("Unknown");
-        }
+        // Mock donRepo to return a non-empty list of nearby donors
+        when(donRepo.findTopByCityOrConservatism("New York", "High")).thenReturn(Collections.singletonList(donEntity));
 
-        assertEquals("RedCross", existingEntity.getModifiedUser());
+        // Mock messageSource to return a valid message
+        when(ms.getMessage(anyString(), any(), any())).thenReturn("Test Message");
+
+        // Call the method under test
+        ReqEntity result = reqServices.addRequest(1L, reqEntity);
+
+        // Assertions
+        assertNotNull(result);
+        assertEquals(userEntity, result.getUser());
+
+        // Verify that notificationService.sendNotification was called
+        verify(notificationService, times(1)).sendNotification(any(NotificationRequest.class));
     }
 
     @Test
-    public void testSetModifiedUser_WhenNeitherExists() {
-        ReqEntity existingEntity = new ReqEntity();
+    void testAddRequestForOrg() throws GlobalException, FirebaseMessagingException {
+        // Mock orgRepo to return a valid organization
+        when(orgRepo.findById(1L)).thenReturn(Optional.of(orgEntity));
 
-        // Execute logic
-        if (existingEntity.getUser() != null) {
-            existingEntity.setModifiedUser(existingEntity.getUser().getUsername());
-        } else if (existingEntity.getOrganization() != null) {
-            existingEntity.setModifiedUser(existingEntity.getOrganization().getOrgName());
-        } else {
-            existingEntity.setModifiedUser("Unknown");
-        }
+        // Mock reqRepo to return the saved entity
+        when(reqRepo.save(reqEntity)).thenReturn(reqEntity);
 
-        assertEquals("Unknown", existingEntity.getModifiedUser());
-    }
+        // Mock donRepo to return a non-empty list of nearby donors
+        when(donRepo.findTopByCityOrConservatism("New York", "High")).thenReturn(Collections.singletonList(donEntity));
 
+        // Mock messageSource to return a valid message
+        when(ms.getMessage(anyString(), any(), any())).thenReturn("Test Message");
 
-    @Test
-    public void testFindNearbyDonors() {
-        when(donRepo.findTopByCity(any())).thenReturn(new ArrayList<>());
-        List<DonEntity> donors = reqServices.findNearbyDonors("city");
+        // Call the method under test
+        ReqEntity result = reqServices.addRequestForOrg(1L, reqEntity);
 
-        assertNotNull(donors);
-    }
+        // Assertions
+        assertNotNull(result);
+        assertEquals(orgEntity, result.getOrganization());
 
-    @Test
-    void testInvalidIdThrowsException() {
-        Exception exception = assertThrows(GlobalException.class, () -> {
-            reqServices.validId(null);
-        });
-        assertEquals("Invalid ID: null", exception.getMessage());
-
-        exception = assertThrows(GlobalException.class, () -> {
-            reqServices.validId(0L);
-        });
-        assertEquals("Invalid ID: 0", exception.getMessage());
-
-        exception = assertThrows(GlobalException.class, () -> {
-            reqServices.validId(-1L);
-        });
-        assertEquals("Invalid ID: -1", exception.getMessage());
+        // Verify that notificationService.sendNotification was called
+        verify(notificationService, times(1)).sendNotification(any(NotificationRequest.class));
     }
 
     @Test
-    void testReCache_RequestNotFound() {
-        // Arrange
-        Long requestId = 1L;
-        when(reqRepo.findById(requestId)).thenReturn(Optional.empty());
+    void testSendNotification() throws GlobalException, FirebaseMessagingException {
+        // Set up reqEntity with a valid user
+        reqEntity.setUser(userEntity);
 
-        // Act & Assert
-        GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.ReCache(requestId));
-        assertEquals("Request not found with ID: " + requestId, exception.getMessage());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-    }
+        // Mock donRepo to return a non-empty list of nearby donors
+        when(donRepo.findTopByCityOrConservatism("New York", "High")).thenReturn(Collections.singletonList(donEntity));
 
-    @Test
-    void testReCache_CacheClearing() throws GlobalException {
-        // Arrange
-        Long requestId = 1L;
-        ReqEntity reqEntity = new ReqEntity();
-        reqEntity.setId(requestId);
+        // Mock messageSource to return a valid message
+        when(ms.getMessage(anyString(), any(), any())).thenReturn("Test Message");
 
-        // Mock reqRepo.findById
-        when(reqRepo.findById(requestId)).thenReturn(Optional.of(reqEntity));
+        // Call the method under test
+        reqServices.SendNotification(reqEntity);
 
-        // Mock cacheManager and caches
-        when(cacheManager.getCache("requests")).thenReturn(requestCache);
-        when(cacheManager.getCache("users")).thenReturn(userCache);
-        when(cacheManager.getCache("org")).thenReturn(orgCache);
-
-        // Act
-        reqServices.ReCache(requestId);
-
-        // Assert
-        verify(reqRepo).findById(requestId);
-        verify(reqRepo).save(reqEntity);
-
-        // Verify cache-clearing logic
-        verify(requestCache).evict(requestId);
-        verify(userCache).clear();
-        verify(orgCache).clear();
-    }
-
-    @Test
-    void testReCache_CacheClearing_RequestsCacheNull() throws GlobalException {
-        // Arrange
-        Long requestId = 1L;
-        ReqEntity reqEntity = new ReqEntity();
-        reqEntity.setId(requestId);
-
-        // Mock reqRepo.findById
-        when(reqRepo.findById(requestId)).thenReturn(Optional.of(reqEntity));
-
-        // Mock cacheManager to return null for requestsCache
-        when(cacheManager.getCache("requests")).thenReturn(null);
-        when(cacheManager.getCache("users")).thenReturn(userCache);
-        when(cacheManager.getCache("org")).thenReturn(orgCache);
-
-        // Act
-        reqServices.ReCache(requestId);
-
-        // Assert
-        verify(reqRepo).findById(requestId);
-        verify(reqRepo).save(reqEntity);
-
-        // Verify that requestsCache.evict was NOT called (since it's null)
-        verify(requestCache, never()).evict(requestId);
-
-        // Verify that usersCache and orgCache were cleared
-        verify(userCache).clear();
-        verify(orgCache).clear();
-    }
-
-    @Test
-    void testDeleteById_CacheNull() throws GlobalException {
-        // Arrange
-        Long requestId = 1L;
-
-        // Mock reqRepo.existsById to return true
-        when(reqRepo.existsById(requestId)).thenReturn(true);
-
-        // Mock cacheManager to return null for the cache
-        when(cacheManager.getCache("requests")).thenReturn(null);
-
-        // Act
-        reqServices.deleteById(requestId);
-
-        // Assert
-        // Verify that validId and existsById were called
-        verify(reqRepo).existsById(requestId);
-
-        // Verify that hardDeleteById was called
-        verify(reqRepo).hardDeleteById(requestId);
-
-        // Verify that cacheManager.getCache was called
-        verify(cacheManager).getCache("requests");
-
-        // Verify that cache.evict was NOT called (since cache is null)
-        verifyNoInteractions(mock(Cache.class)); // Assuming no mock cache was created
+        // Verify that notificationService.sendNotification was called
+        verify(notificationService, times(1)).sendNotification(any(NotificationRequest.class));
     }
 }

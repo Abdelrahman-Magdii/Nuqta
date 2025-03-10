@@ -19,9 +19,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -69,9 +71,10 @@ public class GeneralResetTest {
         when(userRepo.findUserAuthProjectionByEmail(email)).thenReturn(Optional.empty());
         when(organizationRepo.findOrgAuthProjectionByEmail(email)).thenReturn(Optional.empty());
 
-        String result = generalReset.sendOtpEmail(email);
+        ResponseEntity<?> response = generalReset.sendOtpEmail(email);
+        String result = ((Map<String, String>) response.getBody()).get("message");
 
-        assertEquals("Email not found. Please check the email address and try again.", result);
+        assertEquals("email.not.found", result);
     }
 
     @Test
@@ -80,9 +83,10 @@ public class GeneralResetTest {
         when(user.enabled()).thenReturn(false);
         when(userRepo.findUserAuthProjectionByEmail(email)).thenReturn(Optional.of(user));
 
-        String result = generalReset.sendOtpEmail(email);
+        ResponseEntity<?> response = generalReset.sendOtpEmail(email);
+        String result = ((Map<String, String>) response.getBody()).get("message");
 
-        assertEquals("Email not verified. Please complete sign-in.", result);
+        assertEquals("email.not.verified", result);
     }
 
     @Test
@@ -111,10 +115,11 @@ public class GeneralResetTest {
         doNothing().when(emailService).sendMail(expectedContext);
 
         // Call the method
-        String result = generalReset.sendOtpEmail(email);
+        ResponseEntity<?> response = generalReset.sendOtpEmail(email);
+        String result = ((Map<String, String>) response.getBody()).get("message");
 
         // Assertions
-        assertEquals("Success sent OTP to your email.", result);
+        assertEquals("otp.success", result);
         verify(resetPasswordRepo, times(1)).save(any(ResetPasswordEntity.class));
         verify(emailService, times(1)).sendMail(expectedContext);
     }
@@ -140,10 +145,11 @@ public class GeneralResetTest {
         doThrow(MessagingException.class).when(emailService).sendMail(any(ForgotPasswordWithOtp.class));
 
         // Call the method
-        String result = generalReset.sendOtpEmail(email);
+        ResponseEntity<?> response = generalReset.sendOtpEmail(email);
+        String result = ((Map<String, String>) response.getBody()).get("message");
 
         // Assertions
-        assertEquals("Error sending OTP email. Please try again later.", result);
+        assertEquals("otp.send.error", result);
     }
 
     @Test
@@ -258,11 +264,13 @@ public class GeneralResetTest {
         doNothing().when(emailService).sendMail(expectedContext);
 
         // Call the method
-        String result = generalReset.sendOtpEmail(email);
+        ResponseEntity<?> response = generalReset.sendOtpEmail(email); // Assuming the method returns ResponseEntity<?>
+        String result = ((Map<String, String>) response.getBody()).get("message"); // Extract the message from the response body
 
         // Assertions
-        assertEquals("Success sent OTP to your email.", result);
+        assertEquals("otp.success", result); // Compare the extracted message
         verify(resetPasswordRepo, times(1)).save(any(ResetPasswordEntity.class));
         verify(emailService, times(1)).sendMail(expectedContext);
     }
+
 }

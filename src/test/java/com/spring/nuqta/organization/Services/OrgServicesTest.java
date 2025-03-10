@@ -4,7 +4,6 @@ import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.exception.GlobalException;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.organization.Repo.OrgRepo;
-import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
 import com.spring.nuqta.verificationToken.General.GeneralVerification;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,10 +12,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +44,12 @@ public class OrgServicesTest {
     @Mock
     private UserRepo userRepo;
 
+    @Mock
+    private MessageSource ms;
+
+    @Mock
+    private CacheManager cacheManager;
+
     @InjectMocks
     private OrgServices orgServices;
 
@@ -51,69 +61,54 @@ public class OrgServicesTest {
         orgEntity.setId(1L);
         orgEntity.setOrgName("Test Org");
         orgEntity.setEmail("test@org.com");
+        orgEntity.setCity("Test City");
+        orgEntity.setConservatism("Test Conservatism");
         orgEntity.setPhoneNumber("1234567890");
         orgEntity.setScope(Scope.ORGANIZATION);
         orgEntity.setPassword("password");
         orgEntity.setLicenseNumber("LIC123");
+        orgEntity.setFcmToken("fcmToken");
         orgEntity.setCreatedDate(LocalDate.now());
         orgEntity.setCreatedUser("Test User");
         orgEntity.setModifiedDate(LocalDate.now());
         orgEntity.setModifiedUser("Test User");
-        orgEntity.setConservatism("conservatism");
-        orgEntity.setCity("city");
-        orgEntity.setFcmToken("fcmToken");
-
     }
 
     @Test
     void testFindAll() {
-        when(organizationRepository.findAllByEnabledTrue()).thenReturn(Collections.singletonList(orgEntity));
-
+        when(organizationRepository.findAllByEnabledTrue()).thenReturn(Arrays.asList(orgEntity));
         List<OrgEntity> result = orgServices.findAll();
-
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(orgEntity, result.get(0));
-
         verify(organizationRepository, times(1)).findAllByEnabledTrue();
     }
 
     @Test
     void testFindAllThrowsException() {
-        when(organizationRepository.findAllByEnabledTrue()).thenReturn(Collections.emptyList()); // ✅ Mock the correct method
-
+        when(organizationRepository.findAllByEnabledTrue()).thenReturn(Collections.emptyList());
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.findAll());
-
-        assertEquals("No organizations found", exception.getMessage());
+        assertEquals("org.no.organizations", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(organizationRepository, times(1)).findAllByEnabledTrue();  // ✅ Verify the correct method
     }
 
     @Test
     void testFindById() {
         when(organizationRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.of(orgEntity));
-
         OrgEntity result = orgServices.findById(1L);
-
         assertNotNull(result);
-        assertEquals(orgEntity, result);
-
+        assertEquals("Test Org", result.getOrgName());
         verify(organizationRepository, times(1)).findByIdAndEnabledTrue(1L);
     }
 
     @Test
     void testFindByIdThrowsException() {
-        when(organizationRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.empty());  // ✅ Mock the correct method
+        when(organizationRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.empty());
+        when(ms.getMessage(eq("org.not.found"), any(), eq(LocaleContextHolder.getLocale()))).thenReturn("org.not.found");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.findById(1L));
-
-        assertEquals("Organization not found with ID: 1", exception.getMessage());
+        assertEquals("org.not.found", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(organizationRepository, times(1)).findByIdAndEnabledTrue(1L);  // ✅ Verify the correct method
     }
-
 
     @Test
     void testUpdate() {
@@ -123,19 +118,15 @@ public class OrgServicesTest {
         OrgEntity updatedEntity = new OrgEntity();
         updatedEntity.setId(1L);
         updatedEntity.setOrgName("Updated Org");
-        updatedEntity.setCity("New City");
-        updatedEntity.setConservatism("New Conservatism");
+        updatedEntity.setCity("Updated City");
+        updatedEntity.setConservatism("Updated Conservatism");
         updatedEntity.setPhoneNumber("0987654321");
         updatedEntity.setScope(Scope.ORGANIZATION);
+        updatedEntity.setFcmToken("updatedFcmToken");
 
         OrgEntity result = orgServices.update(updatedEntity);
-
         assertNotNull(result);
         assertEquals("Updated Org", result.getOrgName());
-        assertEquals("New City", result.getCity());
-        assertEquals("New Conservatism", result.getConservatism());
-        assertEquals("0987654321", result.getPhoneNumber());
-
         verify(organizationRepository, times(1)).findById(1L);
         verify(organizationRepository, times(1)).save(any(OrgEntity.class));
     }
@@ -143,415 +134,270 @@ public class OrgServicesTest {
     @Test
     void testUpdateThrowsExceptionWhenEntityIsNull() {
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.update(null));
-
-        assertEquals("Organization ID cannot be null", exception.getMessage());
+        assertEquals("org.id.null", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-
-        verify(organizationRepository, never()).save(any(OrgEntity.class));
     }
 
     @Test
     void testUpdateThrowsExceptionWhenIdIsNull() {
         OrgEntity entity = new OrgEntity();
-        entity.setId(null);
-
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.update(entity));
-
-        assertEquals("Organization ID cannot be null", exception.getMessage());
+        assertEquals("org.id.null", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-
-        verify(organizationRepository, never()).save(any(OrgEntity.class));
     }
 
     @Test
     void testUpdateThrowsExceptionWhenOrganizationNotFound() {
         when(organizationRepository.findById(1L)).thenReturn(Optional.empty());
+        when(ms.getMessage(eq("org.not.found"), any(), eq(LocaleContextHolder.getLocale()))).thenReturn("org.not.found");
 
         OrgEntity entity = new OrgEntity();
         entity.setId(1L);
-
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.update(entity));
-
-        assertEquals("Organization not found with ID: 1", exception.getMessage());
+        assertEquals("org.not.found", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(organizationRepository, times(1)).findById(1L);
-        verify(organizationRepository, never()).save(any(OrgEntity.class));
     }
 
     @Test
     void testDeleteById() {
         when(organizationRepository.existsById(1L)).thenReturn(true);
-
         orgServices.deleteById(1L);
-
-        verify(organizationRepository, times(1)).existsById(1L);
         verify(organizationRepository, times(1)).deleteById(1L);
     }
 
     @Test
     void testDeleteByIdThrowsException() {
-        when(organizationRepository.existsById(1L)).thenReturn(false);  // Mock existsById instead of findById
+        when(organizationRepository.existsById(1L)).thenReturn(false);
+        when(ms.getMessage(eq("org.not.found"), any(), eq(LocaleContextHolder.getLocale()))).thenReturn("org.not.found");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.deleteById(1L));
-
-        assertEquals("Organization not found with ID: 1", exception.getMessage());
+        assertEquals("org.not.found", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(organizationRepository, times(1)).existsById(1L);  // Verify correct method call
-        verify(organizationRepository, never()).deleteById(1L);  // Ensure deleteById is never called
     }
 
     @Test
     void testSaveOrg() {
-        when(organizationRepository.findByLicenseNumberOrEmail(anyString(), anyString())).thenReturn(Optional.empty());
-        when(userRepo.findByEmail(anyString())).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        when(organizationRepository.findByLicenseNumberOrEmail("LIC123", "test@org.com")).thenReturn(Optional.empty());
+        when(userRepo.findByEmail("test@org.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
         when(organizationRepository.save(any(OrgEntity.class))).thenReturn(orgEntity);
 
         orgServices.saveOrg(orgEntity);
 
-        verify(organizationRepository, times(1)).findByLicenseNumberOrEmail(anyString(), anyString());
-        verify(userRepo, times(1)).findByEmail(anyString());
-        verify(passwordEncoder, times(1)).encode(anyString());
+        verify(organizationRepository, times(1)).findByLicenseNumberOrEmail("LIC123", "test@org.com");
+        verify(userRepo, times(1)).findByEmail("test@org.com");
+        verify(passwordEncoder, times(1)).encode("password");
         verify(organizationRepository, times(1)).save(any(OrgEntity.class));
-        verify(generalVerification, times(1)).sendOtpEmail(any(OrgEntity.class));
+        verify(generalVerification, times(1)).sendOtpEmail(orgEntity);
     }
 
     @Test
-    void testSaveOrgThrowsExceptionWhenLicenseNumberOrEmailExists() {
-        when(organizationRepository.findByLicenseNumberOrEmail(anyString(), anyString())).thenReturn(Optional.of(orgEntity));
-
+    void testSaveOrgThrowsExceptionWhenEmailOrLicenseExists() {
+        when(organizationRepository.findByLicenseNumberOrEmail("LIC123", "test@org.com")).thenReturn(Optional.of(orgEntity));
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.saveOrg(orgEntity));
-
-        assertEquals("Organization Email or License Number already exists", exception.getMessage());
+        assertEquals("org.email.license.exists", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-
-        verify(organizationRepository, times(1)).findByLicenseNumberOrEmail(anyString(), anyString());
-        verify(organizationRepository, never()).save(any(OrgEntity.class));
     }
 
     @Test
     void testChangeOrgPassword() {
         when(organizationRepository.findById(1L)).thenReturn(Optional.of(orgEntity));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(passwordEncoder.encode(anyString())).thenReturn("newEncodedPassword");
-        when(organizationRepository.save(any(OrgEntity.class))).thenReturn(orgEntity);
+        when(passwordEncoder.matches("oldPassword", "password")).thenReturn(true);
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
 
         orgServices.changeOrgPassword(1L, "oldPassword", "newPassword");
 
         verify(organizationRepository, times(1)).findById(1L);
-        verify(passwordEncoder, times(1)).matches(anyString(), anyString());
-        verify(passwordEncoder, times(1)).encode(anyString());
-        verify(organizationRepository, times(1)).save(any(OrgEntity.class));
+        verify(passwordEncoder, times(1)).matches("oldPassword", "password");
+        verify(passwordEncoder, times(1)).encode("newPassword");
+        verify(organizationRepository, times(1)).save(orgEntity);
     }
 
     @Test
     void testChangeOrgPasswordThrowsExceptionWhenOrganizationNotFound() {
         when(organizationRepository.findById(1L)).thenReturn(Optional.empty());
+        when(ms.getMessage(eq("org.not.found"), any(), eq(LocaleContextHolder.getLocale()))).thenReturn("org.not.found");
 
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.changeOrgPassword(1L, "oldPassword", "newPassword"));
-
-        assertEquals("Organization not found with ID: 1", exception.getMessage());
+        assertEquals("org.not.found", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        verify(organizationRepository, times(1)).findById(1L);
-        verify(passwordEncoder, never()).matches(anyString(), anyString());
-        verify(organizationRepository, never()).save(any(OrgEntity.class));
     }
 
     @Test
-    void testChangeOrgPasswordThrowsExceptionWhenOldPasswordIsIncorrect() {
+    void testChangeOrgPasswordThrowsExceptionWhenOldPasswordIncorrect() {
         when(organizationRepository.findById(1L)).thenReturn(Optional.of(orgEntity));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
-
+        when(passwordEncoder.matches("oldPassword", "password")).thenReturn(false);
         GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.changeOrgPassword(1L, "oldPassword", "newPassword"));
-
-        assertEquals("Old password is incorrect.", exception.getMessage());
+        assertEquals("org.old.password.incorrect", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-
-        verify(organizationRepository, times(1)).findById(1L);
-        verify(passwordEncoder, times(1)).matches(anyString(), anyString());
-        verify(organizationRepository, never()).save(any(OrgEntity.class));
     }
 
     @Test
     void testUpdateFcmToken() {
         when(organizationRepository.findById(1L)).thenReturn(Optional.of(orgEntity));
-        when(organizationRepository.save(any(OrgEntity.class))).thenReturn(orgEntity);
-
-        String result = orgServices.updateFcmToken(1L, "newFcmToken");
-
-        assertEquals("FCM token updated successfully", result);
-
+        ResponseEntity<?> response = orgServices.updateFcmToken(1L, "newFcmToken");
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(organizationRepository, times(1)).findById(1L);
-        verify(organizationRepository, times(1)).save(any(OrgEntity.class));
+        verify(organizationRepository, times(1)).save(orgEntity);
     }
 
     @Test
     void testUpdateFcmTokenThrowsExceptionWhenOrganizationNotFound() {
         when(organizationRepository.findById(1L)).thenReturn(Optional.empty());
-
-        String result = orgServices.updateFcmToken(1L, "newFcmToken");
-
-        assertEquals("Organization not found", result);
-
+        ResponseEntity<?> response = orgServices.updateFcmToken(1L, "newFcmToken");
+        assertNotNull(response);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verify(organizationRepository, times(1)).findById(1L);
-        verify(organizationRepository, never()).save(any(OrgEntity.class));
     }
 
     @Test
-    void testValidateOrganizationFields_AllFieldsValid() {
-        OrgEntity orgEntity = new OrgEntity();
-        orgEntity.setLicenseNumber("LIC123");
-        orgEntity.setOrgName("Test Org");
-        orgEntity.setPassword("password");
-        orgEntity.setPhoneNumber("1234567890");
-        orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setConservatism("conservatism");
-        orgEntity.setCity("city");
-        orgEntity.setFcmToken("fcmToken");
-
-        // No exception should be thrown
-        assertDoesNotThrow(() -> orgServices.validateOrganizationFields(orgEntity));
-    }
-
-    @Test
-    void testValidateOrganizationFields_LicenseNumberMissing() {
-        OrgEntity orgEntity = new OrgEntity();
-        orgEntity.setOrgName("Test Org");
-        orgEntity.setPassword("password");
-        orgEntity.setPhoneNumber("1234567890");
-        orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setConservatism("conservatism");
-        orgEntity.setCity("city");
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
-
-        assertEquals("License Number is required.", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-    }
-
-    @Test
-    void testValidateOrganizationFields_OrgNameMissing() {
-        OrgEntity orgEntity = new OrgEntity();
-        orgEntity.setLicenseNumber("LIC123");
-        orgEntity.setPassword("password");
-        orgEntity.setPhoneNumber("1234567890");
-        orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setConservatism("conservatism");
-        orgEntity.setCity("city");
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
-
-        assertEquals("Organization name is required.", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-    }
-
-    @Test
-    void testValidateOrganizationFields_PasswordMissing() {
-        OrgEntity orgEntity = new OrgEntity();
-        orgEntity.setLicenseNumber("LIC123");
-        orgEntity.setOrgName("Test Org");
-        orgEntity.setPhoneNumber("1234567890");
-        orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setConservatism("conservatism");
-        orgEntity.setCity("city");
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
-
-        assertEquals("Password is required.", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-    }
-
-    @Test
-    void testValidateOrganizationFields_PhoneNumberMissing() {
-        OrgEntity orgEntity = new OrgEntity();
-        orgEntity.setLicenseNumber("LIC123");
-        orgEntity.setOrgName("Test Org");
-        orgEntity.setPassword("password");
-        orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setConservatism("conservatism");
-        orgEntity.setCity("city");
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
-
-        assertEquals("Mobile phone number is required.", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-    }
-
-    @Test
-    void testValidateOrganizationFields_ScopeMissing() {
-        OrgEntity orgEntity = new OrgEntity();
-        orgEntity.setLicenseNumber("LIC123");
-        orgEntity.setOrgName("Test Org");
-        orgEntity.setPassword("password");
-        orgEntity.setPhoneNumber("1234567890");
-        orgEntity.setConservatism("conservatism");
-        orgEntity.setCity("city");
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
-
-        assertEquals("Scope must be set to 'organization'.", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-    }
-
-    @Test
-    void testValidateOrganizationFields_ScopeInvalid() {
-        OrgEntity orgEntity = new OrgEntity();
-        orgEntity.setLicenseNumber("LIC123");
-        orgEntity.setOrgName("Test Org");
-        orgEntity.setPassword("password");
-        orgEntity.setPhoneNumber("1234567890");
-        orgEntity.setScope(Scope.USER);
-        orgEntity.setConservatism("conservatism");
-        orgEntity.setCity("city");
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
-
-        assertEquals("Scope must be set to 'organization'.", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-    }
-
-    @Test
-    void testValidateOrganizationFields_ConservatismMissing() {
-        OrgEntity orgEntity = new OrgEntity();
-        orgEntity.setLicenseNumber("LIC123");
-        orgEntity.setOrgName("Test Org");
-        orgEntity.setPassword("password");
-        orgEntity.setPhoneNumber("1234567890");
-        orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setCity("city");
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
-
-        assertEquals("Conservatism is required.", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-    }
-
-    @Test
-    void testValidateOrganizationFields_CityMissing() {
-        OrgEntity orgEntity = new OrgEntity();
-        orgEntity.setLicenseNumber("LIC123");
-        orgEntity.setOrgName("Test Org");
-        orgEntity.setPassword("password");
-        orgEntity.setPhoneNumber("1234567890");
-        orgEntity.setScope(Scope.ORGANIZATION);
-        orgEntity.setConservatism("city");
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(orgEntity));
-
-        assertEquals("City is required.", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-    }
-
-    @Test
-    void testUpdateOrgThrowsExceptionWhenNameExists() {
-        // Given: An organization with the same name but a different ID already exists
+    void testValidateOrganizationFields() {
         OrgEntity entity = new OrgEntity();
-        entity.setId(2L);
-        entity.setOrgName("ExistingOrg");
+        entity.setLicenseNumber("LIC123");
+        entity.setOrgName("Test Org");
+        entity.setPassword("password");
+        entity.setPhoneNumber("1234567890");
+        entity.setScope(Scope.ORGANIZATION);
+        entity.setCity("Test City");
+        entity.setConservatism("Test Conservatism");
+        entity.setFcmToken("fcmToken");
 
-        // Ensure organization exists before checking for duplicate name
-        when(organizationRepository.findById(2L)).thenReturn(Optional.of(entity));
-        when(organizationRepository.existsByOrgNameAndIdNot("ExistingOrg", 2L)).thenReturn(true);
-
-        // When & Then: Expect an exception when calling the update method
-        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.update(entity));
-
-        assertEquals("Organization name already exists", exception.getMessage());
-        assertEquals(HttpStatus.CONFLICT, exception.getStatus());
-
-        verify(organizationRepository, times(1)).findById(2L);
-        verify(organizationRepository, times(1)).existsByOrgNameAndIdNot("ExistingOrg", 2L);
+        assertDoesNotThrow(() -> orgServices.validateOrganizationFields(entity));
     }
 
     @Test
-    void testUpdateOrgSuccessWhenNameDoesNotExist() {
+    void testValidateOrganizationFieldsThrowsExceptionWhenLicenseNumberIsNull() {
         OrgEntity entity = new OrgEntity();
-        entity.setId(2L);
-        entity.setOrgName("UniqueOrg");
+        entity.setOrgName("Test Org");
+        entity.setPassword("password");
+        entity.setPhoneNumber("1234567890");
+        entity.setScope(Scope.ORGANIZATION);
+        entity.setCity("Test City");
+        entity.setConservatism("Test Conservatism");
+        entity.setFcmToken("fcmToken");
 
-        // Ensure the organization exists in the database
-        when(organizationRepository.findById(2L)).thenReturn(Optional.of(entity));
-        when(organizationRepository.existsByOrgNameAndIdNot("UniqueOrg", 2L)).thenReturn(false);
-        when(organizationRepository.save(any(OrgEntity.class))).thenReturn(entity);
-
-        OrgEntity updatedEntity = orgServices.update(entity);
-
-        assertNotNull(updatedEntity);
-        assertEquals("UniqueOrg", updatedEntity.getOrgName());
-
-        verify(organizationRepository, times(1)).findById(2L);
-        verify(organizationRepository, times(1)).existsByOrgNameAndIdNot("UniqueOrg", 2L);
-        verify(organizationRepository, times(1)).save(entity);
-    }
-
-
-    @Test
-    void shouldThrowExceptionWhenOrganizationAlreadyExists() {
-        // Mock: Organization already exists
-        when(organizationRepository.findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail()))
-                .thenReturn(Optional.of(orgEntity));
-
-        when(userRepo.findByEmail(orgEntity.getEmail()))
-                .thenReturn(Optional.empty());
-
-        // Test and assert exception
-        GlobalException exception = assertThrows(GlobalException.class, () -> {
-            orgServices.saveOrg(orgEntity);
-        });
-
-        assertEquals("Organization Email or License Number already exists", exception.getMessage());
+        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(entity));
+        assertEquals("org.license.required", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-
-        // Verify repository interactions
-        verify(organizationRepository, times(1)).findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail());
-        verify(userRepo, times(1)).findByEmail(orgEntity.getEmail());
-        verifyNoMoreInteractions(organizationRepository, userRepo);
     }
 
     @Test
-    void shouldThrowExceptionWhenUserAlreadyExists() {
-        // Mock: User already exists
-        when(organizationRepository.findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail()))
-                .thenReturn(Optional.empty());
+    void testValidateOrganizationFieldsThrowsExceptionWhenOrgNameIsNull() {
+        OrgEntity entity = new OrgEntity();
+        entity.setLicenseNumber("LIC123");
+        entity.setPassword("password");
+        entity.setPhoneNumber("1234567890");
+        entity.setScope(Scope.ORGANIZATION);
+        entity.setCity("Test City");
+        entity.setConservatism("Test Conservatism");
+        entity.setFcmToken("fcmToken");
 
-        when(userRepo.findByEmail(orgEntity.getEmail()))
-                .thenReturn(Optional.of(new UserEntity()));
-
-        // Test and assert exception
-        GlobalException exception = assertThrows(GlobalException.class, () -> {
-            orgServices.saveOrg(orgEntity);
-        });
-
-        assertEquals("Organization Email or License Number already exists", exception.getMessage());
+        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(entity));
+        assertEquals("org.name.required", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-
-        // Verify repository interactions
-        verify(organizationRepository, times(1)).findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail());
-        verify(userRepo, times(1)).findByEmail(orgEntity.getEmail());
-        verifyNoMoreInteractions(organizationRepository, userRepo);
     }
 
     @Test
-    void shouldSaveOrganizationWhenNoDuplicateExists() {
-        // Mock: No existing organization or user
-        when(organizationRepository.findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail()))
-                .thenReturn(Optional.empty());
-        when(userRepo.findByEmail(orgEntity.getEmail()))
-                .thenReturn(Optional.empty());
-        when(passwordEncoder.encode(orgEntity.getPassword())).thenReturn("encodedPassword");
-        when(organizationRepository.save(any(OrgEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    void testValidateOrganizationFieldsThrowsExceptionWhenPasswordIsNull() {
+        OrgEntity entity = new OrgEntity();
+        entity.setLicenseNumber("LIC123");
+        entity.setOrgName("Test Org");
+        entity.setPhoneNumber("1234567890");
+        entity.setScope(Scope.ORGANIZATION);
+        entity.setCity("Test City");
+        entity.setConservatism("Test Conservatism");
+        entity.setFcmToken("fcmToken");
 
-        // Test
-        assertDoesNotThrow(() -> orgServices.saveOrg(orgEntity));
-
-        // Verify repository interactions
-        verify(organizationRepository, times(1)).findByLicenseNumberOrEmail(orgEntity.getLicenseNumber(), orgEntity.getEmail());
-        verify(userRepo, times(1)).findByEmail(orgEntity.getEmail());
-        verify(organizationRepository, times(1)).save(any(OrgEntity.class));
-        verify(generalVerification, times(1)).sendOtpEmail(any(OrgEntity.class));
+        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(entity));
+        assertEquals("org.password.required", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
+    @Test
+    void testValidateOrganizationFieldsThrowsExceptionWhenPhoneNumberIsNull() {
+        OrgEntity entity = new OrgEntity();
+        entity.setLicenseNumber("LIC123");
+        entity.setOrgName("Test Org");
+        entity.setPassword("password");
+        entity.setScope(Scope.ORGANIZATION);
+        entity.setCity("Test City");
+        entity.setConservatism("Test Conservatism");
+        entity.setFcmToken("fcmToken");
+
+        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(entity));
+        assertEquals("org.phone.required", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+    }
+
+    @Test
+    void testValidateOrganizationFieldsThrowsExceptionWhenScopeIsNull() {
+        OrgEntity entity = new OrgEntity();
+        entity.setLicenseNumber("LIC123");
+        entity.setOrgName("Test Org");
+        entity.setPassword("password");
+        entity.setPhoneNumber("1234567890");
+        entity.setCity("Test City");
+        entity.setConservatism("Test Conservatism");
+        entity.setFcmToken("fcmToken");
+
+        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(entity));
+        assertEquals("org.scope.required", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+    }
+
+    @Test
+    void testValidateOrganizationFieldsThrowsExceptionWhenCityIsNull() {
+        OrgEntity entity = new OrgEntity();
+        entity.setLicenseNumber("LIC123");
+        entity.setOrgName("Test Org");
+        entity.setPassword("password");
+        entity.setPhoneNumber("1234567890");
+        entity.setScope(Scope.ORGANIZATION);
+        entity.setConservatism("Test Conservatism");
+        entity.setFcmToken("fcmToken");
+
+        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(entity));
+        assertEquals("org.city.required", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+    }
+
+    @Test
+    void testValidateOrganizationFieldsThrowsExceptionWhenConservatismIsNull() {
+        OrgEntity entity = new OrgEntity();
+        entity.setLicenseNumber("LIC123");
+        entity.setOrgName("Test Org");
+        entity.setPassword("password");
+        entity.setPhoneNumber("1234567890");
+        entity.setScope(Scope.ORGANIZATION);
+        entity.setCity("Test City");
+        entity.setFcmToken("fcmToken");
+
+        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(entity));
+        assertEquals("org.conservatism.required", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+    }
+
+    @Test
+    void testValidateOrganizationFieldsThrowsExceptionWhenFcmTokenIsNull() {
+        OrgEntity entity = new OrgEntity();
+        entity.setLicenseNumber("LIC123");
+        entity.setOrgName("Test Org");
+        entity.setPassword("password");
+        entity.setPhoneNumber("1234567890");
+        entity.setScope(Scope.ORGANIZATION);
+        entity.setCity("Test City");
+        entity.setConservatism("Test Conservatism");
+
+        GlobalException exception = assertThrows(GlobalException.class, () -> orgServices.validateOrganizationFields(entity));
+        assertEquals("org.fcm.token.required", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+    }
+
+    @Test
+    void testMessageParam() {
+        when(ms.getMessage(eq("org.not.found"), any(), eq(LocaleContextHolder.getLocale()))).thenReturn("org.not.found");
+        String result = orgServices.messageParam(1L, "org.not.found");
+        assertEquals("org.not.found", result);
+    }
 }

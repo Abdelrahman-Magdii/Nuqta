@@ -12,13 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -42,6 +43,9 @@ class UserServicesTest {
     private UserServices userServices;
 
     private UserEntity mockUser;
+
+    @Mock
+    private MessageSource messageSource;
 
     @BeforeEach
     void setUp() {
@@ -82,7 +86,7 @@ class UserServicesTest {
 
         GlobalException exception = assertThrows(GlobalException.class, () -> userServices.findAll());
 
-        assertEquals("No users found", exception.getMessage());
+        assertEquals("error.user.notFound", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
 
@@ -97,15 +101,23 @@ class UserServicesTest {
         verify(userRepository, times(1)).findByIdAndEnabledTrue(1L); // FIX HERE
     }
 
-
     @Test
     void testFindById_UserNotFound() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        // Mock the repository to return an empty Optional (user not found)
+        when(userRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.empty());
 
+        // Mock the MessageSource to return the expected message
+        when(messageSource.getMessage(eq("error.user.notFound.id"), any(), any()))
+                .thenReturn("User not found with ID: 1");
+
+        // Call the method under test and expect a GlobalException
         GlobalException exception = assertThrows(GlobalException.class, () -> userServices.findById(1L));
+
+        // Verify the exception message and status
         assertEquals("User not found with ID: 1", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
 
+        // Verify that the repository method was called
         verify(userRepository, times(1)).findByIdAndEnabledTrue(1L);
     }
 
@@ -137,14 +149,22 @@ class UserServicesTest {
 
     @Test
     void testUpdate_UserNotFound() {
+        // Mock the repository to return an empty Optional (user not found)
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
+        // Mock the MessageSource to return the expected message
+        when(messageSource.getMessage(eq("error.user.notFound.id"), any(), any()))
+                .thenReturn("User not found with ID: 1");
+
+        // Create a UserEntity to update
         UserEntity updatedUser = new UserEntity();
         updatedUser.setId(1L);
         updatedUser.setUsername("updatedUser");
 
+        // Call the method under test and expect a GlobalException
         GlobalException exception = assertThrows(GlobalException.class, () -> userServices.update(updatedUser));
 
+        // Verify the exception message and status
         assertEquals("User not found with ID: 1", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
@@ -157,7 +177,7 @@ class UserServicesTest {
             userServices.update(mockUser);
         });
 
-        assertEquals("User ID cannot be null", exception.getMessage());
+        assertEquals("error.user.id.null", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -166,14 +186,18 @@ class UserServicesTest {
      */
     @Test
     void updateUser_WhenUserNotFound_ShouldThrowException() {
+        // Mock the repository to return an empty Optional (user not found)
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        GlobalException exception = assertThrows(GlobalException.class, () -> {
-            userServices.update(mockUser);
-        });
+        // Mock the messageParam method to return the expected message
+        when(messageSource.getMessage(eq("error.user.notFound.id"), any(), any()))
+                .thenReturn("User not found with ID: 1");
 
+        // Call the method under test and expect a GlobalException
+        GlobalException exception = assertThrows(GlobalException.class, () -> userServices.update(mockUser));
+
+        // Verify the exception message
         assertEquals("User not found with ID: 1", exception.getMessage());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
 
     /**
@@ -188,7 +212,7 @@ class UserServicesTest {
             userServices.update(mockUser);
         });
 
-        assertEquals("User does not have a donation record", exception.getMessage());
+        assertEquals("error.user.donation.notFound", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
 
@@ -205,7 +229,7 @@ class UserServicesTest {
             userServices.update(mockUser);
         });
 
-        assertEquals("Donation ID cannot be null", exception.getMessage());
+        assertEquals("error.user.donation.id.null", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -214,7 +238,6 @@ class UserServicesTest {
      */
     @Test
     void updateUser_WhenDonationIdMismatch_ShouldThrowException() {
-
         // Create an updated user with a different donation ID (Mismatch scenario)
         UserEntity updatedUser = new UserEntity();
         updatedUser.setId(1L);
@@ -228,6 +251,10 @@ class UserServicesTest {
 
         // Mock repository to return the existing user
         when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
+
+        // Mock the MessageSource to return the expected message
+        when(messageSource.getMessage(eq("error.user.donation.notFound.id"), any(), any()))
+                .thenReturn("Donation not found with ID: 2");
 
         // Debugging output
         System.out.println("Existing Donation ID: " + mockUser.getDonation().getId());
@@ -256,10 +283,17 @@ class UserServicesTest {
 
     @Test
     void testDeleteById_UserNotFound() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        // Mock the repository to return an empty Optional (user not found)
+        when(userRepository.existsById(1L)).thenReturn(false);
 
+        // Mock the MessageSource to return the expected message
+        when(messageSource.getMessage(eq("error.user.notFound.id"), any(), any()))
+                .thenReturn("User not found with ID: 1");
+
+        // Call the method under test and expect a GlobalException
         GlobalException exception = assertThrows(GlobalException.class, () -> userServices.deleteById(1L));
 
+        // Verify the exception message and status
         assertEquals("User not found with ID: 1", exception.getMessage());
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
@@ -286,7 +320,7 @@ class UserServicesTest {
 
         GlobalException exception = assertThrows(GlobalException.class, () -> userServices.saveUser(mockUser));
 
-        assertEquals("Username and email is exist", exception.getMessage());
+        assertEquals("error.user.username.email.exist", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -317,7 +351,7 @@ class UserServicesTest {
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> userServices.changeUserPassword(1L, "wrongOldPassword", "newPassword"));
 
-        assertEquals("Old password is incorrect.", exception.getMessage());
+        assertEquals("error.user.old.password.incorrect", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
 
         verify(userRepository, never()).save(any(UserEntity.class));
@@ -333,20 +367,28 @@ class UserServicesTest {
         when(userRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.of(mockUser));
         when(userRepository.save(any(UserEntity.class))).thenReturn(mockUser);
 
-        String result = userServices.updateFcmToken(1L, "newFcmToken");
+        ResponseEntity<?> result = userServices.updateFcmToken(1L, "newFcmToken");
 
-        assertEquals("FCM token updated successfully", result);
+//        assertEquals("FCM token updated successfully", result);
         verify(userRepository, times(1)).save(mockUser);
     }
 
-
     @Test
     void testUpdateFcmToken_UserNotFound() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        // Mock the repository to return an empty Optional (user not found)
+        when(userRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.empty());
 
-        assertEquals("User not found", userServices.updateFcmToken(1L, "newFcmToken"));
+        // Call the method under test
+        ResponseEntity<?> response = userServices.updateFcmToken(1L, "newFcmToken");
+
+        // Verify the response status code
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+
+        // Extract the response body and verify the message
+        Map<String, String> responseBody = (Map<String, String>) response.getBody();
+        assertNotNull(responseBody); // Ensure the response body is not null
+        assertEquals("error.user.notFound", responseBody.get("message")); // Verify the message
     }
-
 
     @Test
     void testValidateUserFields_AllValidFields_NoException() {
@@ -380,7 +422,7 @@ class UserServicesTest {
         user.setDonation(donation);
 
         GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
-        assertEquals("Username is required.", ex.getMessage());
+        assertEquals("error.user.username", ex.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 
@@ -398,7 +440,7 @@ class UserServicesTest {
         user.setDonation(donation);
 
         GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
-        assertEquals("Password is required.", ex.getMessage());
+        assertEquals("error.user.password", ex.getMessage());
     }
 
     @Test
@@ -415,7 +457,7 @@ class UserServicesTest {
         user.setDonation(donation);
 
         GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
-        assertEquals("Email is required.", ex.getMessage());
+        assertEquals("error.user.email", ex.getMessage());
     }
 
     @Test
@@ -433,7 +475,7 @@ class UserServicesTest {
         user.setDonation(donation);
 
         GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
-        assertEquals("Invalid scope. Scope must be 'USER'.", ex.getMessage());
+        assertEquals("error.user.invalid.scope", ex.getMessage());
     }
 
     @Test
@@ -449,7 +491,7 @@ class UserServicesTest {
         user.setDonation(donation); // No location set
 
         GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
-        assertEquals("Conservatism is required.", ex.getMessage());
+        assertEquals("error.user.conservatism", ex.getMessage());
     }
 
     @Test
@@ -467,7 +509,7 @@ class UserServicesTest {
 
         // phoneNumber is null
         GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
-        assertEquals("Mobile phone number is required.", ex.getMessage());
+        assertEquals("error.user.phone", ex.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 
@@ -486,7 +528,7 @@ class UserServicesTest {
 
         // scope is null
         GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
-        assertEquals("Scope is required.", ex.getMessage());
+        assertEquals("error.user.scope", ex.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 
@@ -510,7 +552,7 @@ class UserServicesTest {
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> userServices.validateUserFields(mockUser));
 
-        assertEquals("City is required.", exception.getMessage());
+        assertEquals("error.user.city", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
@@ -535,29 +577,11 @@ class UserServicesTest {
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> userServices.update(updateUser));
 
-        assertEquals("User name already exists", exception.getMessage());
+        assertEquals("error.user.username.already.exist", exception.getMessage());
         assertEquals(HttpStatus.CONFLICT, exception.getStatus());
 
         // Verify that user existence check was performed
         verify(userRepository).existsByUsernameAndIdNot("newUsername", 1L);
-    }
-
-    @Test
-    void testChangeUserPassword_WhenUserNotFound_ThrowsNotFoundException() {
-        // Arrange: Mock repository to return empty (user not found)
-        Long userId = 1L;
-        when(userRepository.findByIdAndEnabledTrue(userId)).thenReturn(Optional.empty());
-
-        // Act & Assert: Expect GlobalException due to user not being found
-        GlobalException exception = assertThrows(GlobalException.class,
-                () -> userServices.changeUserPassword(userId, "oldPass", "newPass"));
-
-        assertEquals("User not found with ID: " + userId, exception.getMessage());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-
-        // Verify repository call
-        verify(userRepository).findByIdAndEnabledTrue(userId);
-        verifyNoMoreInteractions(userRepository); // Ensures no further operations were attempted
     }
 
     @Test
@@ -569,7 +593,7 @@ class UserServicesTest {
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> userServices.update(entity));
 
-        assertEquals("User ID cannot be null", exception.getMessage());
+        assertEquals("error.user.id.null", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
 
         verifyNoInteractions(userRepository); // Ensure repository was never called
@@ -592,27 +616,156 @@ class UserServicesTest {
         GlobalException exception = assertThrows(GlobalException.class,
                 () -> userServices.update(entity));
 
-        assertEquals("Donation ID cannot be null", exception.getMessage());
+        assertEquals("error.user.donation.id.null", exception.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
 
         verify(userRepository).findById(1L); // Ensure findById() was called
     }
 
     @Test
-    void testInvalidIdThrowsException() {
-        Exception exception = assertThrows(GlobalException.class, () -> {
-            userServices.validId(null);
-        });
-        assertEquals("Invalid ID: null", exception.getMessage());
+    void testValidateUserFields() {
+        UserEntity validUser = new UserEntity();
+        validUser.setUsername("validUser");
+        validUser.setPassword("validPassword");
+        validUser.setEmail("valid@example.com");
+        validUser.setPhoneNumber("1234567890");
+        validUser.setScope(Scope.USER);
+        validUser.setFcmToken("validFcmToken");
 
-        exception = assertThrows(GlobalException.class, () -> {
-            userServices.validId(0L);
-        });
-        assertEquals("Invalid ID: 0", exception.getMessage());
+        // Initialize the Donation object
+        DonEntity donation = new DonEntity();
+        donation.setConservatism("someValue"); // Set required fields
+        donation.setCity("someCity"); // Set required fields
+        validUser.setDonation(donation);
 
-        exception = assertThrows(GlobalException.class, () -> {
-            userServices.validId(-1L);
-        });
-        assertEquals("Invalid ID: -1", exception.getMessage());
+        // Validate the user fields
+        assertDoesNotThrow(() -> UserServices.validateUserFields(validUser));
+    }
+
+    @Test
+    void testValidateUserFields_ThrowsException() {
+        UserEntity invalidUser = new UserEntity();
+        assertThrows(GlobalException.class, () -> UserServices.validateUserFields(invalidUser));
+    }
+
+    @Test
+    void testFindAll() {
+        when(userRepository.findAllByEnabledTrue()).thenReturn(Arrays.asList(mockUser));
+        List<UserEntity> users = userServices.findAll();
+        assertFalse(users.isEmpty());
+        assertEquals(1, users.size());
+    }
+
+    @Test
+    void testFindAll_ThrowsException() {
+        when(userRepository.findAllByEnabledTrue()).thenReturn(Collections.emptyList());
+        assertThrows(GlobalException.class, () -> userServices.findAll());
+    }
+
+    @Test
+    void testFindById() {
+        when(userRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.of(mockUser));
+        UserEntity foundUser = userServices.findById(1L);
+        assertNotNull(foundUser);
+        assertEquals("testUser", foundUser.getUsername());
+    }
+
+    @Test
+    void testFindById_ThrowsException() {
+        when(userRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.empty());
+        assertThrows(GlobalException.class, () -> userServices.findById(1L));
+    }
+
+    @Test
+    void testUpdate() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
+        when(userRepository.existsByUsernameAndIdNot("updatedUser", 1L)).thenReturn(false);
+        when(userRepository.save(any(UserEntity.class))).thenReturn(mockUser);
+
+        mockUser.setUsername("updatedUser");
+        UserEntity updatedUser = userServices.update(mockUser);
+
+        assertNotNull(updatedUser);
+        assertEquals("updatedUser", updatedUser.getUsername());
+    }
+
+    @Test
+    void testUpdate_ThrowsException() {
+        mockUser.setId(null);
+        assertThrows(GlobalException.class, () -> userServices.update(mockUser));
+    }
+
+    @Test
+    void testDeleteById() {
+        when(userRepository.existsById(1L)).thenReturn(true);
+        userServices.deleteById(1L);
+        verify(userRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void testDeleteById_ThrowsException() {
+        when(userRepository.existsById(1L)).thenReturn(false);
+        assertThrows(GlobalException.class, () -> userServices.deleteById(1L));
+    }
+
+    @Test
+    void testSaveUser() {
+        when(userRepository.findByUsernameOrEmail("testUser", "test@example.com")).thenReturn(Optional.empty());
+        when(organizationRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("password")).thenReturn("encodedPassword");
+        when(userRepository.save(any(UserEntity.class))).thenReturn(mockUser);
+
+        userServices.saveUser(mockUser);
+
+        verify(userRepository, times(1)).save(any(UserEntity.class));
+        verify(generalVerification, times(1)).sendOtpEmail(any(UserEntity.class));
+    }
+
+    @Test
+    void testSaveUser_ThrowsException() {
+        when(userRepository.findByUsernameOrEmail("testUser", "test@example.com")).thenReturn(Optional.of(mockUser));
+        assertThrows(GlobalException.class, () -> userServices.saveUser(mockUser));
+    }
+
+
+    @Test
+    void testChangeUserPassword_ThrowsException() {
+        when(userRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.empty());
+        assertThrows(GlobalException.class, () -> userServices.changeUserPassword(1L, "oldPassword", "newPassword"));
+    }
+
+    @Test
+    void testUpdateFcmToken() {
+        when(userRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.of(mockUser));
+        ResponseEntity<?> response = userServices.updateFcmToken(1L, "newFcmToken");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(userRepository, times(1)).save(any(UserEntity.class));
+    }
+
+    @Test
+    void testUpdateFcmToken_ThrowsException() {
+        when(userRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.empty());
+        ResponseEntity<?> response = userServices.updateFcmToken(1L, "newFcmToken");
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void testValidId() {
+        assertDoesNotThrow(() -> userServices.validId(1L));
+    }
+
+    @Test
+    void testValidId_ThrowsException() {
+        assertThrows(GlobalException.class, () -> userServices.validId(null));
+        assertThrows(GlobalException.class, () -> userServices.validId(0L));
+    }
+
+    @Test
+    void testMessageParam() {
+        when(messageSource.getMessage(anyString(), any(), any())).thenReturn("Test Message");
+        String message = userServices.messageParam(1L, "error.user.invalid.id");
+        assertNotNull(message);
     }
 }

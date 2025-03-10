@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,17 +35,8 @@ public class DonController {
     private final DonServices donServices;
     private final DonMapper donMapper;
     private final DonResponseMapper donResponseMapper;
+    private final MessageSource ms;
 
-
-    @Operation(summary = "Get All Donations", description = "Retrieve a list of all donations")
-    @ApiResponse(responseCode = "200", description = "Donations get successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = DonDto.class)))
-    @GetMapping()
-    public ResponseEntity<?> getAllDonation() {
-        List<DonResponseDto> dtos = donResponseMapper.map(donServices.findAll());
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
-    }
 
     @Operation(summary = "Get Donation by ID", description = "Retrieve a donation by its unique ID")
     @ApiResponse(responseCode = "200", description = "Donations get successfully",
@@ -55,17 +48,16 @@ public class DonController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-
     @Operation(summary = "Get Nearest Donations", description = "Retrieve a list of donations nearest to the provided coordinates")
     @ApiResponse(responseCode = "200", description = "Donations retrieved successfully",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = DonDto.class)))
     @ApiResponse(responseCode = "400", description = "Invalid input parameters (e.g., missing latitude or longitude)")
-    @GetMapping("/nearest")
-    public ResponseEntity<?> getNearestDonations(@RequestParam double latitude, @RequestParam double longitude) {
+    @GetMapping("/nearest/conservatism")
+    public ResponseEntity<?> getNearestDonations(@RequestParam String conservatism) {
 
         // Fetch nearest donations from the service layer
-        List<DonEntity> nearestDonations = donServices.findNearestLocations(latitude, longitude);
+        List<DonEntity> nearestDonations = donServices.findTopConservatism(conservatism);
 
         // Map entities to DTOs
         List<DonDto> dtos = donMapper.map(nearestDonations);
@@ -74,6 +66,23 @@ public class DonController {
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 
+    @Operation(summary = "Get Nearest Donations", description = "Retrieve a list of donations nearest to the provided coordinates")
+    @ApiResponse(responseCode = "200", description = "Donations retrieved successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = DonDto.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid input parameters (e.g., missing latitude or longitude)")
+    @GetMapping("/nearest/city")
+    public ResponseEntity<?> getNearestDonationsCity(@RequestParam String city) {
+
+        // Fetch nearest donations from the service layer
+        List<DonEntity> nearestDonations = donServices.findTopCity(city);
+
+        // Map entities to DTOs
+        List<DonDto> dtos = donMapper.map(nearestDonations);
+
+        // Return the DTOs with a 200 OK status
+        return new ResponseEntity<>(dtos, HttpStatus.OK);
+    }
 
     @PostMapping("/acceptRequest")
     public ResponseEntity<?> acceptDonationRequest(@RequestBody AcceptDonationRequestDto dto) {
@@ -87,13 +96,13 @@ public class DonController {
         Map<String, Object> response = new HashMap<>();
         try {
             donServices.deleteAcceptedDonationRequest(dto);
-            response.put("message", "Donation request successfully deleted.");
+            response.put("message", "success.donation.requestDeleted");
             return ResponseEntity.ok(response);
         } catch (GlobalException e) {
-            response.put("message", e.getMessage());
+            response.put("message", ms.getMessage("error.globalException", new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
             return ResponseEntity.status(e.getStatus()).body(response);
         } catch (Exception e) {
-            response.put("message", "An error occurred: " + e.getMessage());
+            response.put("message", ms.getMessage("error.unknown", new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

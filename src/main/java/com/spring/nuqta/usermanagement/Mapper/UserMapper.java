@@ -7,6 +7,7 @@ import com.spring.nuqta.usermanagement.Dto.UserDto;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 import java.time.LocalDate;
 
@@ -14,31 +15,20 @@ import java.time.LocalDate;
 public interface UserMapper extends BaseMapper<UserEntity, UserDto> {
 
     @Override
-    @Mapping(target = "age", source = "birthDate")
+    @Mapping(target = "age", source = "birthDate", qualifiedByName = "calculateAge")
     UserDto map(UserEntity entity);
 
     @Override
-    @Mapping(target = "birthDate", source = "age")
+    @Mapping(target = "birthDate", source = "age", qualifiedByName = "calculateBirthDate")
     UserEntity unMap(UserDto dto);
 
-    default int calculateAgeFromBirthDate(LocalDate birthDate) {
-        if (birthDate == null) return 0;
-
-        LocalDate today = LocalDate.now();
-        int age = today.getYear() - birthDate.getYear();
-
-        // Adjust if the birth date hasn't occurred yet in the current year
-        if (birthDate.getMonthValue() > today.getMonthValue() ||
-                (birthDate.getMonthValue() == today.getMonthValue() && birthDate.getDayOfMonth() > today.getDayOfMonth())) {
-            age--;
-        }
-
-        return age;
+    @Named("calculateAge")
+    default int calculateAge(LocalDate birthDate) {
+        return DateUtils.calculateAgeFromBirthDate(birthDate);
     }
 
-
-    default LocalDate calculateBirthDateFromAge(int age) {
-        if (age < 0) throw new IllegalArgumentException("Age cannot be negative");
-        return LocalDate.now().minusYears(age).withDayOfYear(1); // Approximate to the first day of the year
+    @Named("calculateBirthDate")
+    default LocalDate calculateBirthDate(int age) {
+        return DateUtils.calculateBirthDateFromAge(age);
     }
 }

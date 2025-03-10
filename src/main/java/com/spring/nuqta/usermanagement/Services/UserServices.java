@@ -12,14 +12,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -31,6 +32,8 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     private final PasswordEncoder passwordEncoder; // Password encoder for secure password handling
     private final GeneralVerification generalVerification; // Service for general verification tasks
 
+    private final MessageSource ms;
+
     /**
      * Validates the required fields of a UserEntity.
      * Throws a GlobalException if any required field is missing or invalid.
@@ -39,35 +42,35 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      */
     static void validateUserFields(UserEntity params) {
         if (Objects.isNull(params.getUsername())) {
-            throw new GlobalException("Username is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.username", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getPassword())) {
-            throw new GlobalException("Password is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.password", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getEmail())) {
-            throw new GlobalException("Email is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.email", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getPhoneNumber())) {
-            throw new GlobalException("Mobile phone number is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.phone", HttpStatus.BAD_REQUEST);
         }
         if (Objects.isNull(params.getScope())) {
-            throw new GlobalException("Scope is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.scope", HttpStatus.BAD_REQUEST);
         }
 
         if (!(Scope.USER.equals(params.getScope()))) {
-            throw new GlobalException("Invalid scope. Scope must be 'USER'.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.invalid.scope", HttpStatus.BAD_REQUEST);
         }
 
         if (Objects.isNull(params.getDonation().getConservatism())) {
-            throw new GlobalException("Conservatism is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.conservatism", HttpStatus.BAD_REQUEST);
         }
 
         if (Objects.isNull(params.getDonation().getCity())) {
-            throw new GlobalException("City is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.city", HttpStatus.BAD_REQUEST);
         }
 
         if (Objects.isNull(params.getFcmToken())) {
-            throw new GlobalException("Fcm Token is required.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.fcmToken", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -83,7 +86,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     public List<UserEntity> findAll() throws GlobalException {
         List<UserEntity> users = userRepository.findAllByEnabledTrue();
         if (users.isEmpty()) {
-            throw new GlobalException("No users found", HttpStatus.NOT_FOUND);
+            throw new GlobalException("error.user.notFound", HttpStatus.NOT_FOUND);
         }
         return users;
     }
@@ -103,7 +106,8 @@ public class UserServices extends BaseServices<UserEntity, Long> {
 
         Optional<UserEntity> user = userRepository.findByIdAndEnabledTrue(id);
         if (user.isEmpty()) {
-            throw new GlobalException("User not found with ID: " + id, HttpStatus.NOT_FOUND);
+            String msg = messageParam(id, "error.user.notFound.id");
+            throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
         return user.get();
     }
@@ -120,31 +124,33 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     @CacheEvict(value = "users", allEntries = true) // Clear all cached users
     public UserEntity update(UserEntity entity) throws GlobalException {
         if (entity.getId() == null) {
-            throw new GlobalException("User ID cannot be null", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.id.null", HttpStatus.BAD_REQUEST);
         }
 
         Optional<UserEntity> user = userRepository.findById(entity.getId());
         if (user.isEmpty()) {
-            throw new GlobalException("User not found with ID: " + entity.getId(), HttpStatus.NOT_FOUND);
+            String msg = messageParam(entity.getId(), "error.user.notFound.id");
+            throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
 
         if (userRepository.existsByUsernameAndIdNot(entity.getUsername(), entity.getId())) {
-            throw new GlobalException("User name already exists", HttpStatus.CONFLICT);
+            throw new GlobalException("error.user.username.already.exist", HttpStatus.CONFLICT);
         }
 
         UserEntity existingUser = user.get();
 
         // Check if existingUser.getDonation() is null before accessing getId()
         if (existingUser.getDonation() == null) {
-            throw new GlobalException("User does not have a donation record", HttpStatus.NOT_FOUND);
+            throw new GlobalException("error.user.donation.notFound", HttpStatus.NOT_FOUND);
         }
 
         if (entity.getDonation().getId() == null) {
-            throw new GlobalException("Donation ID cannot be null", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.donation.id.null", HttpStatus.BAD_REQUEST);
         }
 
         if (!existingUser.getDonation().getId().equals(entity.getDonation().getId())) {
-            throw new GlobalException("Donation not found with ID: " + entity.getDonation().getId(), HttpStatus.NOT_FOUND);
+            String msg = messageParam(entity.getDonation().getId(), "error.user.donation.notFound.id");
+            throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
 
         existingUser.setUsername(entity.getUsername());
@@ -174,7 +180,8 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         validId(id);
         boolean user = userRepository.existsById(id);
         if (!user) {
-            throw new GlobalException("User not found with ID: " + id, HttpStatus.NOT_FOUND);
+            String msg = messageParam(id, "error.user.notFound.id");
+            throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
         userRepository.deleteById(id);
     }
@@ -196,7 +203,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
                 organizationRepository.findByEmail(entity.getEmail());
 
         if (existingUser.isPresent() || existingOrganization.isPresent()) {
-            throw new GlobalException("Username and email is exist", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.username.email.exist", HttpStatus.BAD_REQUEST);
         }
 
         UserEntity userCreation = new UserEntity();
@@ -232,12 +239,14 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         validId(userId);
         Optional<UserEntity> user = userRepository.findByIdAndEnabledTrue(userId);
         if (user.isEmpty()) {
-            throw new GlobalException("User not found with ID: " + userId, HttpStatus.NOT_FOUND);
+            String msg = messageParam(userId, "error.user.notFound.id");
+
+            throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
 
         // Verify old password
         if (!passwordEncoder.matches(oldPassword, user.get().getPassword())) {
-            throw new GlobalException("Old password is incorrect.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.user.old.password.incorrect", HttpStatus.BAD_REQUEST);
         }
 
         // Encode and update new password
@@ -254,24 +263,32 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      * @return A ResponseEntity indicating success or failure.
      */
     @CacheEvict(value = "users", key = "#id")
-    public String updateFcmToken(Long id, String fcmToken) {
+    public ResponseEntity<?> updateFcmToken(Long id, String fcmToken) {
         validId(id);
-
         Optional<UserEntity> userOptional = userRepository.findByIdAndEnabledTrue(id);
 
+        Map<String, String> response = new HashMap<>();
         if (userOptional.isPresent()) {
             UserEntity user = userOptional.get();
             user.setFcmToken(fcmToken);
             userRepository.save(user);
-            return "FCM token updated successfully";
+            response.put("message", "error.user.fcmToken.update");
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            return "User not found";
+            response.put("message", "error.user.notFound");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
     public void validId(Long id) {
         if (id == null || id <= 0) {
-            throw new GlobalException("Invalid ID: " + id, HttpStatus.BAD_REQUEST);
+            String msg = messageParam(id, "error.user.invalid.id");
+            throw new GlobalException(msg, HttpStatus.BAD_REQUEST);
         }
+    }
+
+    public String messageParam(Long id, String message) {
+        String[] msParam = {id != null ? id.toString() : "null"};
+        return ms.getMessage(message, msParam, LocaleContextHolder.getLocale());
     }
 }

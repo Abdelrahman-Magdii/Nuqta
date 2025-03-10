@@ -5,6 +5,8 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -20,11 +22,13 @@ public class EmailService {
 
     private final JavaMailSender emailSender;
     private final SpringTemplateEngine templateEngine;
+    private final MessageSource ms;
 
     @Autowired
-    public EmailService(JavaMailSender emailSender, SpringTemplateEngine templateEngine) {
+    public EmailService(JavaMailSender emailSender, SpringTemplateEngine templateEngine, MessageSource ms) {
         this.emailSender = emailSender;
         this.templateEngine = templateEngine;
+        this.ms = ms;
     }
 
     public void sendMail(AbstractEmailContext email) throws MessagingException {
@@ -53,7 +57,9 @@ public class EmailService {
             log.info("Email sent successfully to {}", email.getTo());
         } catch (MessagingException e) {
             log.error("Failed to send email to {}: {}", email.getTo(), e.getMessage());
-            throw new MessagingException("Failed to send email" + e.getMessage());
+            String[] obj = {email.getTo()};
+            String msg = ms.getMessage("mail.failed.send", obj, LocaleContextHolder.getLocale());
+            throw new MessagingException(msg);
         }
     }
 }

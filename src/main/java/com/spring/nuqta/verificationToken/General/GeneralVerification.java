@@ -44,8 +44,6 @@ public class GeneralVerification {
             token.setUser(user);
         } else if (entity instanceof OrgEntity org) {
             token.setOrganization(org);
-        } else {
-            throw new IllegalArgumentException("Unsupported entity type");
         }
 
         verificationTokenService.saveToken(token);
@@ -80,7 +78,7 @@ public class GeneralVerification {
 
         if (token.getExpiredAt() != null && token.getExpiredAt().isBefore(LocalDateTime.now())) {
             log.warn("Expired verification token: {}", tokenValue);
-            throw new GlobalException("Expired verification token.", HttpStatus.BAD_REQUEST);
+            throw new GlobalException("error.token", HttpStatus.BAD_REQUEST);
         }
 
         if (token.getUser() != null) {

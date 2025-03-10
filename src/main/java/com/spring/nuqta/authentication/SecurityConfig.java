@@ -54,7 +54,7 @@ public class SecurityConfig {
                             response.setCharacterEncoding("UTF-8");
 
                             Map<String, String> errorResponse = Map.of(
-                                    "message", "You don't have permission to access this resource.",
+                                    "message", "security.permission",
                                     "timestamp", java.time.LocalDateTime.now().toString(),
                                     "details", request.getRequestURI()
                             );
