@@ -21,17 +21,17 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws");
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
-                .withSockJS();
+                .withSockJS(); // Allow SockJS fallback
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/app");
-        registry.enableSimpleBroker("/topic", "/queue");
+        registry.setApplicationDestinationPrefixes("/app"); // Prefix for client messages
+        registry.enableSimpleBroker("/topic", "/queue"); // Enable in-memory broker
     }
 
     @EventListener
     public void onDisconnect(SessionDisconnectEvent event) {
-        log.info("Disconnected from session : " + event.getSessionId());
+        log.info("Disconnected from session: " + event.getSessionId());
     }
 }

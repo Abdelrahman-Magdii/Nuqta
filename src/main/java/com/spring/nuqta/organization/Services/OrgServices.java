@@ -165,6 +165,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
         organizationCreation.setScope(params.getScope());
         organizationCreation.setPassword(passwordEncoder.encode(params.getPassword()));
         organizationCreation.setLicenseNumber(params.getLicenseNumber());
+        organizationCreation.setFcmToken(params.getFcmToken());
         organizationCreation.setModifiedDate(LocalDate.now());
         organizationCreation.setModifiedUser(params.getOrgName());
         organizationCreation.setCreatedDate(LocalDate.now());

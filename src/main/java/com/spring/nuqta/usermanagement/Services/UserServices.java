@@ -218,7 +218,8 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         userCreation.setBirthDate(entity.getBirthDate());
         userCreation.setCreatedDate(LocalDate.now());
         userCreation.setCreatedUser(entity.getUsername());
-
+        userCreation.setFcmToken(entity.getFcmToken());
+        
         userCreation = userRepository.save(userCreation);
 
         generalVerification.sendOtpEmail(userCreation);
