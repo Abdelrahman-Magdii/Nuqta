@@ -57,7 +57,7 @@ public class UserEntity extends BaseEntity<Long> {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<ReqEntity> uploadedRequests;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "donation_id", referencedColumnName = "id")
     private DonEntity donation;
 

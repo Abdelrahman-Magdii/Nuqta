@@ -54,15 +54,15 @@ public class ReqEntity extends BaseEntity<Long> {
     @Column(name = "conservatism", nullable = false)
     private String conservatism;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private UserEntity user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "org_id", referencedColumnName = "id")
     private OrgEntity organization;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
     @JoinTable(
             name = "request_donation",
             joinColumns = @JoinColumn(name = "request_id"),
