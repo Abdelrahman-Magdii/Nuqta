@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +36,7 @@ public class UserController {
     private final UserMapper userMapper;
     private final UserInsertMapper userInsertMapper;
     private final UserUpdateMapper userUpdateMapper;
+    private final MessageSource ms;
 
     @Operation(summary = "Get All Users", description = "Retrieve a list of all users")
     @ApiResponse(responseCode = "200", description = "User get successfully",
@@ -73,7 +76,7 @@ public class UserController {
     public ResponseEntity<?> deleteUserById(@PathVariable Long id) {
         userServices.deleteById(id);
         Map<String, String> response = new HashMap<>();
-        response.put("message", "error.user.delete.id");
+        response.put("message", getMS("error.user.delete.id"));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -88,7 +91,7 @@ public class UserController {
         userServices.changeUserPassword(userId, oldPassword, newPassword);
 
         Map<String, String> response = new HashMap<>();
-        response.put("message", "error.user.password.change");
+        response.put("message", getMS("error.user.password.change"));
 
         return ResponseEntity.ok(response);
     }
@@ -98,5 +101,9 @@ public class UserController {
     public ResponseEntity<?> updateFcmToken(@PathVariable Long id, @RequestBody Map<String, String> request) {
         String fcmToken = request.get("fcmToken");
         return userServices.updateFcmToken(id, fcmToken);
+    }
+
+    private String getMS(String messageKey) {
+        return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
     }
 }

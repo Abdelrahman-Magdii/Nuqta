@@ -96,14 +96,18 @@ public class DonController {
         Map<String, Object> response = new HashMap<>();
         try {
             donServices.deleteAcceptedDonationRequest(dto);
-            response.put("message", "success.donation.requestDeleted");
+            response.put("message", getMS("success.donation.requestDeleted"));
             return ResponseEntity.ok(response);
         } catch (GlobalException e) {
-            response.put("message", ms.getMessage("error.globalException", new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
+            response.put("message", getMS("error.globalException"));
             return ResponseEntity.status(e.getStatus()).body(response);
         } catch (Exception e) {
-            response.put("message", ms.getMessage("error.unknown", new Object[]{e.getMessage()}, LocaleContextHolder.getLocale()));
+            response.put("message", getMS("error.unknown"));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    private String getMS(String messageKey) {
+        return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
     }
 }

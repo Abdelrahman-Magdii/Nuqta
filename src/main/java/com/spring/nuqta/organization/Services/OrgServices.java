@@ -102,13 +102,12 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
 
 
         OrgEntity existingOrganization = organizationOptional.get();
+        
         // Updating only selected fields to maintain data integrity
         existingOrganization.setOrgName(entity.getOrgName());
         existingOrganization.setCity(entity.getCity());
         existingOrganization.setConservatism(entity.getConservatism());
         existingOrganization.setPhoneNumber(entity.getPhoneNumber());
-        existingOrganization.setScope(entity.getScope());
-        existingOrganization.setFcmToken(entity.getFcmToken());
 
         existingOrganization.setModifiedDate(LocalDate.now());
         existingOrganization.setModifiedUser(entity.getOrgName());
@@ -221,10 +220,10 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
             OrgEntity org = orgOptional.get();
             org.setFcmToken(fcmToken);
             organizationRepository.save(org);
-            response.put("message", "error.user.fcmToken.update");
+            response.put("message", getMS("error.user.fcmToken.update"));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            response.put("message", "error.user.notFound");
+            response.put("message", getMS("error.user.notFound"));
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
@@ -265,5 +264,9 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
     public String messageParam(Long id, String message) {
         String[] msParam = {id != null ? id.toString() : "null"};
         return ms.getMessage(message, msParam, LocaleContextHolder.getLocale());
+    }
+
+    private String getMS(String messageKey) {
+        return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
     }
 }

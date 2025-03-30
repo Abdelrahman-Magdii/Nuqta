@@ -1,6 +1,8 @@
 package com.spring.nuqta.exception;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.context.request.WebRequest;
@@ -11,7 +13,10 @@ import static org.mockito.Mockito.when;
 
 class GlobalExceptionHandlerTest {
 
-    GlobalExceptionHandler exceptionHandler = new GlobalExceptionHandler();
+    @Mock
+    public MessageSource messageSource;
+
+    GlobalExceptionHandler exceptionHandler = new GlobalExceptionHandler(messageSource);
 
     @Test
     void testHandleGlobalException() {

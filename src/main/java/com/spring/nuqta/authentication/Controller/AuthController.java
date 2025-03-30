@@ -17,13 +17,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.SystemException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.HashMap;
 import java.util.Map;
-
 
 @Slf4j
 @Tag(name = "Authentication")
@@ -38,29 +40,28 @@ public class AuthController {
     private final UserInsertMapper userInsertMapper;
     private final OrgServices orgServices;
     private final AddOrgMapper addOrgMapper;
+    private final MessageSource ms;
 
-    @PostMapping("/user/register")
-    public ResponseEntity<Map<String, String>> register(@RequestBody UserInsertDto userDto) {
+    @PostMapping("/register/user")
+    public ResponseEntity<Map<String, String>> registerUser(@RequestBody UserInsertDto userDto) {
         UserEntity entity = userInsertMapper.unMap(userDto);
         userServices.saveUser(entity);
 
-        // Create a map with the message
         Map<String, String> response = new HashMap<>();
-        response.put("message", "user.register.success");
+
+        response.put("message", getMS("user.register.success"));
 
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/org/register")
-    public ResponseEntity<?> register(@RequestBody AddOrgDto addOrgDto) {
+    @PostMapping("/register/org")
+    public ResponseEntity<Map<String, String>> registerOrg(@RequestBody AddOrgDto addOrgDto) {
         OrgEntity entity = addOrgMapper.unMap(addOrgDto);
         orgServices.saveOrg(entity);
 
-        // Create a map for the JSON response
         Map<String, String> response = new HashMap<>();
-        response.put("message", "organization.register.success");
+        response.put("message", getMS("organization.register.success"));
 
-        // Return the response as JSON
         return ResponseEntity.ok(response);
     }
 
@@ -69,47 +70,38 @@ public class AuthController {
         return ResponseEntity.ok(authService.authUser(input));
     }
 
-    @PostMapping("/login/organization")
+    @PostMapping("/login/org")
     public ResponseEntity<AuthOrgDto> loginOrganization(@RequestBody Map<String, Object> input) throws SystemException {
         return ResponseEntity.ok(authService.authOrganization(input));
     }
 
     @GetMapping("/verify")
-    public ResponseEntity<?> verifyRegistration(@RequestParam("token") String token, @RequestParam("mail") String mail) {
-
+    public RedirectView verifyRegistration(@RequestParam("token") String token, @RequestParam("mail") String mail) {
         boolean verified = generalVerification.verifyRegistration(token, mail);
-        Map<String, String> response = new HashMap<>();
-
-        if (verified) {
-            response.put("messing", "email.verify.success");
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } else {
-            response.put("messing", "email.verify.invalid");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
+        return new RedirectView(verified ? "/verification-success.html" : "/verification-failed.html");
     }
-
 
     @PostMapping("/forgotPassword")
     public ResponseEntity<Map<String, String>> forgotPassword(@RequestParam("email") String email) {
         return generalReset.sendOtpEmail(email);
     }
 
-
     @PostMapping("/resetPassword")
-    public ResponseEntity<?> resetPassword(@RequestParam String email, @RequestParam String otp, @RequestParam String newPassword) {
+    public ResponseEntity<Map<String, String>> resetPassword(@RequestParam String email, @RequestParam String otp, @RequestParam String newPassword) {
 
         boolean verified = generalReset.resetPassword(email, otp, newPassword);
-
         Map<String, String> response = new HashMap<>();
 
         if (verified) {
-            response.put("messing", "password.reset.success");
+            response.put("message", getMS("password.reset.success"));
             return ResponseEntity.ok(response);
         } else {
-            response.put("messing", "password.reset.invalid");
+            response.put("message", getMS("password.reset.invalid"));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
+    private String getMS(String messageKey) {
+        return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
+    }
 }

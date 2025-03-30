@@ -3,8 +3,10 @@ package com.spring.nuqta.authentication;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spring.nuqta.authentication.Jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,9 +30,10 @@ import static com.spring.nuqta.enums.Scope.USER;
 public class SecurityConfig {
 
     public static final String[] PUBLIC_APIS = {"/swagger-ui/**", "/api/auth/**",
-            "/api-docs/**"}; // WebSocket is public, authentication handled in handshake
+            "/api-docs/**", "/", "/verify", "/verification-success.html", "/verification-failed.html"}; // WebSocket is public, authentication handled in handshake
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final MessageSource ms;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -52,8 +55,10 @@ public class SecurityConfig {
                             response.setContentType("application/json");
                             response.setCharacterEncoding("UTF-8");
 
+                            String message = ms.getMessage("security.permission", null, LocaleContextHolder.getLocale());
+
                             Map<String, String> errorResponse = Map.of(
-                                    "message", "security.permission",
+                                    "message", message,
                                     "timestamp", java.time.LocalDateTime.now().toString(),
                                     "details", request.getRequestURI()
                             );

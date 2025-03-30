@@ -27,10 +27,10 @@ import java.util.*;
 @RequiredArgsConstructor
 public class UserServices extends BaseServices<UserEntity, Long> {
 
-    private final UserRepo userRepository; // Repository for UserEntity operations
-    private final OrgRepo organizationRepository; // Repository for OrgEntity operations
-    private final PasswordEncoder passwordEncoder; // Password encoder for secure password handling
-    private final GeneralVerification generalVerification; // Service for general verification tasks
+    private final UserRepo userRepository;
+    private final OrgRepo organizationRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final GeneralVerification generalVerification;
 
     private final MessageSource ms;
 
@@ -57,6 +57,10 @@ public class UserServices extends BaseServices<UserEntity, Long> {
             throw new GlobalException("error.user.scope", HttpStatus.BAD_REQUEST);
         }
 
+        if (Objects.isNull(params.getGender())) {
+            throw new GlobalException("error.user.gender", HttpStatus.BAD_REQUEST);
+        }
+
         if (!(Scope.USER.equals(params.getScope()))) {
             throw new GlobalException("error.user.invalid.scope", HttpStatus.BAD_REQUEST);
         }
@@ -71,6 +75,10 @@ public class UserServices extends BaseServices<UserEntity, Long> {
 
         if (Objects.isNull(params.getFcmToken())) {
             throw new GlobalException("error.user.fcmToken", HttpStatus.BAD_REQUEST);
+        }
+
+        if (Objects.isNull(params.getBirthDate())) {
+            throw new GlobalException("error.user.birthDate", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -154,11 +162,8 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         }
 
         existingUser.setUsername(entity.getUsername());
-        existingUser.setGender(entity.getGender());
         existingUser.setPhoneNumber(entity.getPhoneNumber());
-        existingUser.setScope(entity.getScope());
         existingUser.setDonation(entity.getDonation());
-        existingUser.setFcmToken(entity.getFcmToken());
         existingUser.setBirthDate(entity.getBirthDate());
 
         existingUser.setModifiedDate(LocalDate.now());
@@ -219,7 +224,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         userCreation.setCreatedDate(LocalDate.now());
         userCreation.setCreatedUser(entity.getUsername());
         userCreation.setFcmToken(entity.getFcmToken());
-        
+
         userCreation = userRepository.save(userCreation);
 
         generalVerification.sendOtpEmail(userCreation);
@@ -273,10 +278,10 @@ public class UserServices extends BaseServices<UserEntity, Long> {
             UserEntity user = userOptional.get();
             user.setFcmToken(fcmToken);
             userRepository.save(user);
-            response.put("message", "error.user.fcmToken.update");
+            response.put("message", getMS("error.user.fcmToken.update"));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            response.put("message", "error.user.notFound");
+            response.put("message", getMS("error.user.notFound"));
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
@@ -291,5 +296,9 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     public String messageParam(Long id, String message) {
         String[] msParam = {id != null ? id.toString() : "null"};
         return ms.getMessage(message, msParam, LocaleContextHolder.getLocale());
+    }
+
+    private String getMS(String messageKey) {
+        return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
     }
 }

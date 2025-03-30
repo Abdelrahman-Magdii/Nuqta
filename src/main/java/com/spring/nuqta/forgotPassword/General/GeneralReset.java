@@ -15,6 +15,8 @@ import com.spring.nuqta.usermanagement.Repo.UserRepo;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,15 +38,17 @@ public class GeneralReset {
     private final UserRepo userRepo;
     private final OrgRepo organizationRepo;
     private final PasswordEncoder passwordEncoder;
+    private final MessageSource ms;
 
     @Autowired
-    public GeneralReset(EmailService emailService, ResetPasswordService otpVerifyService, UserRepo userRepo, OrgRepo organizationRepo, PasswordEncoder passwordEncoder, ResetPasswordRepo resetPasswordRepo) {
+    public GeneralReset(EmailService emailService, ResetPasswordService otpVerifyService, UserRepo userRepo, OrgRepo organizationRepo, PasswordEncoder passwordEncoder, ResetPasswordRepo resetPasswordRepo, MessageSource ms) {
         this.emailService = emailService;
         this.resetPasswordService = otpVerifyService;
         this.userRepo = userRepo;
         this.organizationRepo = organizationRepo;
         this.passwordEncoder = passwordEncoder;
         this.resetPasswordRepo = resetPasswordRepo;
+        this.ms = ms;
     }
 
     public ResponseEntity<Map<String, String>> sendOtpEmail(String email) {
@@ -55,7 +59,7 @@ public class GeneralReset {
         Optional<OrgAuthProjection> organization = organizationRepo.findOrgAuthProjectionByEmail(email);
 
         if (user.isEmpty() && organization.isEmpty()) {
-            response.put("message", "email.not.found");
+            response.put("message", getMS("email.not.found"));
             return ResponseEntity.ok(response);
         }
 
@@ -80,15 +84,15 @@ public class GeneralReset {
 
             try {
                 emailService.sendMail(context);
-                response.put("message", "otp.success");
+                response.put("message", getMS("otp.success"));
                 return ResponseEntity.ok(response);
             } catch (MessagingException e) {
-                response.put("message", "otp.send.error");
+                response.put("message", getMS("otp.send.error"));
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         } else {
             log.warn("Email not verified: {}", email);
-            response.put("message", "email.not.verified");
+            response.put("message", getMS("email.not.verified"));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
@@ -151,5 +155,9 @@ public class GeneralReset {
             }
         }
         return false;
+    }
+
+    private String getMS(String messageKey) {
+        return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
     }
 }

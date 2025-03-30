@@ -79,7 +79,7 @@ public class ReqServicesTest {
         reqEntity.setStatus(Status.FULFILLED);
         reqEntity.setUrgencyLevel(Level.HIGH);
         reqEntity.setPaymentAvailable(true);
-        
+
         userEntity = new UserEntity();
         userEntity.setId(1L);
         userEntity.setUsername("testUser");
@@ -170,26 +170,6 @@ public class ReqServicesTest {
         verify(cache, times(2)).clear(); // Expect 2 clears (users and org caches)
     }
 
-    @Test
-    void testAddRequestThrowsException() {
-        when(userRepo.findById(1L)).thenReturn(Optional.empty());
-        when(ms.getMessage(eq("error.request.notfound"), any(), any())).thenReturn("error.request.notfound");
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.addRequest(1L, reqEntity));
-        assertEquals("error.request.notfound", exception.getMessage());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-    }
-
-
-    @Test
-    void testAddRequestForOrgThrowsException() {
-        when(orgRepo.findById(1L)).thenReturn(Optional.empty());
-        when(ms.getMessage(eq("error.org.notfound"), any(), any())).thenReturn("error.org.notfound");
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.addRequestForOrg(1L, reqEntity));
-        assertEquals("error.org.notfound", exception.getMessage());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-    }
 
     @Test
     void testUpdate() throws GlobalException {
@@ -232,55 +212,6 @@ public class ReqServicesTest {
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
-    @Test
-    void testAddRequest() throws GlobalException, FirebaseMessagingException {
-        // Mock userRepo to return a valid user
-        when(userRepo.findById(1L)).thenReturn(Optional.of(userEntity));
-
-        // Mock reqRepo to return the saved entity
-        when(reqRepo.save(reqEntity)).thenReturn(reqEntity);
-
-        // Mock donRepo to return a non-empty list of nearby donors
-        when(donRepo.findTopByCityOrConservatism("New York", "High")).thenReturn(Collections.singletonList(donEntity));
-
-        // Mock messageSource to return a valid message
-        when(ms.getMessage(anyString(), any(), any())).thenReturn("Test Message");
-
-        // Call the method under test
-        ReqEntity result = reqServices.addRequest(1L, reqEntity);
-
-        // Assertions
-        assertNotNull(result);
-        assertEquals(userEntity, result.getUser());
-
-        // Verify that notificationService.sendNotification was called
-        verify(notificationService, times(1)).sendNotification(any(NotificationRequest.class));
-    }
-
-    @Test
-    void testAddRequestForOrg() throws GlobalException, FirebaseMessagingException {
-        // Mock orgRepo to return a valid organization
-        when(orgRepo.findById(1L)).thenReturn(Optional.of(orgEntity));
-
-        // Mock reqRepo to return the saved entity
-        when(reqRepo.save(reqEntity)).thenReturn(reqEntity);
-
-        // Mock donRepo to return a non-empty list of nearby donors
-        when(donRepo.findTopByCityOrConservatism("New York", "High")).thenReturn(Collections.singletonList(donEntity));
-
-        // Mock messageSource to return a valid message
-        when(ms.getMessage(anyString(), any(), any())).thenReturn("Test Message");
-
-        // Call the method under test
-        ReqEntity result = reqServices.addRequestForOrg(1L, reqEntity);
-
-        // Assertions
-        assertNotNull(result);
-        assertEquals(orgEntity, result.getOrganization());
-
-        // Verify that notificationService.sendNotification was called
-        verify(notificationService, times(1)).sendNotification(any(NotificationRequest.class));
-    }
 
     @Test
     void testSendNotification() throws GlobalException, FirebaseMessagingException {

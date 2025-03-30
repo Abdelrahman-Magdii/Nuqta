@@ -1,6 +1,7 @@
 package com.spring.nuqta.request.Controller;
 
 import com.google.firebase.messaging.FirebaseMessagingException;
+import com.spring.nuqta.exception.GlobalException;
 import com.spring.nuqta.request.Dto.AddReqDto;
 import com.spring.nuqta.request.Dto.ReqDto;
 import com.spring.nuqta.request.Entity.ReqEntity;
@@ -14,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +35,7 @@ public class ReqController {
     private final ReqServices reqServices;
     private final ReqMapper reqMapper;
     private final AddReqMapper addReqMapper;
+    private final MessageSource ms;
 
     @Operation(summary = "Get All Requests", description = "Retrieve a list of all requests")
     @ApiResponse(responseCode = "200", description = "Requests get successfully",
@@ -53,28 +57,25 @@ public class ReqController {
         return new ResponseEntity<>(reqDto, HttpStatus.OK);
     }
 
-
-    @Operation(summary = "Add New Request", description = "Create a new request")
+    @Operation(summary = "Add New Request", description = "Create a new request for a user or organization")
     @ApiResponse(responseCode = "200", description = "Request created successfully",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = AddReqDto.class)))
-    @PostMapping("/{userId}")
-    public ResponseEntity<?> addReq(@PathVariable Long userId, @RequestBody AddReqDto addReqDto) throws FirebaseMessagingException {
-        ReqEntity entity = addReqMapper.unMap(addReqDto);
-        entity = reqServices.addRequest(userId, entity);
-        AddReqDto dto = addReqMapper.map(entity);
-        return new ResponseEntity<>(dto, HttpStatus.CREATED);
-    }
+    @PostMapping("")
+    public ResponseEntity<?> addRequest(@RequestBody AddReqDto addReqDto) throws FirebaseMessagingException {
 
+        if (addReqDto.getUserId() == null && addReqDto.getOrgId() == null) {
+            throw new GlobalException("error.request.notfoundID", HttpStatus.BAD_REQUEST);
+        }
 
-    @Operation(summary = "Add New Request", description = "Create a new request")
-    @ApiResponse(responseCode = "200", description = "Request created successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = AddReqDto.class)))
-    @PostMapping("org/{orgId}")
-    public ResponseEntity<?> addReqForOrg(@PathVariable Long orgId, @RequestBody AddReqDto addReqDto) throws FirebaseMessagingException {
         ReqEntity entity = addReqMapper.unMap(addReqDto);
-        entity = reqServices.addRequestForOrg(orgId, entity);
+
+        if (addReqDto.getOrgId() != null) {
+            entity = reqServices.addRequest(entity, addReqDto.getOrgId(), true);
+        } else {
+            entity = reqServices.addRequest(entity, addReqDto.getUserId(), false);
+        }
+
         AddReqDto dto = addReqMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
@@ -97,7 +98,8 @@ public class ReqController {
         reqServices.ReCache(id);
         reqServices.deleteById(id);
         Map<String, String> response = new HashMap<>();
-        response.put("message", "error.request.delete");
+        String message = ms.getMessage("error.request.delete", null, LocaleContextHolder.getLocale());
+        response.put("message", message);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

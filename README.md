@@ -1,17 +1,24 @@
 # Nuqta
 
-![](nuqta.png)
+![](nuqtaa.png)
 
 ---
+
 ## Overview
 
-The **Blood Donation App** is a Spring Boot-based application designed to connect blood donors and recipients in real time. By leveraging location services, users can easily find nearby individuals with matching blood types. The app fosters a community of voluntary and paid blood donors, ensuring a seamless and safe donation process.
+The **Blood Donation App** is a Spring Boot-based application designed to connect blood donors and recipients in real
+time. By leveraging location services, users can easily find nearby individuals with matching blood types. The app
+fosters a community of voluntary and paid blood donors, ensuring a seamless and safe donation process.
 
-To enhance safety, the app employs machine learning (ML) algorithms to assess the health suitability of donors, ensuring they meet the required criteria. This reduces risks and ensures a smooth experience for both donors and recipients.
+To enhance safety, the app employs machine learning (ML) algorithms to assess the health suitability of donors, ensuring
+they meet the required criteria. This reduces risks and ensures a smooth experience for both donors and recipients.
 
 ---
+
 ## Class Diagram
+
 ![](ERD.png)
+
 ## Features
 
 ### Core Functionalities
@@ -100,27 +107,32 @@ The API endpoints are documented using **Postman**. You can access the API docum
 ### Key Endpoints
 
 #### Authentication
+
 - **POST /auth/sign-up**: Register a new user.
 - **POST /auth/sign-in**: Log in and receive a JWT token.
 - **POST /auth/verify-email**: Verify email address.
 - **POST /auth/verify-phone**: Verify phone number via Twilio.
 
 #### Blood Requests
+
 - **GET /requests**: Retrieve all requests.
 - **POST /requests**: Create a new blood request.
 - **PUT /requests/{id}**: Update an existing request.
 - **DELETE /requests/{id}**: Delete a request.
 
 #### Donations
+
 - **GET /donations**: Retrieve all donations.
 
 ---
 
 ## Machine Learning Integration
 
-The application integrates pre-trained ML models to assess donor health based on the `Health Assessments` table. These models predict a `health_score`, which determines donor eligibility.
+The application integrates pre-trained ML models to assess donor health based on the `Health Assessments` table. These
+models predict a `health_score`, which determines donor eligibility.
 
 ### ML Features
+
 - **Model Type**: Classification and regression.
 - **Input Data**: User's health assessment records.
 
@@ -146,9 +158,11 @@ JUnit is used to validate the application's functionality.
 ## Deployment
 
 ### Local Deployment
+
 - Follow the installation steps above to run the application locally.
 
 ### Production Deployment
+
 - Configure an external PostgreSQL database.
 - Set up a cloud service (AWS, Azure, GCP) for hosting.
 - Use environment variables for sensitive data (e.g., database credentials, API keys).
@@ -191,7 +205,6 @@ For inquiries, contact the development team at [abdelrahmanmagdi527@gmail.com](m
 - **Lombok** for reduced boilerplate code.
 - **MapStruct** for Java bean mapping.
 - **Swagger** for OpenAPI documentation.
-
 
 ---
 

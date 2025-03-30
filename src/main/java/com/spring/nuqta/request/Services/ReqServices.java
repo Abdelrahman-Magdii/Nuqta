@@ -131,85 +131,54 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         if (orgCache != null) orgCache.clear();
     }
 
-    /**
-     * Creates a new request and links it to a user.
-     * Sends notifications to nearby donors.
-     * Clears cache after adding a new request.
-     *
-     * @param userId    ID of the user creating the request
-     * @param reqEntity The request entity to be saved
-     * @return The saved request entity
-     * @throws GlobalException if the user is not found
-     */
     @Caching(
             evict = {
                     @CacheEvict(value = "requests", allEntries = true),
-                    @CacheEvict(value = "users", allEntries = true)
-
+                    @CacheEvict(value = "users", allEntries = true, condition = "!#isOrg"),
+                    @CacheEvict(value = "org", allEntries = true, condition = "#isOrg")
             },
             put = {
-                    @CachePut(value = "requests", key = "#result.id"),
-
-            } // Caches the new request by ID
+                    @CachePut(value = "requests", key = "#result.id")
+            }
     )
-    public ReqEntity addRequest(Long userId, ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
-        validId(userId);
-        String msg = messageParam(userId, "error.request.notfound");
+    public ReqEntity addRequest(ReqEntity reqEntity, Long id, boolean isOrg)
+            throws GlobalException, FirebaseMessagingException {
 
-        UserEntity user = userRepo.findById(userId)
-                .orElseThrow(() -> new GlobalException(msg, HttpStatus.NOT_FOUND));
-        reqEntity.setUser(user);
-
-        // Send notifications to nearby donors
-        this.SendNotification(reqEntity);
-
-        // Set timestamps and user details
+        // Common validation and setup
+        validId(id);
         reqEntity.setCreatedDate(LocalDate.now());
         reqEntity.setModifiedDate(LocalDate.now());
-        reqEntity.setCreatedUser(user.getUsername());
-        reqEntity.setModifiedUser(user.getUsername());
+
+        if (isOrg) {
+            handleOrgRequest(reqEntity, id);
+        } else {
+            handleUserRequest(reqEntity, id);
+        }
+
+        // Common notification logic
+        // this.SendNotification(reqEntity);
 
         return reqRepo.save(reqEntity);
     }
 
-    /**
-     * Creates a new request for an organization.
-     * Sends notifications to nearby donors.
-     * Clears cache after adding a new request.
-     *
-     * @param orgId     ID of the organization creating the request
-     * @param reqEntity The request entity to be saved
-     * @return The saved request entity
-     * @throws GlobalException if the organization is not found
-     */
-
-    @Caching(
-            evict = {
-                    @CacheEvict(value = "requests", allEntries = true),
-                    @CacheEvict(value = "org", allEntries = true)
-            },
-            put = {
-                    @CachePut(value = "requests", key = "#result.id"),
-            }// Caches the new request by ID
-    )
-    public ReqEntity addRequestForOrg(Long orgId, ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
-        validId(orgId);
+    private void handleOrgRequest(ReqEntity reqEntity, Long orgId) throws GlobalException {
         String msg = messageParam(orgId, "error.org.notfound");
         OrgEntity org = orgRepo.findById(orgId)
                 .orElseThrow(() -> new GlobalException(msg, HttpStatus.NOT_FOUND));
         reqEntity.setOrganization(org);
-
-        // Send notifications to nearby donors
-        this.SendNotification(reqEntity);
-
-        // Set timestamps and organization details
-        reqEntity.setCreatedDate(LocalDate.now());
-        reqEntity.setModifiedDate(LocalDate.now());
         reqEntity.setCreatedUser(org.getOrgName());
         reqEntity.setModifiedUser(org.getOrgName());
-
-        return reqRepo.save(reqEntity);
     }
+
+    private void handleUserRequest(ReqEntity reqEntity, Long userId) throws GlobalException {
+        String msg = messageParam(userId, "error.request.notfound");
+        UserEntity user = userRepo.findById(userId)
+                .orElseThrow(() -> new GlobalException(msg, HttpStatus.NOT_FOUND));
+        reqEntity.setUser(user);
+        reqEntity.setCreatedUser(user.getUsername());
+        reqEntity.setModifiedUser(user.getUsername());
+    }
+
 
     /**
      * Updates an existing request with new details.

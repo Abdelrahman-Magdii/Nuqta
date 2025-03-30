@@ -48,4 +48,12 @@ public class AddReqDto extends BaseDto<Long> {
     @JsonProperty("conservatism")
     private String conservatism;
 
+    @Schema(description = "User ID (only for input)", example = "1")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Accept in request, hide in response
+    private Long userId;
+
+    @Schema(description = "Organization ID (only for input)", example = "1")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Accept in request, hide in response
+    private Long orgId;
+
 }

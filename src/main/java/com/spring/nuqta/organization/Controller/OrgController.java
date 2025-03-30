@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +34,7 @@ public class OrgController {
     private final OrgMapper orgMapper;
     private final AddOrgMapper addOrgMapper;
     private final OrgRequestMapper orgRequestMapper;
+    private final MessageSource ms;
 
     @Operation(summary = "Get All Organizations", description = "Retrieve a list of all organizations")
     @ApiResponse(responseCode = "200", description = "Organization get successfully",
@@ -71,7 +74,7 @@ public class OrgController {
     public ResponseEntity<?> deleteOrgById(@PathVariable Long id) {
         orgServices.deleteById(id);
         Map<String, String> response = new HashMap<>();
-        response.put("message", "org.delete.success");
+        response.put("message", getMS("org.delete.success"));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -86,7 +89,7 @@ public class OrgController {
         orgServices.changeOrgPassword(orgId, oldPassword, newPassword);
 
         Map<String, String> response = new HashMap<>();
-        response.put("message", "error.user.password.change");
+        response.put("message", getMS("error.user.password.change"));
 
         return ResponseEntity.ok(response);
     }
@@ -95,5 +98,9 @@ public class OrgController {
     public ResponseEntity<?> updateFcmToken(@PathVariable Long id, @RequestBody Map<String, String> request) {
         String fcmToken = request.get("fcmToken");
         return orgServices.updateFcmToken(id, fcmToken);
+    }
+
+    private String getMS(String messageKey) {
+        return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
     }
 }
