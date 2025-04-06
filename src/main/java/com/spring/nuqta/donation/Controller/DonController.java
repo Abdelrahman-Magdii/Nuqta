@@ -107,7 +107,7 @@ public class DonController {
         }
     }
 
-    private String getMS(String messageKey) {
+    String getMS(String messageKey) {
         return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
     }
 }
