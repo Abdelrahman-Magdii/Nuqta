@@ -2,69 +2,71 @@ package com.spring.nuqta.chat.Config;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.StompWebSocketEndpointRegistration;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = WebSocketConfig.class)
-public class WebSocketConfigTest {
+@ExtendWith(MockitoExtension.class)
+class WebSocketConfigTest {
 
-    @Autowired
+    @Mock
+    private StompEndpointRegistry stompEndpointRegistry;
+
+    @Mock
+    private StompWebSocketEndpointRegistration endpointRegistration;
+
+    @Mock
+    private MessageBrokerRegistry messageBrokerRegistry;
+
+    @Mock
+    private SessionDisconnectEvent sessionDisconnectEvent;
+
+    @InjectMocks
     private WebSocketConfig webSocketConfig;
 
     @Test
-    public void testRegisterStompEndpoints() {
+    void registerStompEndpoints_shouldConfigureCorrectEndpoints() {
         // Arrange
-        StompEndpointRegistry registry = mock(StompEndpointRegistry.class);
-        StompWebSocketEndpointRegistration endpointRegistration = mock(StompWebSocketEndpointRegistration.class);
-
-        // Mock the behavior of addEndpoint to return a valid StompWebSocketEndpointRegistration
-        when(registry.addEndpoint("/ws")).thenReturn(endpointRegistration);
+        when(stompEndpointRegistry.addEndpoint("/ws")).thenReturn(endpointRegistration);
         when(endpointRegistration.setAllowedOriginPatterns("*")).thenReturn(endpointRegistration);
 
         // Act
-        webSocketConfig.registerStompEndpoints(registry);
+        webSocketConfig.registerStompEndpoints(stompEndpointRegistry);
 
         // Assert
-        // Verify that addEndpoint is called twice
-        verify(registry, times(2)).addEndpoint("/ws");
-
-        // Verify that setAllowedOriginPatterns and withSockJS are called once
-        verify(endpointRegistration, times(1)).setAllowedOriginPatterns("*");
-        verify(endpointRegistration, times(1)).withSockJS();
+        verify(stompEndpointRegistry, times(2)).addEndpoint("/ws");
+        verify(endpointRegistration).setAllowedOriginPatterns("*");
+        verify(endpointRegistration).withSockJS();
     }
 
     @Test
-    public void testConfigureMessageBroker() {
-        // Arrange
-        MessageBrokerRegistry registry = mock(MessageBrokerRegistry.class);
-
+    void configureMessageBroker_shouldConfigureBrokerCorrectly() {
         // Act
-        webSocketConfig.configureMessageBroker(registry);
+        webSocketConfig.configureMessageBroker(messageBrokerRegistry);
 
         // Assert
-        verify(registry, times(1)).enableSimpleBroker("/topic");
-        verify(registry, times(1)).setApplicationDestinationPrefixes("/app");
+        verify(messageBrokerRegistry).setApplicationDestinationPrefixes("/app");
+        verify(messageBrokerRegistry).enableSimpleBroker("/topic", "/queue");
     }
 
     @Test
-    public void testOnDisconnect() {
+    void onDisconnect_shouldLogSessionDisconnect() {
         // Arrange
-        SessionDisconnectEvent event = mock(SessionDisconnectEvent.class);
-        when(event.getSessionId()).thenReturn("session-123");
+        String sessionId = "test-session-123";
+        when(sessionDisconnectEvent.getSessionId()).thenReturn(sessionId);
 
         // Act
-        webSocketConfig.onDisconnect(event);
+        webSocketConfig.onDisconnect(sessionDisconnectEvent);
 
         // Assert
-        verify(event, times(1)).getSessionId();
-        // You can also verify logging behavior if needed
+        // Normally we would verify logging, but since Logger is static,
+        // we'll just verify the event interaction
+        verify(sessionDisconnectEvent).getSessionId();
     }
 }

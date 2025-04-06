@@ -6,28 +6,15 @@ import com.spring.nuqta.usermanagement.Dto.UserUpdateDto;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-
-import java.time.LocalDate;
 
 @Mapper(componentModel = "spring", uses = {DonResponseUserUpdateMapper.class})
 public interface UserUpdateMapper extends BaseMapper<UserEntity, UserUpdateDto> {
 
     @Override
-    @Mapping(target = "age", source = "birthDate", qualifiedByName = "calculateAge")
+    @Mapping(target = "age", expression = "java(com.spring.nuqta.usermanagement.Mapper.DateUtils.calculateAgeFromBirthDate(entity.getBirthDate()))")
     UserUpdateDto map(UserEntity entity);
 
     @Override
-    @Mapping(target = "birthDate", source = "age", qualifiedByName = "calculateBirthDate")
+    @Mapping(target = "birthDate", expression = "java(com.spring.nuqta.usermanagement.Mapper.DateUtils.calculateBirthDateFromAge(dto.getAge()))")
     UserEntity unMap(UserUpdateDto dto);
-
-    @Named("calculateAge")
-    default int calculateAge(LocalDate birthDate) {
-        return DateUtils.calculateAgeFromBirthDate(birthDate);
-    }
-
-    @Named("calculateBirthDate")
-    default LocalDate calculateBirthDate(int age) {
-        return DateUtils.calculateBirthDateFromAge(age);
-    }
 }

@@ -40,7 +40,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      *
      * @param params The UserEntity to validate.
      */
-    static void validateUserFields(UserEntity params) {
+    public void validateUserFields(UserEntity params) {
         if (Objects.isNull(params.getUsername())) {
             throw new GlobalException("error.user.username", HttpStatus.BAD_REQUEST);
         }
@@ -298,7 +298,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         return ms.getMessage(message, msParam, LocaleContextHolder.getLocale());
     }
 
-    private String getMS(String messageKey) {
+    public String getMS(String messageKey) {
         return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
     }
 }

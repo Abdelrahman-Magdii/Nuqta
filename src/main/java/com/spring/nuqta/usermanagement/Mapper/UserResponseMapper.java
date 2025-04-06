@@ -5,29 +5,16 @@ import com.spring.nuqta.usermanagement.Dto.UserResponseToDonDto;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-
-import java.time.LocalDate;
 
 @Mapper(componentModel = "spring")
 public interface UserResponseMapper extends BaseMapper<UserEntity, UserResponseToDonDto> {
 
     @Override
-    @Mapping(target = "age", source = "birthDate", qualifiedByName = "calculateAge")
+    @Mapping(target = "age", expression = "java(com.spring.nuqta.usermanagement.Mapper.DateUtils.calculateAgeFromBirthDate(entity.getBirthDate()))")
     UserResponseToDonDto map(UserEntity entity);
 
     @Override
-    @Mapping(target = "birthDate", source = "age", qualifiedByName = "calculateBirthDate")
+    @Mapping(target = "birthDate", expression = "java(com.spring.nuqta.usermanagement.Mapper.DateUtils.calculateBirthDateFromAge(dto.getAge()))")
     UserEntity unMap(UserResponseToDonDto dto);
-
-    @Named("calculateAge")
-    default int calculateAge(LocalDate birthDate) {
-        return DateUtils.calculateAgeFromBirthDate(birthDate);
-    }
-
-    @Named("calculateBirthDate")
-    default LocalDate calculateBirthDate(int age) {
-        return DateUtils.calculateBirthDateFromAge(age);
-    }
 
 }

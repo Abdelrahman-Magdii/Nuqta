@@ -157,7 +157,7 @@ public class GeneralReset {
         return false;
     }
 
-    private String getMS(String messageKey) {
+    public String getMS(String messageKey) {
         return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
     }
 }

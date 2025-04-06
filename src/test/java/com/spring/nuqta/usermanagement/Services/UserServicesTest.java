@@ -1,8 +1,10 @@
 package com.spring.nuqta.usermanagement.Services;
 
 import com.spring.nuqta.donation.Entity.DonEntity;
+import com.spring.nuqta.enums.Gender;
 import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.exception.GlobalException;
+import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.organization.Repo.OrgRepo;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Repo.UserRepo;
@@ -56,6 +58,8 @@ class UserServicesTest {
         mockUser.setPhoneNumber("1234567890");
         mockUser.setPassword("encodedPassword");
         mockUser.setScope(Scope.USER);
+        mockUser.setGender(Gender.MALE);
+        mockUser.setBirthDate(LocalDate.now().minusYears(20));
         mockUser.setCreatedDate(LocalDate.now());
         mockUser.setFcmToken("token");
 
@@ -317,6 +321,16 @@ class UserServicesTest {
     void testSaveUser_UsernameOrEmailExists() {
         when(userRepository.findByUsernameOrEmail(anyString(), anyString())).thenReturn(Optional.of(mockUser));
 
+        GlobalException exception = assertThrows(GlobalException.class, () -> userServices.saveUser(mockUser));
+
+        assertEquals("error.user.username.email.exist", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+    }
+
+    @Test
+    void testSaveUser_UsernameOrEmailOrgExists() {
+        when(organizationRepository.findByEmail(anyString())).thenReturn(Optional.of(new OrgEntity()));
+
 
         GlobalException exception = assertThrows(GlobalException.class, () -> userServices.saveUser(mockUser));
 
@@ -387,166 +401,76 @@ class UserServicesTest {
         // Extract the response body and verify the message
         Map<String, String> responseBody = (Map<String, String>) response.getBody();
         assertNotNull(responseBody); // Ensure the response body is not null
-        assertEquals("error.user.notFound", responseBody.get("message")); // Verify the message
-    }
-
-    @Test
-    void testValidateUserFields_AllValidFields_NoException() {
-        UserEntity user = new UserEntity();
-        user.setUsername("testuser");
-        user.setPassword("password123");
-        user.setEmail("test@example.com");
-        user.setPhoneNumber("1234567890");
-        user.setScope(Scope.USER);
-        user.setFcmToken("oldFcmToken");
-
-        DonEntity donation = new DonEntity();
-        donation.setCity("city");
-        donation.setConservatism("conservatism");
-        user.setDonation(donation);
-
-        assertDoesNotThrow(() -> UserServices.validateUserFields(user));
+        assertEquals(userServices.getMS("error.user.notFound"), responseBody.get("message")); // Verify the message
     }
 
     @Test
     void testValidateUserFields_NullUsername_ThrowsException() {
-        UserEntity user = new UserEntity();
-        user.setPassword("password123");
-        user.setEmail("test@example.com");
-        user.setPhoneNumber("1234567890");
-        user.setScope(Scope.USER);
+        mockUser.setUsername(null);
 
-        DonEntity donation = new DonEntity();
-        donation.setCity("city");
-        donation.setConservatism("conservatism");
-        user.setDonation(donation);
-
-        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        GlobalException ex = assertThrows(GlobalException.class, () -> userServices.validateUserFields(mockUser));
         assertEquals("error.user.username", ex.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 
     @Test
     void testValidateUserFields_NullPassword_ThrowsException() {
-        UserEntity user = new UserEntity();
-        user.setUsername("testuser");
-        user.setEmail("test@example.com");
-        user.setPhoneNumber("1234567890");
-        user.setScope(Scope.USER);
+        mockUser.setPassword(null);
 
-        DonEntity donation = new DonEntity();
-        donation.setCity("city");
-        donation.setConservatism("conservatism");
-        user.setDonation(donation);
-
-        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        GlobalException ex = assertThrows(GlobalException.class, () -> userServices.validateUserFields(mockUser));
         assertEquals("error.user.password", ex.getMessage());
     }
 
     @Test
     void testValidateUserFields_NullEmail_ThrowsException() {
-        UserEntity user = new UserEntity();
-        user.setUsername("testuser");
-        user.setPassword("password123");
-        user.setPhoneNumber("1234567890");
-        user.setScope(Scope.USER);
+        mockUser.setEmail(null);
 
-        DonEntity donation = new DonEntity();
-        donation.setCity("city");
-        donation.setConservatism("conservatism");
-        user.setDonation(donation);
-
-        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        GlobalException ex = assertThrows(GlobalException.class, () -> userServices.validateUserFields(mockUser));
         assertEquals("error.user.email", ex.getMessage());
     }
 
     @Test
     void testValidateUserFields_InvalidScope_ThrowsException() {
-        UserEntity user = new UserEntity();
-        user.setUsername("testuser");
-        user.setPassword("password123");
-        user.setEmail("test@example.com");
-        user.setPhoneNumber("1234567890");
-        user.setScope(Scope.ORGANIZATION);  // Invalid scope
 
-        DonEntity donation = new DonEntity();
-        donation.setCity("city");
-        donation.setConservatism("conservatism");
-        user.setDonation(donation);
+        mockUser.setScope(Scope.ORGANIZATION);  // Invalid scope
 
-        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        GlobalException ex = assertThrows(GlobalException.class, () -> userServices.validateUserFields(mockUser));
         assertEquals("error.user.invalid.scope", ex.getMessage());
     }
 
     @Test
     void testValidateUserFields_NullLocation_ThrowsException() {
-        UserEntity user = new UserEntity();
-        user.setUsername("testuser");
-        user.setPassword("password123");
-        user.setEmail("test@example.com");
-        user.setPhoneNumber("1234567890");
-        user.setScope(Scope.USER);
+        mockUser.getDonation().setCity("city");
+        mockUser.getDonation().setConservatism(null);
 
-        DonEntity donation = new DonEntity();
-        user.setDonation(donation); // No location set
 
-        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        GlobalException ex = assertThrows(GlobalException.class, () -> userServices.validateUserFields(mockUser));
         assertEquals("error.user.conservatism", ex.getMessage());
     }
 
     @Test
     void testValidateUserFields_NullPhoneNumber_ThrowsException() {
-        UserEntity user = new UserEntity();
-        user.setUsername("testuser");
-        user.setPassword("password123");
-        user.setEmail("test@example.com");
-        user.setScope(Scope.USER);  // Valid scope
-
-        DonEntity donation = new DonEntity();
-        donation.setCity("city");
-        donation.setConservatism("conservatism");
-        user.setDonation(donation);
+        mockUser.setPhoneNumber(null);
 
         // phoneNumber is null
-        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        GlobalException ex = assertThrows(GlobalException.class, () -> userServices.validateUserFields(mockUser));
         assertEquals("error.user.phone", ex.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 
     @Test
     void testValidateUserFields_NullScope_ThrowsException() {
-        UserEntity user = new UserEntity();
-        user.setUsername("testuser");
-        user.setPassword("password123");
-        user.setEmail("test@example.com");
-        user.setPhoneNumber("1234567890"); // Valid phone number
-
-        DonEntity donation = new DonEntity();
-        donation.setCity("city");
-        donation.setConservatism("conservatism");
-        user.setDonation(donation);
+        mockUser.setScope(null);
 
         // scope is null
-        GlobalException ex = assertThrows(GlobalException.class, () -> UserServices.validateUserFields(user));
+        GlobalException ex = assertThrows(GlobalException.class, () -> userServices.validateUserFields(mockUser));
         assertEquals("error.user.scope", ex.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 
     @Test
     void testDonationCityIsNull_ThrowsException() {
-        // Mock the request parameters
-        UserEntity mockUser = mock(UserEntity.class);
-        DonEntity mockDonation = mock(DonEntity.class);
-
-        // Ensure all required fields before city validation are valid
-        when(mockUser.getUsername()).thenReturn("validUsername");
-        when(mockUser.getPassword()).thenReturn("validPassword");
-        when(mockUser.getEmail()).thenReturn("valid@email.com");
-        when(mockUser.getPhoneNumber()).thenReturn("1234567890");
-        when(mockUser.getScope()).thenReturn(Scope.USER);
-        when(mockUser.getDonation()).thenReturn(mockDonation);
-        when(mockDonation.getCity()).thenReturn(null);
-        when(mockDonation.getConservatism()).thenReturn("conservatism");
+        mockUser.getDonation().setCity(null);
 
         // Verify that the exception is thrown
         GlobalException exception = assertThrows(GlobalException.class,
@@ -624,28 +548,51 @@ class UserServicesTest {
 
     @Test
     void testValidateUserFields() {
-        UserEntity validUser = new UserEntity();
-        validUser.setUsername("validUser");
-        validUser.setPassword("validPassword");
-        validUser.setEmail("valid@example.com");
-        validUser.setPhoneNumber("1234567890");
-        validUser.setScope(Scope.USER);
-        validUser.setFcmToken("validFcmToken");
-
-        // Initialize the Donation object
-        DonEntity donation = new DonEntity();
-        donation.setConservatism("someValue"); // Set required fields
-        donation.setCity("someCity"); // Set required fields
-        validUser.setDonation(donation);
 
         // Validate the user fields
-        assertDoesNotThrow(() -> UserServices.validateUserFields(validUser));
+        assertDoesNotThrow(() -> userServices.validateUserFields(mockUser));
+    }
+
+    @Test
+    void validateUserFields_WithNullFcmToken_ShouldThrowException() {
+        // Given
+        mockUser.setFcmToken(null);
+
+        // When / Then
+        GlobalException exception = assertThrows(GlobalException.class,
+                () -> userServices.validateUserFields(mockUser));
+        assertEquals("error.user.fcmToken", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+    }
+
+    @Test
+    void validateUserFields_WithNullBirthDate_ShouldThrowException() {
+        // Given
+        mockUser.setBirthDate(null);
+
+        // When / Then
+        GlobalException exception = assertThrows(GlobalException.class,
+                () -> userServices.validateUserFields(mockUser));
+        assertEquals("error.user.birthDate", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+    }
+
+    @Test
+    void validateUserFields_WithNullGender_ShouldThrowException() {
+        // Given
+        mockUser.setGender(null);
+
+        // When / Then
+        GlobalException exception = assertThrows(GlobalException.class,
+                () -> userServices.validateUserFields(mockUser));
+        assertEquals("error.user.gender", exception.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
     }
 
     @Test
     void testValidateUserFields_ThrowsException() {
         UserEntity invalidUser = new UserEntity();
-        assertThrows(GlobalException.class, () -> UserServices.validateUserFields(invalidUser));
+        assertThrows(GlobalException.class, () -> userServices.validateUserFields(invalidUser));
     }
 
     @Test

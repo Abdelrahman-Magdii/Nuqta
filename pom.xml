@@ -47,6 +47,8 @@
     <properties>
         <java.version>17</java.version>
         <org.mapstruct.version>1.6.0</org.mapstruct.version>
+        <heroku.appName>Nuqta</heroku.appName>
+        <heroku.skip>false</heroku.skip>
     </properties>
 
 
@@ -243,6 +245,22 @@
                             <version>0.2.0</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.heroku.sdk</groupId>
+                <artifactId>heroku-maven-plugin</artifactId>
+                <version>3.0.3</version>
+                <configuration>
+                    <appName>${heroku.appName}</appName>
+                    <processTypes>
+                        <web>java $JAVA_OPTS -Dserver.port=$PORT -jar target/*.jar</web>
+                    </processTypes>
+                    <includeTarget>false</includeTarget>
+                    <includes>
+                        <include>target/${project.build.finalName}.jar</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>

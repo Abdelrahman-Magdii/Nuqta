@@ -1,6 +1,7 @@
 package com.spring.nuqta.authentication;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.data.redis.LettuceClientConfigurationBuilderCustomizer;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,5 +34,14 @@ public class AppConfig {
         messageSource.setBasename("classpath:messages");
         messageSource.setDefaultEncoding("UTF-8");
         return messageSource;
+    }
+
+    @Bean
+    public LettuceClientConfigurationBuilderCustomizer lettuceClientConfigurationBuilderCustomizer() {
+        return clientConfigurationBuilder -> {
+            if (clientConfigurationBuilder.build().isUseSsl()) {
+                clientConfigurationBuilder.useSsl().disablePeerVerification();
+            }
+        };
     }
 }
