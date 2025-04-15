@@ -93,7 +93,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Allow Heroku app's own domain
-        String herokuAppUrl = System.getenv("HEROKU_APP_URL");
+        String herokuAppUrl = System.getenv("token.base.url");
         if (herokuAppUrl != null && !herokuAppUrl.isEmpty()) {
             configuration.setAllowedOrigins(Arrays.asList(herokuAppUrl));
         }
