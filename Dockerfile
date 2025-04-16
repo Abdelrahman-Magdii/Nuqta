@@ -1,18 +1,25 @@
+# Stage 1: Build the application using Maven and Temurin 17 JDK
 FROM maven:3.9.4-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-COPY . .
+# Copy pom.xml and download dependencies first for better cache usage
+COPY pom.xml .
+RUN mvn dependency:go-offline
 
+# Copy the remaining source files
+COPY src ./src
+
+# Package the application, skipping tests
 RUN mvn package -DskipTests
 
-# Use an official OpenJDK runtime as a parent image
+
+# Stage 2: Run the application using a lightweight JDK image
 FROM openjdk:17-jdk-slim
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the JAR file into the container
+# Copy the built JAR file from the build stage
 COPY --from=build /app/target/Nuqta-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the application port
@@ -20,8 +27,3 @@ EXPOSE 8080
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
-
-CMD ["java", "-jar", "app.jar"]
-
-
-
