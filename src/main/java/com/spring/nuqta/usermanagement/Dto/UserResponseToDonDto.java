@@ -1,6 +1,5 @@
 package com.spring.nuqta.usermanagement.Dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.spring.nuqta.base.Dto.BaseDto;
 import com.spring.nuqta.enums.Gender;
 import com.spring.nuqta.enums.Scope;
@@ -10,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@JsonInclude(JsonInclude.Include.NON_NULL)  // Exclude null fields from serialization
+//@JsonInclude(JsonInclude.Include.NON_NULL)  // Exclude null fields from serialization
 public class UserResponseToDonDto extends BaseDto<Long> {
 
     @Schema(description = "Unique username of the user", example = "john_doe")
