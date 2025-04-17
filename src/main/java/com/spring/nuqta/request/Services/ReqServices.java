@@ -99,12 +99,16 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
             throw new GlobalException(msg, HttpStatus.NOT_FOUND);
         }
         reqRepo.hardDeleteById(id);
-        // Invalidate cache
+
+        // Invalidate caches
         if (cacheManager != null) {
-            Cache cache = cacheManager.getCache("requests");
-            if (cache != null) {
-                cache.evict(id);
-            }
+            Cache requestsCache = cacheManager.getCache("requests");
+            Cache usersCache = cacheManager.getCache("users");
+            Cache orgCache = cacheManager.getCache("org");
+
+            if (requestsCache != null) requestsCache.clear();
+            if (usersCache != null) usersCache.clear();
+            if (orgCache != null) orgCache.clear();
         }
     }
 
@@ -120,15 +124,6 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         request.setUser(null);
         request.setOrganization(null);
         reqRepo.save(request);
-
-        // Manually clear the cache
-        Cache requestsCache = cacheManager.getCache("requests");
-        Cache usersCache = cacheManager.getCache("users");
-        Cache orgCache = cacheManager.getCache("org");
-
-        if (requestsCache != null) requestsCache.evict(id);
-        if (usersCache != null) usersCache.clear();
-        if (orgCache != null) orgCache.clear();
     }
 
     @Caching(
