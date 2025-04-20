@@ -102,7 +102,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
 
 
         OrgEntity existingOrganization = organizationOptional.get();
-        
+
         // Updating only selected fields to maintain data integrity
         existingOrganization.setOrgName(entity.getOrgName());
         existingOrganization.setCity(entity.getCity());
@@ -123,7 +123,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      * @throws GlobalException if the organization is not found.
      */
     @Override
-    @CacheEvict(value = "org", key = "#id")
+    @CacheEvict(value = "org", key = "'allOrg'", allEntries = true)
     public void deleteById(Long id) throws GlobalException {
         boolean organization = organizationRepository.existsById(id);
         if (!organization) {
@@ -185,7 +185,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      * @param newPassword New password.
      * @throws GlobalException if the organization is not found or the old password is incorrect.
      */
-    @CacheEvict(value = "org", key = "#orgId")
+    @CacheEvict(value = "org", key = "#orgId", allEntries = true)
     public void changeOrgPassword(Long orgId, String oldPassword, String newPassword) {
         Optional<OrgEntity> org = organizationRepository.findById(orgId);
 
@@ -211,7 +211,7 @@ public class OrgServices extends BaseServices<OrgEntity, Long> {
      * @param fcmToken New FCM token.
      * @return ResponseEntity with success or failure message.
      */
-    @CacheEvict(value = "org", key = "#id")
+    @CacheEvict(value = "org", key = "#id", allEntries = true)
     public ResponseEntity<?> updateFcmToken(Long id, String fcmToken) {
         Optional<OrgEntity> orgOptional = organizationRepository.findById(id);
         Map<String, String> response = new HashMap<>();

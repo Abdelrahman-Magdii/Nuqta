@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
@@ -129,7 +130,12 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      * @throws GlobalException If the user ID is null or the user is not found.
      */
     @Override
-    @CacheEvict(value = "users", allEntries = true) // Clear all cached users
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "users", key = "#entity.id"),
+                    @CacheEvict(value = "users", key = "'allUsers'")
+            }
+    )
     public UserEntity update(UserEntity entity) throws GlobalException {
         if (entity.getId() == null) {
             throw new GlobalException("error.user.id.null", HttpStatus.BAD_REQUEST);
@@ -180,7 +186,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
      * @throws GlobalException If the user is not found.
      */
     @Override
-    @CacheEvict(value = "users", key = "#id")
+    @CacheEvict(value = "users", key = "'allUsers'")
     public void deleteById(Long id) throws GlobalException {
         validId(id);
         boolean user = userRepository.existsById(id);
