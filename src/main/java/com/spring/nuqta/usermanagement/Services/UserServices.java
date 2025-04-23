@@ -170,7 +170,6 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         existingUser.setUsername(entity.getUsername());
         existingUser.setPhoneNumber(entity.getPhoneNumber());
         existingUser.setDonation(entity.getDonation());
-        existingUser.setBirthDate(entity.getBirthDate());
 
         existingUser.setModifiedDate(LocalDate.now());
         existingUser.setModifiedUser(entity.getUsername());
