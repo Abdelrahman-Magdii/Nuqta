@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
@@ -79,7 +80,12 @@ public class DonServices extends BaseServices<DonEntity, Long> {
      * Accepts a donation request and updates the cache.
      */
     @Transactional
-    @CacheEvict(value = "donation", key = "#dto.donationId", allEntries = true)
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "donation", key = "#dto.donationId", allEntries = true),
+                    @CacheEvict(value = "users", allEntries = true),
+                    @CacheEvict(value = "requests", allEntries = true)
+            })
     public DonEntity acceptDonationRequest(AcceptDonationRequestDto dto) {
         DonEntity donation = donRepository.findById(dto.getDonationId())
                 .orElseThrow(() -> new GlobalException("error.don.notFound", HttpStatus.NOT_FOUND));
@@ -104,7 +110,12 @@ public class DonServices extends BaseServices<DonEntity, Long> {
     }
 
     @Transactional
-    @CacheEvict(value = "donation", key = "#dto.donationId", allEntries = true)
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "donation", key = "#dto.donationId", allEntries = true),
+                    @CacheEvict(value = "users", allEntries = true),
+                    @CacheEvict(value = "requests", allEntries = true)
+            })
     public void deleteAcceptedDonationRequest(AcceptDonationRequestDto dto) {
         DonEntity donation = donRepository.findById(dto.getDonationId())
                 .orElseThrow(() -> new GlobalException("error.don.notFound", HttpStatus.NOT_FOUND));
