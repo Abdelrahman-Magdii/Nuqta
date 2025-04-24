@@ -29,16 +29,16 @@ public class UserDto extends BaseDto<Long> {
     @Schema(description = "Phone number of the user", example = "+11234567890")
     private String phoneNumber;
 
-    @Schema(description = "Gender of user", example = "male")
+    @Schema(description = "Gender of the user", example = "MALE", allowableValues = {"MALE", "FEMALE"})
     private Gender gender;
 
-    @Schema(description = "Scope of the user, indicating their operational access", example = "USER")
+    @Schema(description = "Scope of the user, indicating their operational access", example = "USER", allowableValues = {"ORGANIZATION", "USER"})
     private Scope scope;
 
-    @Schema(description = "Donation details associated with the user", example = "{}")
+    @Schema(description = "Donation details associated with the user")
     private DonResponseUserDto donation;
 
-    @Schema(description = "Requests that user uploaded it", example = "[]")
+    @Schema(description = "Requests that user uploaded it")
     private Set<AddReqDto> uploadedRequests;
 
 }

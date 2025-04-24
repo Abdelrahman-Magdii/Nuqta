@@ -28,11 +28,11 @@ public class AddReqDto extends BaseDto<Long> {
     @JsonProperty("request_date")
     private LocalDate requestDate;
 
-    @Schema(description = "Urgency level of the request", example = "HIGH")
+    @Schema(description = "Urgency level of the donation", example = "HIGH", allowableValues = {"LOW", "MEDIUM", "HIGH"})
     @JsonProperty("urgency_level")
     private Level urgencyLevel;
 
-    @Schema(description = "Current status of the request", example = "OPEN")
+    @Schema(description = "Request status", example = "OPEN", allowableValues = {"OPEN", "FULFILLED"})
     @JsonProperty("status")
     private Status status;
 

@@ -1,6 +1,5 @@
 package com.spring.nuqta.donation.Dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.nuqta.base.Dto.BaseDto;
 import com.spring.nuqta.enums.DonStatus;
@@ -37,7 +36,7 @@ public class DonResponseDto extends BaseDto<Long> {
     @JsonProperty("payment_offered")
     private Boolean paymentOffered;
 
-    @Schema(description = "Current status of the donation process.", example = "PENDING")
+    @Schema(description = "Current status of the donation process", example = "VALID", allowableValues = {"VALID", "INVALID"})
     private DonStatus status;
 
     @Schema(description = "Weight of the donor", example = "80")

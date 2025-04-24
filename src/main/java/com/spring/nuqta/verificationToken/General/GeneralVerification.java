@@ -78,6 +78,8 @@ public class GeneralVerification {
 
         if (token.getExpiredAt() != null && token.getExpiredAt().isBefore(LocalDateTime.now())) {
             log.warn("Expired verification token: {}", tokenValue);
+            verificationTokenService.removeToken(token);
+            userRepo.deleteById(token.getUser().getId());
             throw new GlobalException("error.token", HttpStatus.BAD_REQUEST);
         }
 

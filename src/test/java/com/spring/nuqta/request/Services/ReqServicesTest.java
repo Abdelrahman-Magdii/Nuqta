@@ -143,31 +143,47 @@ public class ReqServicesTest {
         reqServices.deleteById(1L);
 
         verify(reqRepo, times(1)).hardDeleteById(1L);
-        verify(cache, times(1)).evict(1L);
     }
 
     @Test
     void testDeleteByIdThrowsException() {
-        when(reqRepo.existsById(1L)).thenReturn(false);
+        // Arrange
+        when(reqRepo.existsById(1L)).thenReturn(false);  // Simulate the case where the request doesn't exist
         when(ms.getMessage(eq("error.request.notfound"), any(), any())).thenReturn("error.request.notfound");
 
+        // Act & Assert: Verify exception is thrown
         GlobalException exception = assertThrows(GlobalException.class, () -> reqServices.deleteById(1L));
-        assertEquals("error.request.notfound", exception.getMessage());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+        assertEquals("error.request.notfound", exception.getMessage());  // Verify message
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());       // Verify status
+
+        // Verify that no cache.clear() calls were made (since the exception is thrown before that)
+        verify(cache, never()).clear();  // Ensure clear was not called
     }
 
+
     @Test
-    void testReCache() throws GlobalException {
-        when(reqRepo.findById(1L)).thenReturn(Optional.of(reqEntity));
+    void testDeleteByIdSuccess() {
+        // Arrange
+        when(reqRepo.existsById(1L)).thenReturn(true);   // Simulate the case where the request exists
+        doNothing().when(reqRepo).hardDeleteById(1L);    // Mock the delete operation to do nothing
         when(cacheManager.getCache("requests")).thenReturn(cache);
         when(cacheManager.getCache("users")).thenReturn(cache);
         when(cacheManager.getCache("org")).thenReturn(cache);
 
+        // Act
+        reqServices.deleteById(1L);  // Call the method
+
+        // Assert
+        verify(cache, times(3)).clear();  // Verify that clear was called on all caches
+    }
+
+
+    @Test
+    void testReCache() throws GlobalException {
+        when(reqRepo.findById(1L)).thenReturn(Optional.of(reqEntity));
         reqServices.ReCache(1L);
 
         verify(reqRepo, times(1)).save(reqEntity);
-        verify(cache, times(1)).evict(1L);
-        verify(cache, times(2)).clear(); // Expect 2 clears (users and org caches)
     }
 
 

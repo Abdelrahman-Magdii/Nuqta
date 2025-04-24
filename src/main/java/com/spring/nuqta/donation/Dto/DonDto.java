@@ -37,7 +37,7 @@ public class DonDto extends BaseDto<Long> {
     @JsonProperty("payment_offered")
     private Boolean paymentOffered;
 
-    @Schema(description = "Current status of the donation process.", example = "PENDING")
+    @Schema(description = "Current status of the donation process", example = "VALID", allowableValues = {"VALID", "INVALID"})
     private DonStatus status;
 
     @Schema(description = "Weight of the donor", example = "80")

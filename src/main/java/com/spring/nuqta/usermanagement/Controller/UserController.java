@@ -9,6 +9,7 @@ import com.spring.nuqta.usermanagement.Mapper.UserMapper;
 import com.spring.nuqta.usermanagement.Mapper.UserUpdateMapper;
 import com.spring.nuqta.usermanagement.Services.UserServices;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -59,10 +60,21 @@ public class UserController {
     }
 
 
-    @Operation(summary = "Update an Existing User", description = "Update the details of an existing user")
-    @ApiResponse(responseCode = "200", description = "User updated successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = UserInsertDto.class)))
+    @Operation(
+            summary = "Update an Existing User",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "User information to update",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserInsertDto.class)
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User updated successfully",
+                            content = @Content(schema = @Schema(implementation = UserUpdateDto.class)))
+            }
+    )
     @PutMapping("")
     public ResponseEntity<UserUpdateDto> updateUser(@RequestBody UserInsertDto userDto) {
         UserEntity entity = userInsertMapper.unMap(userDto);
@@ -80,7 +92,19 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @Operation(summary = "Change User Password", description = "Allow users to change their password")
+    @Operation(
+            summary = "Change User Password",
+            description = "Allow users to change their password",
+            parameters = {
+                    @Parameter(name = "userId", required = true, description = "User ID"),
+                    @Parameter(name = "oldPassword", required = true, description = "Old password"),
+                    @Parameter(name = "newPassword", required = true, description = "New password")
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Password changed successfully",
+                            content = @Content(schema = @Schema(implementation = Map.class)))
+            }
+    )
     @ApiResponse(responseCode = "200", description = "Password changed successfully")
     @PostMapping("/changePassword")
     public ResponseEntity<Map<String, String>> changePassword(

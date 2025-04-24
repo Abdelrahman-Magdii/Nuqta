@@ -33,7 +33,7 @@ public class DonResponseUserUpdateDto extends BaseDto<Long> {
     @JsonProperty("payment_offered")
     private Boolean paymentOffered;
 
-    @Schema(description = "Current status of the donation process.", example = "PENDING")
+    @Schema(description = "Current status of the donation process", example = "VALID", allowableValues = {"VALID", "INVALID"})
     private DonStatus status;
 
     @Schema(description = "Weight of the donor", example = "80")
@@ -44,5 +44,5 @@ public class DonResponseUserUpdateDto extends BaseDto<Long> {
 
     @Schema(description = "Conservatism level of the donation", example = "Moderate")
     private String conservatism;
-    
+
 }
