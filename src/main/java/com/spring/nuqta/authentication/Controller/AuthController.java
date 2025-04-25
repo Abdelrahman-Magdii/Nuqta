@@ -86,6 +86,19 @@ public class AuthController {
         return generalReset.sendOtpEmail(email);
     }
 
+    @PostMapping("/verifyOtp")
+    public ResponseEntity<?> verifyOtp(@RequestParam String email, @RequestParam String otp) {
+        boolean valid = generalReset.validateOtp(email, otp);
+        Map<String, String> response = new HashMap<>();
+        if (!valid) {
+            response.put("message", getMS("otp.invalid"));
+            return ResponseEntity.badRequest().body(response);
+        } else {
+            response.put("message", getMS("otp.verified"));
+            return ResponseEntity.ok(response);
+        }
+    }
+
     @PostMapping("/resetPassword")
     public ResponseEntity<Map<String, String>> resetPassword(@RequestParam String email, @RequestParam String otp, @RequestParam String newPassword) {
 

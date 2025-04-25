@@ -52,6 +52,10 @@ public class GeneralReset {
     }
 
     public ResponseEntity<Map<String, String>> sendOtpEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new GlobalException("email.required", HttpStatus.BAD_REQUEST);
+        }
+
         Map<String, String> response = new HashMap<>();
 
         // Find user or organization by email
@@ -120,41 +124,72 @@ public class GeneralReset {
         return resetPasswordEntity;
     }
 
-    public boolean resetPassword(String mail, String otp, String newPassword) {
+    public boolean validateOtp(String mail, String otp) {
+
+        if (mail == null || mail.trim().isEmpty() || otp == null || otp.trim().isEmpty()) {
+            throw new GlobalException("otp.verify.required", HttpStatus.BAD_REQUEST);
+        }
+
         Optional<ResetPasswordEntity> tokenOpt = Optional.ofNullable(resetPasswordRepo.findByOtp(otp));
 
-        if (tokenOpt.isPresent()) {
-            ResetPasswordEntity verify = tokenOpt.get();
-
-            if (verify.isExpired()) {
-                throw new GlobalException("verification.code.expired", HttpStatus.BAD_REQUEST);
-            }
-
-            if (verify.getUser() != null) {
-                Optional<UserEntity> userOpt = userRepo.findById(verify.getUser().getId());
-                boolean entity = userRepo.existsByEmail(mail);
-
-                if (userOpt.isPresent() && entity) {
-                    UserEntity user = userOpt.get();
-                    user.setPassword(passwordEncoder.encode(newPassword));
-                    userRepo.save(user);
-                    resetPasswordService.deleteOtp(verify);
-                    return true;
-                }
-            } else if (verify.getOrganization() != null) {
-                Optional<OrgEntity> orgOpt = organizationRepo.findById(verify.getOrganization().getId());
-                boolean entity = organizationRepo.existsByEmail(mail);
-
-                if (orgOpt.isPresent() && entity) {
-                    OrgEntity org = orgOpt.get();
-                    org.setPassword(passwordEncoder.encode(newPassword));
-                    organizationRepo.save(org);
-                    resetPasswordService.deleteOtp(verify);
-                    return true;
-                }
-            }
+        if (tokenOpt.isEmpty()) {
+            throw new GlobalException("otp.not.found", HttpStatus.BAD_REQUEST);
         }
-        return false;
+
+        ResetPasswordEntity verify = tokenOpt.get();
+
+        if (verify.isExpired()) {
+            throw new GlobalException("verification.code.expired", HttpStatus.BAD_REQUEST);
+        }
+
+        // If it's a user OTP
+        if (verify.getUser() != null) {
+            Optional<UserEntity> userOpt = userRepo.findById(verify.getUser().getId());
+            boolean exists = userRepo.existsByEmail(mail);
+
+            if (userOpt.isEmpty() || !exists) {
+                throw new GlobalException("otp.user.not", HttpStatus.BAD_REQUEST);
+            }
+
+            return true;
+
+            // If it's an organization OTP
+        } else if (verify.getOrganization() != null) {
+            Optional<OrgEntity> orgOpt = organizationRepo.findById(verify.getOrganization().getId());
+            boolean exists = organizationRepo.existsByEmail(mail);
+
+            if (orgOpt.isEmpty() || !exists) {
+                throw new GlobalException("otp.org.not", HttpStatus.BAD_REQUEST);
+            }
+
+            return true;
+        }
+
+        throw new GlobalException("otp.type.invalid", HttpStatus.BAD_REQUEST);
+    }
+
+    public boolean resetPassword(String mail, String otp, String newPassword) {
+        if (!validateOtp(mail, otp)) return false;
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new GlobalException("password.reset.required", HttpStatus.BAD_REQUEST);
+        }
+
+        ResetPasswordEntity verify = resetPasswordRepo.findByOtp(otp);
+
+        if (verify.getUser() != null) {
+            UserEntity user = userRepo.findById(verify.getUser().getId()).orElseThrow();
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepo.save(user);
+            resetPasswordService.deleteOtp(verify);
+        } else if (verify.getOrganization() != null) {
+            OrgEntity org = organizationRepo.findById(verify.getOrganization().getId()).orElseThrow();
+            org.setPassword(passwordEncoder.encode(newPassword));
+            organizationRepo.save(org);
+            resetPasswordService.deleteOtp(verify);
+        }
+
+        resetPasswordService.deleteOtp(verify);
+        return true;
     }
 
     public String getMS(String messageKey) {
