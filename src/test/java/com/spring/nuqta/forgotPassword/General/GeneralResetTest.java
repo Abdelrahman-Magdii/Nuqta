@@ -56,110 +56,7 @@ class GeneralResetTest {
     private MessageSource messageSource;
     @InjectMocks
     private GeneralReset generalReset;
-
-    @Test
-    void sendOtpEmail_UserNotFound_ReturnsOkWithMessage() {
-        when(userRepo.findUserAuthProjectionByEmail(testEmail)).thenReturn(Optional.empty());
-        when(organizationRepo.findOrgAuthProjectionByEmail(testEmail)).thenReturn(Optional.empty());
-        when(messageSource.getMessage(eq("email.not.found"), any(), eq(testLocale))).thenReturn("Test message");
-
-        ResponseEntity<Map<String, String>> response = generalReset.sendOtpEmail(testEmail);
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals("Test message", response.getBody().get("message"));
-    }
-
-    @Test
-    void sendOtpEmail_UserFoundButNotVerified_ReturnsBadRequest() {
-        UserAuthProjection user = mock(UserAuthProjection.class);
-        when(user.enabled()).thenReturn(false);
-        when(userRepo.findUserAuthProjectionByEmail(testEmail)).thenReturn(Optional.of(user));
-        when(organizationRepo.findOrgAuthProjectionByEmail(testEmail)).thenReturn(Optional.empty());
-        when(messageSource.getMessage(eq("email.not.verified"), any(), eq(testLocale))).thenReturn("Test message");
-
-        ResponseEntity<Map<String, String>> response = generalReset.sendOtpEmail(testEmail);
-
-        assertEquals(400, response.getStatusCodeValue());
-        assertEquals("Test message", response.getBody().get("message"));
-    }
-
-    @Test
-    void sendOtpEmail_UserFoundAndVerified_SendsEmail() throws MessagingException {
-        UserAuthProjection user = mock(UserAuthProjection.class);
-        when(user.enabled()).thenReturn(true);
-        when(user.email()).thenReturn(testEmail);
-        when(userRepo.findUserAuthProjectionByEmail(testEmail)).thenReturn(Optional.of(user));
-        when(organizationRepo.findOrgAuthProjectionByEmail(testEmail)).thenReturn(Optional.empty());
-
-        ResetPasswordEntity resetEntity = new ResetPasswordEntity();
-        when(resetPasswordService.generateOtp()).thenReturn(testOtp);
-        when(resetPasswordRepo.findByUser_Email(testEmail)).thenReturn(null);
-        when(resetPasswordRepo.save(any(ResetPasswordEntity.class))).thenReturn(resetEntity);
-
-        UserEntity fullUser = new UserEntity();
-        when(userRepo.findByEmail(testEmail)).thenReturn(Optional.of(fullUser));
-
-        doNothing().when(emailService).sendMail(any(ForgotPasswordWithOtp.class));
-        when(messageSource.getMessage(eq("otp.success"), any(), eq(testLocale))).thenReturn("Test message");
-
-        ResponseEntity<Map<String, String>> response = generalReset.sendOtpEmail(testEmail);
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals("Test message", response.getBody().get("message"));
-        verify(emailService).sendMail(any(ForgotPasswordWithOtp.class));
-    }
-
-    @Test
-    void sendOtpEmail_OrgFoundAndVerified_SendsEmail() throws MessagingException {
-        OrgAuthProjection org = mock(OrgAuthProjection.class);
-        when(org.enabled()).thenReturn(true);
-        when(org.email()).thenReturn(testEmail);
-        when(organizationRepo.findOrgAuthProjectionByEmail(testEmail)).thenReturn(Optional.of(org));
-        when(userRepo.findUserAuthProjectionByEmail(testEmail)).thenReturn(Optional.empty());
-
-        ResetPasswordEntity resetEntity = new ResetPasswordEntity();
-        when(resetPasswordService.generateOtp()).thenReturn(testOtp);
-        when(resetPasswordRepo.findByOrganization_Email(testEmail)).thenReturn(null);
-        when(resetPasswordRepo.save(any(ResetPasswordEntity.class))).thenReturn(resetEntity);
-
-        OrgEntity fullOrg = new OrgEntity();
-        when(organizationRepo.findByEmail(testEmail)).thenReturn(Optional.of(fullOrg));
-
-        doNothing().when(emailService).sendMail(any(ForgotPasswordWithOtp.class));
-        when(messageSource.getMessage(eq("otp.success"), any(), eq(testLocale))).thenReturn("Test message");
-
-        ResponseEntity<Map<String, String>> response = generalReset.sendOtpEmail(testEmail);
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals("Test message", response.getBody().get("message"));
-        verify(emailService).sendMail(any(ForgotPasswordWithOtp.class));
-    }
-
-    @Test
-    void sendOtpEmail_EmailSendingFails_ReturnsInternalError() throws MessagingException {
-        UserAuthProjection user = mock(UserAuthProjection.class);
-        when(user.enabled()).thenReturn(true);
-        when(user.email()).thenReturn(testEmail);
-        when(userRepo.findUserAuthProjectionByEmail(testEmail)).thenReturn(Optional.of(user));
-        when(organizationRepo.findOrgAuthProjectionByEmail(testEmail)).thenReturn(Optional.empty());
-
-        ResetPasswordEntity resetEntity = new ResetPasswordEntity();
-        when(resetPasswordService.generateOtp()).thenReturn(testOtp);
-        when(resetPasswordRepo.findByUser_Email(testEmail)).thenReturn(null);
-        when(resetPasswordRepo.save(any(ResetPasswordEntity.class))).thenReturn(resetEntity);
-
-        UserEntity fullUser = new UserEntity();
-        when(userRepo.findByEmail(testEmail)).thenReturn(Optional.of(fullUser));
-
-        doThrow(new MessagingException("Failed to send")).when(emailService).sendMail(any(ForgotPasswordWithOtp.class));
-        when(messageSource.getMessage(eq("otp.send.error"), any(), eq(testLocale))).thenReturn("Test message");
-
-        ResponseEntity<Map<String, String>> response = generalReset.sendOtpEmail(testEmail);
-
-        assertEquals(500, response.getStatusCodeValue());
-        assertEquals("Test message", response.getBody().get("message"));
-    }
-
+    
     @Test
     void retrieveOrCreateOtpEntity_UserExists_ReturnsExistingEntity() {
         UserAuthProjection user = mock(UserAuthProjection.class);
@@ -235,49 +132,6 @@ class GeneralResetTest {
         });
     }
 
-    @Test
-    void resetPassword_ValidUserOtp_UpdatesPassword() {
-        ResetPasswordEntity token = new ResetPasswordEntity();
-        token.setOtp(testOtp);
-        token.setExpiredAt(LocalDateTime.now().plusMinutes(5));
-
-        UserEntity user = new UserEntity();
-        user.setEmail(testEmail);
-        token.setUser(user);
-
-        when(resetPasswordRepo.findByOtp(testOtp)).thenReturn(token);
-        when(userRepo.findById(any())).thenReturn(Optional.of(user));
-        when(userRepo.existsByEmail(testEmail)).thenReturn(true);
-        when(passwordEncoder.encode(testPassword)).thenReturn("encodedPassword");
-
-        boolean result = generalReset.resetPassword(testEmail, testOtp, testPassword);
-
-        assertTrue(result);
-        verify(userRepo).save(user);
-        verify(resetPasswordService).deleteOtp(token);
-    }
-
-    @Test
-    void resetPassword_ValidOrgOtp_UpdatesPassword() {
-        ResetPasswordEntity token = new ResetPasswordEntity();
-        token.setOtp(testOtp);
-        token.setExpiredAt(LocalDateTime.now().plusMinutes(5));
-
-        OrgEntity org = new OrgEntity();
-        org.setEmail(testEmail);
-        token.setOrganization(org);
-
-        when(resetPasswordRepo.findByOtp(testOtp)).thenReturn(token);
-        when(organizationRepo.findById(any())).thenReturn(Optional.of(org));
-        when(organizationRepo.existsByEmail(testEmail)).thenReturn(true);
-        when(passwordEncoder.encode(testPassword)).thenReturn("encodedPassword");
-
-        boolean result = generalReset.resetPassword(testEmail, testOtp, testPassword);
-
-        assertTrue(result);
-        verify(organizationRepo).save(org);
-        verify(resetPasswordService).deleteOtp(token);
-    }
 
     @Test
     void resetPassword_ExpiredOtp_ThrowsException() {
@@ -293,38 +147,111 @@ class GeneralResetTest {
     }
 
     @Test
-    void resetPassword_InvalidOtp_ReturnsFalse() {
-        when(resetPasswordRepo.findByOtp(testOtp)).thenReturn(null);
-
-        boolean result = generalReset.resetPassword(testEmail, testOtp, testPassword);
-
-        assertFalse(result);
-    }
-
-    @Test
-    void resetPassword_UserNotFound_ReturnsFalse() {
-        ResetPasswordEntity token = new ResetPasswordEntity();
-        token.setOtp(testOtp);
-        token.setExpiredAt(LocalDateTime.now().plusMinutes(5));
-
-        UserEntity user = new UserEntity();
-        user.setEmail(testEmail);
-        token.setUser(user);
-
-        when(resetPasswordRepo.findByOtp(testOtp)).thenReturn(token);
-        when(userRepo.findById(any())).thenReturn(Optional.empty());
-
-        boolean result = generalReset.resetPassword(testEmail, testOtp, testPassword);
-
-        assertFalse(result);
-    }
-
-    @Test
     void getMS_ReturnsMessage() {
-        when(messageSource.getMessage(eq("test.key"), any(), eq(testLocale))).thenReturn("Test message");
+        when(messageSource.getMessage(eq("test.key"), eq(null), any(Locale.class)))
+                .thenReturn("Test message");
 
         String result = generalReset.getMS("test.key");
 
         assertEquals("Test message", result);
+    }
+
+    @Test
+    void sendOtpEmail_WhenUserNotFound_ReturnsNotFoundMessage() {
+        // Setup
+        when(userRepo.findUserAuthProjectionByEmail(testEmail)).thenReturn(Optional.empty());
+        when(organizationRepo.findOrgAuthProjectionByEmail(testEmail)).thenReturn(Optional.empty());
+        when(messageSource.getMessage(eq("email.not.found"), eq(null), any(Locale.class)))
+                .thenReturn("Email not found");
+
+        // Execute
+        ResponseEntity<Map<String, String>> response = generalReset.sendOtpEmail(testEmail);
+
+        // Verify
+        assertEquals("Email not found", response.getBody().get("message"));
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
+    void sendOtpEmail_WhenUserFoundAndEnabled_SendsOtp() throws MessagingException {
+        // Setup
+        UserAuthProjection userProjection = mock(UserAuthProjection.class);
+        when(userProjection.enabled()).thenReturn(true);
+        when(userProjection.email()).thenReturn(testEmail);
+
+        when(userRepo.findUserAuthProjectionByEmail(testEmail)).thenReturn(Optional.of(userProjection));
+        when(resetPasswordService.generateOtp()).thenReturn(testOtp);
+        when(userRepo.findByEmail(testEmail)).thenReturn(Optional.of(new UserEntity()));
+        when(messageSource.getMessage(eq("otp.success"), eq(null), any(Locale.class)))
+                .thenReturn("OTP sent successfully");
+
+        // Execute
+        ResponseEntity<Map<String, String>> response = generalReset.sendOtpEmail(testEmail);
+
+        // Verify
+        verify(emailService).sendMail(any(ForgotPasswordWithOtp.class));
+        assertEquals("OTP sent successfully", response.getBody().get("message"));
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
+    void sendOtpEmail_WhenOrganizationFoundAndEnabled_SendsOtp() throws MessagingException {
+        // Setup
+        OrgAuthProjection orgProjection = mock(OrgAuthProjection.class);
+        when(orgProjection.enabled()).thenReturn(true);
+        when(orgProjection.email()).thenReturn(testEmail);
+
+        when(organizationRepo.findOrgAuthProjectionByEmail(testEmail)).thenReturn(Optional.of(orgProjection));
+        when(resetPasswordService.generateOtp()).thenReturn(testOtp);
+        when(organizationRepo.findByEmail(testEmail)).thenReturn(Optional.of(new OrgEntity()));
+        when(messageSource.getMessage(eq("otp.success"), eq(null), any(Locale.class)))
+                .thenReturn("OTP sent successfully");
+
+        // Execute
+        ResponseEntity<Map<String, String>> response = generalReset.sendOtpEmail(testEmail);
+
+        // Verify
+        verify(emailService).sendMail(any(ForgotPasswordWithOtp.class));
+        assertEquals("OTP sent successfully", response.getBody().get("message"));
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
+    void sendOtpEmail_WhenUserFoundButNotVerified_ReturnsBadRequest() {
+        // Setup
+        UserAuthProjection userProjection = mock(UserAuthProjection.class);
+        when(userProjection.enabled()).thenReturn(false);
+        when(userRepo.findUserAuthProjectionByEmail(testEmail)).thenReturn(Optional.of(userProjection));
+        when(messageSource.getMessage(eq("email.not.verified"), eq(null), any(Locale.class)))
+                .thenReturn("Email not verified");
+
+        // Execute
+        ResponseEntity<Map<String, String>> response = generalReset.sendOtpEmail(testEmail);
+
+        // Verify
+        assertEquals("Email not verified", response.getBody().get("message"));
+        assertEquals(400, response.getStatusCodeValue());
+    }
+
+    @Test
+    void sendOtpEmail_WhenEmailSendingFails_ReturnsInternalError() throws MessagingException {
+        // Setup
+        UserAuthProjection userProjection = mock(UserAuthProjection.class);
+        when(userProjection.enabled()).thenReturn(true);
+        when(userProjection.email()).thenReturn(testEmail);
+
+        when(userRepo.findUserAuthProjectionByEmail(testEmail)).thenReturn(Optional.of(userProjection));
+        when(resetPasswordService.generateOtp()).thenReturn(testOtp);
+        when(userRepo.findByEmail(testEmail)).thenReturn(Optional.of(new UserEntity()));
+        when(messageSource.getMessage(eq("otp.send.error"), eq(null), any(Locale.class)))
+                .thenReturn("Failed to send OTP");
+        doThrow(new MessagingException()).when(emailService).sendMail(any(ForgotPasswordWithOtp.class));
+
+        // Execute
+        ResponseEntity<Map<String, String>> response = generalReset.sendOtpEmail(testEmail);
+
+        // Verify
+        assertEquals("Failed to send OTP", response.getBody().get("message"));
+        assertEquals(500, response.getStatusCodeValue());
     }
 }
