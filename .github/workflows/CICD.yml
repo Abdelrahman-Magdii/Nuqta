@@ -12,6 +12,10 @@ jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      SVC_ID: 28678633-e983-4166-82ea-32ba216ac497
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
     steps:
       - name: Checkout Repository
@@ -36,3 +40,6 @@ jobs:
 
       - name: Package Application
         run: mvn package -DskipTests
+
+      - name: Deploy to Railway
+        run: railway up --service=${{ env.SVC_ID }}
