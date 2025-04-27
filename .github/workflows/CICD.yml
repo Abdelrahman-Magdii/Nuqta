@@ -44,4 +44,4 @@ jobs:
         run: npm install -g @railway/cli
 
       - name: Deploy to Railway
-        run: railway up --service=${{ env.SVC_ID }}
+        run: railway up --service=${{ env.RAILWAY_TOKEN }}
