@@ -1,6 +1,6 @@
 on: [ push ]
 
-name: Release
+name: Release (Create Docker Image and Push in Docker Hub)
 
 jobs:
   release:
