@@ -1,0 +1,38 @@
+on: [ push ]
+
+name: Release
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_REPO: abdelrahmanmagdii10/nuqta
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Docker Login
+        env:
+          DOCKER_USERNAME: abdelrahmanmagdii10
+          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+          echo "${{ secrets.DOCKERHUB_TOKEN }}"
+      #          docker login -u "abdelrahmanmagdii10" --password-stdin
+
+      - name: Build and Tag Docker Image
+        run: |
+          version=${GITHUB_REF#refs/tags/}
+          if [ "$version" == "$GITHUB_REF" ]; then
+            version=latest
+          fi
+          docker build . -t $DOCKER_REPO:$version
+          echo "docker run -p 3000:3000 $DOCKER_REPO:$version" > release
+
+      - name: Push Docker Image
+        run: |
+          version=${GITHUB_REF##*/}
+          docker push $DOCKER_REPO:$version
+          echo "\`docker run -p 3000:3000 $DOCKER_REPO:$version\`" > release
