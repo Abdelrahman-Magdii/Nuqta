@@ -33,6 +33,6 @@ jobs:
 
       - name: Push Docker Image
         run: |
-          version=${GITHUB_REF##*/}
+          version=${GITHUB_REF#refs/tags/}
           docker push $DOCKER_REPO:$version
           echo "\`docker run -p 3000:3000 $DOCKER_REPO:$version\`" > release
