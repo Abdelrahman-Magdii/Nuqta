@@ -33,6 +33,13 @@ jobs:
 
       - name: Push Docker Image
         run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
           version=${GITHUB_REF#refs/tags/}
+          else
+          version=${GITHUB_REF#refs/heads/}
+          fi
+
+          echo "Using version: $version"
+
           docker push $DOCKER_REPO:$version
           echo "\`docker run -p 3000:3000 $DOCKER_REPO:$version\`" > release
