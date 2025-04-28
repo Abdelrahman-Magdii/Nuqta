@@ -28,16 +28,13 @@ jobs:
           if [ "$version" == "$GITHUB_REF" ]; then
             version=latest
           fi
+          echo "Using version: $version"
+
           docker build . -t $DOCKER_REPO:$version
-          echo "docker run -p 3000:3000 $DOCKER_REPO:$version" > release
 
       - name: Push Docker Image
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-          version=${GITHUB_REF#refs/tags/}
-          else
-          version=${GITHUB_REF#refs/heads/}
-          fi
+          version=${GITHUB_REF##*/}
 
           echo "Using version: $version"
 
