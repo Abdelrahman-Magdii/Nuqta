@@ -20,7 +20,7 @@ jobs:
         run: |
           docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
           echo "${{ secrets.DOCKERHUB_TOKEN }}"
-      #          docker login -u "abdelrahmanmagdii10" --password-stdin
+      ##          docker login -u "abdelrahmanmagdii10" --password-stdin
 
       - name: Build and Tag Docker Image
         run: |
