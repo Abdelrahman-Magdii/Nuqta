@@ -1,4 +1,7 @@
-on: [ push ]
+on:
+  push:
+    tags:
+      - "v*"
 
 name: Release (Create Docker Image and Push in Docker Hub)
 
