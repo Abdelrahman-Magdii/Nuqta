@@ -185,7 +185,16 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
      * @throws GlobalException if the request ID is null or the request is not found
      */
     @Override
-    @CachePut(value = "requests", key = "#entity.id")
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "requests", allEntries = true),
+                    @CacheEvict(value = "users", allEntries = true),
+                    @CacheEvict(value = "org", allEntries = true)
+            },
+            put = {
+                    @CachePut(value = "requests", key = "#result.id")
+            }
+    )
     public ReqEntity update(ReqEntity entity) throws GlobalException {
         if (entity == null || entity.getId() == null) {
             throw new GlobalException("error.request.id.null", HttpStatus.BAD_REQUEST);
