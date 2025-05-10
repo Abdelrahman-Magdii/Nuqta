@@ -8,6 +8,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -46,7 +47,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for WebSockets
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(PUBLIC_APIS).permitAll()
+                        // Organization can only view users (GET requests)
+                        .requestMatchers(HttpMethod.GET, "/api/user").hasAnyAuthority(String.valueOf(USER), String.valueOf(ORGANIZATION))
+                        // All other user operations require USER authority
                         .requestMatchers("/api/user/**").hasAuthority(String.valueOf(USER))
+                        // Org-specific endpoints
                         .requestMatchers("/api/org/**").hasAuthority(String.valueOf(ORGANIZATION))
                         .anyRequest().authenticated()
                 )
