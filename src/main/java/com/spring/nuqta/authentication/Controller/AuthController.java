@@ -79,7 +79,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.authOrganization(input));
     }
 
-    @PostMapping("/verify")
+    @GetMapping("/verify")
     public ResponseEntity<?> verifyRegistration(
             @RequestBody @Valid VerificationRequest request,
             HttpServletRequest servletRequest) {
