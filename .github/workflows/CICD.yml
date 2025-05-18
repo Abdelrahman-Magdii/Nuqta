@@ -90,7 +90,7 @@ jobs:
           else
             echo "Creating PostgreSQL database..."
             heroku addons:create heroku-postgresql:hobby-dev --app ${{ secrets.HEROKU_APP_NAME }}
-            sleep 10  # Wait for database provisioning
+            sleep 10
           fi
 
       - name: Add Redis for Caching
