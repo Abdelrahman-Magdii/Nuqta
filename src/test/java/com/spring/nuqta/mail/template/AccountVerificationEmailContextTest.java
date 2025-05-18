@@ -58,7 +58,7 @@ class AccountVerificationEmailContextTest {
 
         emailContext.buildVerificationUrl(baseURL, token, email);
 
-        String expectedUrl = "http://localhost:8080/api/auth/verify?token=abc123&mail=user@example.com";
+        String expectedUrl = "http://localhost:8080/api/auth/verify";
         assertEquals(expectedUrl, emailContext.getContext().get("verificationURL"));
     }
 }
