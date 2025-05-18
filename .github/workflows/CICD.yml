@@ -162,6 +162,7 @@ jobs:
           JAVA_OPTS="-Xmx300m -Xss512k -XX:CICompilerCount=2 --enable-preview" \
           PORT="8080" \
           MAVEN_OPTS="--enable-preview" \
+          FORCE_HTTPS="true"\
           MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}" \
           MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}" \
           JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" \

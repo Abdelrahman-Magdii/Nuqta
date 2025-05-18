@@ -78,7 +78,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.authOrganization(input));
     }
 
-    @PostMapping("/verify")
+    @GetMapping("/verify")
     public RedirectView verifyRegistration(
             @RequestParam("token") @Size(min = 10, max = 100) String token,
             @RequestParam("mail") @Email String mail, HttpServletRequest request) {
