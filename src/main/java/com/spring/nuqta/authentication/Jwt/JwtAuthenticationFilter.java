@@ -16,11 +16,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,33 +28,18 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    // HandlerExceptionResolver to handle exceptions during the filter process
     private final HandlerExceptionResolver handlerExceptionResolver;
 
-    // AuthService to authenticate users or organizations using the JWT token
     private final AuthService authService;
 
-    /**
-     * Determines whether the filter should be applied to the current request.
-     * If the request path matches any of the public APIs, the filter is skipped.
-     *
-     * @param request The HTTP request.
-     * @return true if the filter should not be applied, false otherwise.
-     */
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();
         return checkPath(path, SecurityConfig.PUBLIC_APIS);
     }
 
-    /**
-     * Filters incoming requests to authenticate JWT tokens.
-     * If the token is valid, it sets the authentication in the security context.
-     *
-     * @param request     The HTTP request.
-     * @param response    The HTTP response.
-     * @param filterChain The filter chain to continue processing the request.
-     */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
@@ -145,19 +130,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return authenticationToken;
     }
 
-    /**
-     * Checks if the request path matches any of the public APIs.
-     *
-     * @param path        The request path.
-     * @param publicPaths The list of public API paths.
-     * @return true if the path matches a public API, false otherwise.
-     */
+
     private boolean checkPath(String path, String[] publicPaths) {
-        // Split the path into parts to match the public API pattern
-        String[] parts = path.split("/");
-        if (parts.length >= 3) {
-            String newPath = "/" + parts[1] + "/" + parts[2] + "/**";
-            return Arrays.asList(publicPaths).contains(newPath);
+        for (String publicPath : publicPaths) {
+            if (pathMatcher.match(publicPath, path)) {
+                return true;
+            }
         }
         return false;
     }

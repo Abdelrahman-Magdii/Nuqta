@@ -40,6 +40,9 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private String[] allowedOrigins;
 
+    @Value("${token.base.url}")
+    private String baseUrl;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -82,26 +85,29 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow Heroku app's own domain
-        String herokuAppUrl = System.getenv("token.base.url");
-        if (herokuAppUrl != null && !herokuAppUrl.isEmpty()) {
-            configuration.setAllowedOrigins(Arrays.asList(herokuAppUrl));
+        // Add base URL first
+        if (baseUrl != null && !baseUrl.isEmpty()) {
+            configuration.addAllowedOrigin(baseUrl);
         }
 
-        // Add any additional allowed origins from config
-        if (allowedOrigins != null && allowedOrigins.length > 0) {
-            configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
+        // Add all allowed origins
+        if (allowedOrigins != null) {
+            for (String origin : allowedOrigins) {
+                configuration.addAllowedOrigin(origin.trim());
+            }
         }
+
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Total-Count"));
-        configuration.setMaxAge(3600L); // 1 hour
+        configuration.setMaxAge(3600L);
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
 }
