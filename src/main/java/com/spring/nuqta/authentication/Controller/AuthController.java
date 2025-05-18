@@ -14,7 +14,10 @@ import com.spring.nuqta.usermanagement.Mapper.UserInsertMapper;
 import com.spring.nuqta.usermanagement.Services.UserServices;
 import com.spring.nuqta.verificationToken.General.GeneralVerification;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.SystemException;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -75,8 +78,15 @@ public class AuthController {
         return ResponseEntity.ok(authService.authOrganization(input));
     }
 
-    @GetMapping("/verify")
-    public RedirectView verifyRegistration(@RequestParam("token") String token, @RequestParam("mail") String mail) {
+    @PostMapping("/verify")
+    public RedirectView verifyRegistration(
+            @RequestParam("token") @Size(min = 10, max = 100) String token,
+            @RequestParam("mail") @Email String mail, HttpServletRequest request) {
+        if (!request.isSecure()) {
+            String redirectUrl = request.getRequestURL().toString()
+                    .replace("http://", "https://");
+            return new RedirectView(redirectUrl);
+        }
         boolean verified = generalVerification.verifyRegistration(token, mail);
         return new RedirectView(verified ? "/verification-success.html" : "/verification-failed.html");
     }
