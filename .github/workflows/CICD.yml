@@ -101,7 +101,7 @@ jobs:
             echo "Redis cache already exists"
           else
             echo "Creating Redis cache..."
-            heroku addons:create heroku-redis:essential-0 --app ${{ secrets.HEROKU_APP_NAME }}
+            heroku addons:create heroku-redis:mini --app ${{ secrets.HEROKU_APP_NAME }} || \
             echo "Waiting for Redis provisioning to complete..."
             sleep 15
           fi
