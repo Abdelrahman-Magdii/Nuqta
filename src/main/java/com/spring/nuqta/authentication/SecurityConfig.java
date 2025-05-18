@@ -44,14 +44,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for WebSockets
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(PUBLIC_APIS).permitAll()
-                        // Organization can only view users (GET requests)
                         .requestMatchers(HttpMethod.GET, "/api/user").hasAnyAuthority(String.valueOf(USER), String.valueOf(ORGANIZATION))
-                        // All other user operations require USER authority
                         .requestMatchers("/api/user/**").hasAuthority(String.valueOf(USER))
-                        // Org-specific endpoints
                         .requestMatchers("/api/org/**").hasAuthority(String.valueOf(ORGANIZATION))
                         .anyRequest().authenticated()
                 )
@@ -80,18 +77,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-//    @Bean
-//    public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
-//        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-//        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-//        configuration.setExposedHeaders(List.of("Authorization"));
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", configuration);
-//        return source;
-//    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

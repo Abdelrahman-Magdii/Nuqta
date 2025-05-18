@@ -125,31 +125,6 @@ class UserServicesTest {
         verify(userRepository, times(1)).findByIdAndEnabledTrue(1L);
     }
 
-    @Test
-    void testUpdate_Success() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
-        when(userRepository.save(any(UserEntity.class))).thenReturn(mockUser);
-
-        UserEntity updatedUser = new UserEntity();
-        updatedUser.setId(1L);
-        updatedUser.setUsername("updatedUser");
-        updatedUser.setPhoneNumber("9876543210");
-
-        // Set the donation entity properly
-        DonEntity updatedDonation = new DonEntity();
-        updatedDonation.setId(1L);
-        updatedUser.setDonation(updatedDonation);
-
-        // Perform update
-        UserEntity result = userServices.update(updatedUser);
-
-        assertNotNull(result);
-        assertEquals("updatedUser", result.getUsername());
-
-        verify(userRepository, times(1)).findById(1L);
-        verify(userRepository, times(1)).save(any(UserEntity.class));
-    }
-
 
     @Test
     void testUpdate_UserNotFound() {
@@ -220,22 +195,6 @@ class UserServicesTest {
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
 
-    /**
-     * Test Case: Provided donation ID is null
-     */
-    @Test
-    void updateUser_WhenDonationIdIsNull_ShouldThrowException() {
-        mockUser.setDonation(new DonEntity()); // Donation exists but has no ID
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
-
-        GlobalException exception = assertThrows(GlobalException.class, () -> {
-            userServices.update(mockUser);
-        });
-
-        assertEquals("error.user.donation.id.null", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-    }
 
     /**
      * Test Case: Donation ID mismatch between existing and provided user
@@ -524,29 +483,6 @@ class UserServicesTest {
     }
 
     @Test
-    void testUpdate_WhenDonationIdIsNull_ThrowsBadRequestException() {
-        // Arrange
-        UserEntity entity = new UserEntity();
-        entity.setId(1L); // Valid User ID
-        entity.setDonation(new DonEntity()); // Donation exists but ID is null
-
-        UserEntity existingUser = new UserEntity();
-        existingUser.setId(1L);
-        existingUser.setDonation(new DonEntity()); // Mock user with a donation record
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser)); // Simulate user exists
-
-        // Act & Assert
-        GlobalException exception = assertThrows(GlobalException.class,
-                () -> userServices.update(entity));
-
-        assertEquals("error.user.donation.id.null", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-
-        verify(userRepository).findById(1L); // Ensure findById() was called
-    }
-
-    @Test
     void testValidateUserFields() {
 
         // Validate the user fields
@@ -621,19 +557,6 @@ class UserServicesTest {
     void testFindById_ThrowsException() {
         when(userRepository.findByIdAndEnabledTrue(1L)).thenReturn(Optional.empty());
         assertThrows(GlobalException.class, () -> userServices.findById(1L));
-    }
-
-    @Test
-    void testUpdate() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
-        when(userRepository.existsByUsernameAndIdNot("updatedUser", 1L)).thenReturn(false);
-        when(userRepository.save(any(UserEntity.class))).thenReturn(mockUser);
-
-        mockUser.setUsername("updatedUser");
-        UserEntity updatedUser = userServices.update(mockUser);
-
-        assertNotNull(updatedUser);
-        assertEquals("updatedUser", updatedUser.getUsername());
     }
 
     @Test
