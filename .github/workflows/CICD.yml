@@ -89,7 +89,7 @@ jobs:
             echo "PostgreSQL database already exists"
           else
             echo "Creating PostgreSQL database..."
-            heroku addons:create heroku-postgresql:hobby-dev --app ${{ secrets.HEROKU_APP_NAME }}
+            heroku addons:create heroku-postgresql:essential-0 --app ${{ secrets.HEROKU_APP_NAME }}
             sleep 10
           fi
 
@@ -101,7 +101,7 @@ jobs:
             echo "Redis cache already exists"
           else
             echo "Creating Redis cache..."
-            heroku addons:create heroku-redis:hobby-dev --app ${{ secrets.HEROKU_APP_NAME }}
+            heroku addons:create heroku-redis:essential-0 --app ${{ secrets.HEROKU_APP_NAME }}
             echo "Waiting for Redis provisioning to complete..."
             sleep 15
           fi
