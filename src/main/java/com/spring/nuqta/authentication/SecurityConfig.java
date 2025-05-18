@@ -53,9 +53,6 @@ public class SecurityConfig {
                         ).requiresSecure()
                 )
                 .headers(headers -> headers
-                        .contentSecurityPolicy(csp -> csp
-                                .policyDirectives("default-src 'self'; style-src 'self' 'nonce-ABC123';")
-                        )
                         .xssProtection(HeadersConfigurer.XXssConfig::disable)
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
