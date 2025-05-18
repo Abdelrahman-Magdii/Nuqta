@@ -97,7 +97,6 @@ jobs:
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: |
-          # Check if Redis addon already exists
           if heroku addons:info heroku-redis --app ${{ secrets.HEROKU_APP_NAME }} 2>/dev/null; then
             echo "Redis cache already exists"
           else
