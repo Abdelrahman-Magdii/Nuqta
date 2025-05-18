@@ -33,7 +33,7 @@ import static com.spring.nuqta.enums.Scope.USER;
 public class SecurityConfig {
 
     public static final String[] PUBLIC_APIS = {"/swagger-ui/**", "/api/auth/**",
-            "/api-docs/**", "/", "/verify", "/verification-success.html", "/verification-failed.html"};
+            "/api-docs/**", "/", "/verify", "/verification-success.html", "/verification-failed.html", "/static/styles.css"};
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final MessageSource ms;
