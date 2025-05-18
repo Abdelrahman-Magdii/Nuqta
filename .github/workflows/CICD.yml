@@ -36,3 +36,143 @@ jobs:
 
       - name: Package Application
         run: mvn package -DskipTests
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar
+          retention-days: 1
+
+  deploy:
+    name: Deploy to Heroku
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: target
+
+      - name: Create necessary files for Heroku
+        run: |
+          # Create system.properties file for Java version
+          echo "java.runtime.version=23" > system.properties
+          
+          # Create Procfile with proper preview flag
+          echo "web: java -Dserver.port=\$PORT \$JAVA_OPTS --enable-preview -jar target/*.jar" > Procfile
+
+      - name: Install Heroku CLI
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Deploy to Heroku
+        uses: akhileshns/heroku-deploy@v3.12.14
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+          procfile: "web: java -Dserver.port=$PORT $JAVA_OPTS --enable-preview -jar target/*.jar"
+
+      - name: Add PostgreSQL Database
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          # Check if PostgreSQL addon already exists
+          if heroku addons:info heroku-postgresql --app ${{ secrets.HEROKU_APP_NAME }} 2>/dev/null; then
+            echo "PostgreSQL database already exists"
+          else
+            echo "Creating PostgreSQL database..."
+            heroku addons:create heroku-postgresql:hobby-dev --app ${{ secrets.HEROKU_APP_NAME }}
+            sleep 10  # Wait for database provisioning
+          fi
+
+      - name: Add Redis for Caching
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          # Check if Redis addon already exists
+          if heroku addons:info heroku-redis --app ${{ secrets.HEROKU_APP_NAME }} 2>/dev/null; then
+            echo "Redis cache already exists"
+          else
+            echo "Creating Redis cache..."
+            heroku addons:create heroku-redis:hobby-dev --app ${{ secrets.HEROKU_APP_NAME }}
+            echo "Waiting for Redis provisioning to complete..."
+            sleep 15
+          fi
+
+      - name: Configure Database Connection
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          # Get and convert DATABASE_URL to JDBC format for Spring Boot
+          DB_URL=$(heroku config:get DATABASE_URL --app ${{ secrets.HEROKU_APP_NAME }})
+          
+          HOST_AND_DB=$(echo "$DB_URL" | sed -E 's|postgres://[^@]+@([^?]+).*|\1|')
+          JDBC_URL="jdbc:postgresql://${HOST_AND_DB}?sslmode=require"
+          
+          DB_USER=$(echo "$DB_URL" | awk -F 'postgres://|:|@' '{print $2}')
+          DB_PASS=$(echo "$DB_URL" | awk -F 'postgres://|:|@' '{print $3}')
+          
+          # Set database connection properties
+          heroku config:set \
+          SPRING_DATASOURCE_URL="$JDBC_URL" \
+          SPRING_DATASOURCE_USERNAME="$DB_USER" \
+          SPRING_DATASOURCE_PASSWORD="$DB_PASS" \
+          --app ${{ secrets.HEROKU_APP_NAME }}
+
+      - name: Configure Redis Connection
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          # Get Redis connection details from Heroku
+          REDIS_URL=$(heroku config:get REDIS_URL --app ${{ secrets.HEROKU_APP_NAME }})
+          
+          if [ -n "$REDIS_URL" ]; then
+            # Extract relevant parts for Spring Boot
+            REDIS_HOST=$(echo "$REDIS_URL" | sed -E 's|redis://.*@([^:]+):.*|\1|')
+            REDIS_PORT=$(echo "$REDIS_URL" | sed -E 's|redis://.*@[^:]+:([0-9]+)|\1|')
+            REDIS_PASSWORD=$(echo "$REDIS_URL" | sed -E 's|redis://(.*):.*@.*|\1|')
+          
+            # Set Redis configuration properties
+            heroku config:set \
+            SPRING_REDIS_HOST="$REDIS_HOST" \
+            SPRING_REDIS_PORT="$REDIS_PORT" \
+            SPRING_REDIS_PASSWORD="$REDIS_PASSWORD" \
+            SPRING_CACHE_TYPE="redis" \
+            --app ${{ secrets.HEROKU_APP_NAME }}
+          
+            echo "Redis connection configured successfully"
+          else
+            echo "Warning: REDIS_URL not found. Redis configuration skipped."
+          fi
+
+      - name: Configure Heroku Environment Variables
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          # Set all environment variables atomically on Heroku app
+          heroku config:set \
+          JAVA_OPTS="-Xmx300m -Xss512k -XX:CICompilerCount=2 --enable-preview" \
+          PORT="8080" \
+          MAVEN_OPTS="--enable-preview" \
+          MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}" \
+          MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}" \
+          JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" \
+          --app ${{ secrets.HEROKU_APP_NAME }}
+
+      - name: Verify Deployment
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          echo "Checking application status..."
+          heroku ps --app ${{ secrets.HEROKU_APP_NAME }}
+          
+          echo "Checking recent logs..."
+          heroku logs --num 10 --app ${{ secrets.HEROKU_APP_NAME }}
