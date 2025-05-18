@@ -63,7 +63,7 @@ jobs:
       - name: Create necessary files for Heroku
         run: |
           # Create system.properties file for Java version
-          echo "java.runtime.version=23" > system.properties
+          echo "java.runtime.version=17" > system.properties
           
           # Create Procfile with proper preview flag
           echo "web: java -Dserver.port=\$PORT \$JAVA_OPTS --enable-preview -jar target/*.jar" > Procfile
