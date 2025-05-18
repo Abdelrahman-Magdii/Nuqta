@@ -15,7 +15,9 @@ import com.spring.nuqta.usermanagement.Mapper.UserInsertMapper;
 import com.spring.nuqta.usermanagement.Services.UserServices;
 import com.spring.nuqta.verificationToken.General.GeneralVerification;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.SystemException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -23,6 +25,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -77,10 +80,25 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<?> verifyRegistration(@RequestBody VerificationRequest request) {
-        boolean verified = generalVerification.verifyRegistration(request.getToken(), request.getMail());
-        String redirectUrl = verified ? "/verification-success.html" : "/verification-failed.html";
-        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(redirectUrl)).build();
+    public ResponseEntity<?> verifyRegistration(
+            @RequestBody @Valid VerificationRequest request,
+            HttpServletRequest servletRequest) {
+
+        boolean verified = generalVerification.verifyRegistration(
+                request.getToken(),
+                request.getMail()
+        );
+
+        String redirectPath = verified ? "/verification-success.html" : "/verification-failed.html";
+        String redirectUrl = ServletUriComponentsBuilder.fromRequest(servletRequest)
+                .replacePath(redirectPath)
+                .scheme("https")
+                .build()
+                .toUriString();
+
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(redirectUrl))
+                .build();
     }
 
 

@@ -4,6 +4,9 @@ import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AccountVerificationEmailContext extends AbstractEmailContext {
 
     private String token;
@@ -31,7 +34,14 @@ public class AccountVerificationEmailContext extends AbstractEmailContext {
 
     public void buildVerificationUrl(final String baseURL, final String token, final String email) {
         final String url = UriComponentsBuilder.fromHttpUrl(baseURL)
-                .path("api/auth/verify").queryParam("token", token).queryParam("mail", email).toUriString();
+                .path("/api/auth/verify")
+                .toUriString();
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("token", token);
+        requestBody.put("mail", email);
+
         put("verificationURL", url);
+        put("requestBody", requestBody);
     }
 }
