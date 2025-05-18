@@ -141,6 +141,7 @@ jobs:
           
             # Set Redis configuration properties
             heroku config:set \
+            REDIS_URL="$REDIS_URL"\
             SPRING_REDIS_HOST="$REDIS_HOST" \
             SPRING_REDIS_PORT="$REDIS_PORT" \
             SPRING_REDIS_PASSWORD="$REDIS_PASSWORD" \
