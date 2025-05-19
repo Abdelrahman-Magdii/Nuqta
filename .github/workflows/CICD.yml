@@ -134,18 +134,9 @@ jobs:
           REDIS_URL=$(heroku config:get REDIS_URL --app ${{ secrets.HEROKU_APP_NAME }})
           
           if [ -n "$REDIS_URL" ]; then
-            # Extract relevant parts for Spring Boot
-            REDIS_HOST=$(echo "$REDIS_URL" | sed -E 's|redis://.*@([^:]+):.*|\1|')
-            REDIS_PORT=$(echo "$REDIS_URL" | sed -E 's|redis://.*@[^:]+:([0-9]+)|\1|')
-            REDIS_PASSWORD=$(echo "$REDIS_URL" | sed -E 's|redis://(.*):.*@.*|\1|')
           
-            # Set Redis configuration properties
             heroku config:set \
             REDIS_URL="$REDIS_URL"\
-            SPRING_REDIS_HOST="$REDIS_HOST" \
-            SPRING_REDIS_PORT="$REDIS_PORT" \
-            SPRING_REDIS_PASSWORD="$REDIS_PASSWORD" \
-            SPRING_CACHE_TYPE="redis" \
             --app ${{ secrets.HEROKU_APP_NAME }}
           
             echo "Redis connection configured successfully"
@@ -162,7 +153,6 @@ jobs:
           JAVA_OPTS="-Xmx300m -Xss512k -XX:CICompilerCount=2 --enable-preview" \
           PORT="8080" \
           MAVEN_OPTS="--enable-preview" \
-          FORCE_HTTPS="true"\
           MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}" \
           MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}" \
           JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" \
