@@ -82,6 +82,7 @@ public class AuthService {
 
     private <T> Optional<T> authenticateUser(String token) {
         String subject = jwtUtilsUser.getSubject(token);
+        log.info("Email: {}", subject);
 
         return userRepository.findUserAuthProjectionByEmail(subject)
                 .map(user -> {
@@ -92,7 +93,7 @@ public class AuthService {
 
     private <T> Optional<T> authenticateOrganization(String token) {
         String subject = jwtUtilsOrganization.getSubject(token);
-
+        log.info("Email: {}", subject);
         return organizationRepository.findOrgAuthProjectionByEmail(subject)
                 .map(organization -> {
                     AuthOrgDto authOrgDto = createOrgDto(organization, token);

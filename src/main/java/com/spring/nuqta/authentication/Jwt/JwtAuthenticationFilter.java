@@ -47,7 +47,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Extract the Authorization header from the request
         final String authHeader = request.getHeader("Authorization");
-        logger.info("Authorization Header: " + authHeader);
 
         // Skip JWT validation for Basic Authentication
         if (authHeader != null && authHeader.startsWith("Basic ")) {
@@ -64,7 +63,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // Extract the JWT token from the Authorization header
             final String jwt = authHeader.substring(7);
-            logger.info("Extracted JWT: " + jwt);
 
             // If the JWT is empty, return an unauthorized response
             if (jwt.isEmpty()) {

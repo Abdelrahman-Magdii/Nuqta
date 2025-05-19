@@ -30,6 +30,9 @@ public class DonEntity extends BaseEntity<Long> {
     @Column(name = "donation_date")
     private LocalDate donationDate;
 
+    @Column(name = "last_quiz_date")
+    private LocalDate lastQuizDate;
+
     @Column(name = "last_donation")
     private LocalDate lastDonation;
 

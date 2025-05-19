@@ -22,6 +22,9 @@ public class DonResponseUserUpdateDto extends BaseDto<Long> {
     @JsonProperty("donation_date")
     private LocalDate donationDate;
 
+    @JsonProperty("last_quiz_date")
+    private LocalDate lastQuizDate;
+
     @Schema(description = "The date of the last donation made by the donor.", example = "2024-10-01")
     @JsonProperty("last_donation")
     private LocalDate lastDonation;
