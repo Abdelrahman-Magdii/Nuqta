@@ -8,10 +8,6 @@ import com.spring.nuqta.donation.Mapper.DonMapper;
 import com.spring.nuqta.donation.Mapper.DonResponseMapper;
 import com.spring.nuqta.donation.Services.DonServices;
 import com.spring.nuqta.exception.GlobalException;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,21 +34,12 @@ public class DonController {
     private final MessageSource ms;
 
 
-    @Operation(summary = "Get Donation by ID", description = "Retrieve a donation by its unique ID")
-    @ApiResponse(responseCode = "200", description = "Donations get successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = DonDto.class)))
     @GetMapping("/{id}")
     public ResponseEntity<?> getDonationById(@PathVariable Long id) {
         DonResponseDto result = donResponseMapper.map(donServices.findById(id));
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @Operation(summary = "Get Nearest Donations", description = "Retrieve a list of donations nearest to the provided coordinates")
-    @ApiResponse(responseCode = "200", description = "Donations retrieved successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = DonDto.class)))
-    @ApiResponse(responseCode = "400", description = "Invalid input parameters (e.g., missing latitude or longitude)")
     @GetMapping("/nearest/conservatism")
     public ResponseEntity<?> getNearestDonations(@RequestParam String conservatism) {
 
@@ -66,11 +53,6 @@ public class DonController {
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 
-    @Operation(summary = "Get Nearest Donations", description = "Retrieve a list of donations nearest to the provided coordinates")
-    @ApiResponse(responseCode = "200", description = "Donations retrieved successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = DonDto.class)))
-    @ApiResponse(responseCode = "400", description = "Invalid input parameters (e.g., missing latitude or longitude)")
     @GetMapping("/nearest/city")
     public ResponseEntity<?> getNearestDonationsCity(@RequestParam String city) {
 

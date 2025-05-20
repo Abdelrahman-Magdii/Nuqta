@@ -8,10 +8,6 @@ import com.spring.nuqta.organization.Mapper.AddOrgMapper;
 import com.spring.nuqta.organization.Mapper.OrgMapper;
 import com.spring.nuqta.organization.Mapper.OrgRequestMapper;
 import com.spring.nuqta.organization.Services.OrgServices;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -36,20 +32,12 @@ public class OrgController {
     private final OrgRequestMapper orgRequestMapper;
     private final MessageSource ms;
 
-    @Operation(summary = "Get All Organizations", description = "Retrieve a list of all organizations")
-    @ApiResponse(responseCode = "200", description = "Organization get successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = OrgDto.class)))
     @GetMapping("")
     public ResponseEntity<List<OrgDto>> getAllOrg() {
         List<OrgDto> dtos = orgMapper.map(orgServices.findAll());
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 
-    @Operation(summary = "Get Organization by ID", description = "Retrieve details of a specific organization by its ID")
-    @ApiResponse(responseCode = "200", description = "Organization get successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = OrgDto.class)))
     @GetMapping("/{id}")
     public ResponseEntity<OrgDto> getOrgById(@PathVariable Long id) {
         OrgDto dto = orgMapper.map(orgServices.findById(id));
@@ -57,10 +45,6 @@ public class OrgController {
     }
 
 
-    @Operation(summary = "Update an Organization", description = "Update an existing organization's details")
-    @ApiResponse(responseCode = "200", description = "Organization update successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = AddOrgDto.class)))
     @PutMapping("")
     public ResponseEntity<OrgRequestDto> updateOrg(@RequestBody AddOrgDto addOrgDto) {
         OrgEntity entity = addOrgMapper.unMap(addOrgDto);
@@ -69,7 +53,6 @@ public class OrgController {
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
-    @Operation(summary = "Delete Organization by ID", description = "Delete an organization by its ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrgById(@PathVariable Long id) {
         orgServices.deleteById(id);
@@ -78,8 +61,6 @@ public class OrgController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @Operation(summary = "Change Organization Password", description = "Allow Organizations to change their password")
-    @ApiResponse(responseCode = "200", description = "Password changed successfully")
     @PostMapping("/changePassword")
     public ResponseEntity<Map<String, String>> changePassword(
             @RequestParam Long orgId,

@@ -24,8 +24,9 @@ public class JwtUtilsUser extends JwtUtils {
     private String buildToken(Map<String, Object> extraClaims, UserAuthProjection user,
                               long expiration) {
         return Jwts.builder()
-                .setClaims(extraClaims) // Set additional claims
+                .setClaims(extraClaims)
                 .setSubject(user.email())
+                .claim("id", user.id())
                 .claim("scope", user.scope().toString()) // Add the user's scope as a claim
                 .setIssuedAt(new Date(System.currentTimeMillis())) // Set the token issuance time
                 .setExpiration(new Date(System.currentTimeMillis() + expiration)) // Set the token expiration time
@@ -63,6 +64,10 @@ public class JwtUtilsUser extends JwtUtils {
     @Override
     public String getSubject(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public String getUserId(String token) {
+        return extractClaim(token, claims -> claims.get("id", String.class));
     }
 
     /**

@@ -8,11 +8,6 @@ import com.spring.nuqta.usermanagement.Mapper.UserInsertMapper;
 import com.spring.nuqta.usermanagement.Mapper.UserMapper;
 import com.spring.nuqta.usermanagement.Mapper.UserUpdateMapper;
 import com.spring.nuqta.usermanagement.Services.UserServices;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,42 +34,18 @@ public class UserController {
     private final UserUpdateMapper userUpdateMapper;
     private final MessageSource ms;
 
-    @Operation(summary = "Get All Users", description = "Retrieve a list of all users")
-    @ApiResponse(responseCode = "200", description = "User get successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = UserDto.class)))
     @GetMapping("")
     public ResponseEntity<?> getAllUsers() {
         List<UserDto> dtos = userMapper.map(userServices.findAll());
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 
-    @Operation(summary = "Get User by ID", description = "Retrieve details of a specific user by its ID")
-    @ApiResponse(responseCode = "200", description = "User get successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = UserDto.class)))
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         UserDto dto = userMapper.map(userServices.findById(id));
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
-
-    @Operation(
-            summary = "Update an Existing User",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    description = "User information to update",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = UserInsertDto.class)
-                    )
-            ),
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "User updated successfully",
-                            content = @Content(schema = @Schema(implementation = UserUpdateDto.class)))
-            }
-    )
     @PutMapping("")
     public ResponseEntity<UserUpdateDto> updateUser(@RequestBody UserInsertDto userDto) {
         UserEntity entity = userInsertMapper.unMap(userDto);
@@ -83,7 +54,6 @@ public class UserController {
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
-    @Operation(summary = "Delete User by ID", description = "Delete a user by its ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUserById(@PathVariable Long id) {
         userServices.deleteById(id);
@@ -92,20 +62,6 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @Operation(
-            summary = "Change User Password",
-            description = "Allow users to change their password",
-            parameters = {
-                    @Parameter(name = "userId", required = true, description = "User ID"),
-                    @Parameter(name = "oldPassword", required = true, description = "Old password"),
-                    @Parameter(name = "newPassword", required = true, description = "New password")
-            },
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Password changed successfully",
-                            content = @Content(schema = @Schema(implementation = Map.class)))
-            }
-    )
-    @ApiResponse(responseCode = "200", description = "Password changed successfully")
     @PostMapping("/changePassword")
     public ResponseEntity<Map<String, String>> changePassword(
             @RequestParam Long userId,
@@ -120,7 +76,6 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Change User Fcm Token", description = "Allow users to change Fcm Token")
     @PutMapping("fcmToken/{id}")
     public ResponseEntity<?> updateFcmToken(@PathVariable Long id, @RequestBody Map<String, String> request) {
         String fcmToken = request.get("fcmToken");
