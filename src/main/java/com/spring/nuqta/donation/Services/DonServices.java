@@ -112,7 +112,8 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
 //        sendNotificationIfApplicable(donation, request);
 
-        this.sendMail(donation);
+
+        this.sendMail(request);
         return entity;
     }
 
@@ -178,7 +179,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
                 });
     }
 
-    void sendMail(DonEntity don) throws MessagingException {
+    void sendMail(ReqEntity don) throws MessagingException {
 
         UserEntity donor = don.getUser();
         if (donor == null || donor.getFcmToken() == null) {
