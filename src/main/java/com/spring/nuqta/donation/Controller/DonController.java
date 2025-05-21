@@ -9,6 +9,7 @@ import com.spring.nuqta.donation.Mapper.DonResponseMapper;
 import com.spring.nuqta.donation.Services.DonServices;
 import com.spring.nuqta.exception.GlobalException;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -67,7 +68,7 @@ public class DonController {
     }
 
     @PostMapping("/acceptRequest")
-    public ResponseEntity<?> acceptDonationRequest(@RequestBody AcceptDonationRequestDto dto) {
+    public ResponseEntity<?> acceptDonationRequest(@RequestBody AcceptDonationRequestDto dto) throws MessagingException {
         DonEntity updatedDonation = donServices.acceptDonationRequest(dto);
         DonResponseDto entity = donResponseMapper.map(updatedDonation);
         return ResponseEntity.ok(entity);

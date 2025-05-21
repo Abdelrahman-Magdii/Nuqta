@@ -20,7 +20,7 @@ public class AccountVerificationEmailContext extends AbstractEmailContext {
         }
         setTemplateLocation("mail");
         setSubject("Complete your registration");
-        setFrom("no-reply@Nuqta.com");
+        setFrom("Nuqta.help@gmail.com");
 
     }
 
@@ -32,7 +32,7 @@ public class AccountVerificationEmailContext extends AbstractEmailContext {
     public void buildVerificationUrl(final String baseURL, final String token, final String email) {
         final String url = UriComponentsBuilder.fromHttpUrl(baseURL)
                 .path("api/auth/verify").queryParam("token", token).queryParam("mail", email).toUriString();
-        
+
         put("verificationURL", url);
     }
 }

@@ -17,7 +17,7 @@ public class ForgotPasswordWithOtp extends AbstractEmailContext {
         }
         setTemplateLocation("mailForgotPassword");
         setSubject("Password Reset");
-        setFrom("no-reply@Nuqta.com");
+        setFrom("Nuqta.help@gmail.com");
 
     }
 

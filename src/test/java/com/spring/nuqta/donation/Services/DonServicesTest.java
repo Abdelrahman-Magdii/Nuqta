@@ -10,6 +10,7 @@ import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.request.Entity.ReqEntity;
 import com.spring.nuqta.request.Repo.ReqRepo;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -264,7 +265,7 @@ public class DonServicesTest {
 
     @Test
     @Transactional
-    void testAcceptDonationRequest() {
+    void testAcceptDonationRequest() throws MessagingException {
         when(donRepository.findById(anyLong())).thenReturn(Optional.of(donation));
         when(reqRepository.findById(anyLong())).thenReturn(Optional.of(request));
         when(donRepository.save(any(DonEntity.class))).thenReturn(donation);

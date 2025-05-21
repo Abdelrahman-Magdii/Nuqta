@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Request Accepted</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 20px 0;
+        }
+
+        .content p {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .request-details {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .request-id {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            color: #2c3e50;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+<div class="email-container">
+    <div class="header">
+        <h1>Blood Donation Request Accepted</h1>
+        <img src="cid:nuqtaLogo" style="width: 200px; border-radius: 5px;">
+    </div>
+    <div class="content">
+        <p>Hello <strong th:text="${User}">user</strong>,</p>
+        <p>We're pleased to inform you that your blood donation request has been accepted by a donor and is now being
+            processed.</p>
+
+        <div class="request-details">
+            <p><strong>Request Type:</strong> <span>Accepted Request</span></p>
+            <p><strong>Name:</strong> <span th:text="${User}">Abdo</span></p>
+            <p><strong>Blood Type:</strong> <span th:text="${blood}">A+</span></p>
+            <p><strong>Location:</strong> <span th:text="${location}">Benha</span></p>
+            <p><strong>Gender:</strong> <span th:text="${gender}">Male</span></p>
+            <p><strong>Phone Number:</strong> <span th:text="${phoneNumber}">01024855747</span></p>
+            <p><strong>Expected Completion:</strong> <span th:text="${completionDate}">May 28, 2025</span></p>
+
+        </div>
+
+        <p>If you have any questions or need further assistance, please don't hesitate to contact our support team.</p>
+
+        <p>Thank you for choosing Nuqta!</p>
+    </div>
+    <div class="footer">
+        <p>&copy; 2025 Nuqta. All rights reserved.</p>
+    </div>
+</div>
+
+</body>
+</html>

@@ -4,13 +4,17 @@ import com.spring.nuqta.base.Services.BaseServices;
 import com.spring.nuqta.donation.Dto.AcceptDonationRequestDto;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.donation.Repo.DonRepo;
+import com.spring.nuqta.enums.DonStatus;
 import com.spring.nuqta.exception.GlobalException;
+import com.spring.nuqta.mail.Services.EmailService;
+import com.spring.nuqta.mail.template.SendMailToDoner;
 import com.spring.nuqta.notifications.Dto.NotificationRequest;
 import com.spring.nuqta.notifications.Services.NotificationService;
 import com.spring.nuqta.organization.Entity.OrgEntity;
 import com.spring.nuqta.request.Entity.ReqEntity;
 import com.spring.nuqta.request.Repo.ReqRepo;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +36,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
     private final DonRepo donRepository;
     private final ReqRepo reqRepository;
+    private final EmailService emailService;
     private final NotificationService notificationService;
     private final MessageSource ms;
 
@@ -86,7 +91,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
                     @CacheEvict(value = "users", allEntries = true),
                     @CacheEvict(value = "requests", allEntries = true)
             })
-    public DonEntity acceptDonationRequest(AcceptDonationRequestDto dto) {
+    public DonEntity acceptDonationRequest(AcceptDonationRequestDto dto) throws MessagingException {
         DonEntity donation = donRepository.findById(dto.getDonationId())
                 .orElseThrow(() -> new GlobalException("error.don.notFound", HttpStatus.NOT_FOUND));
 
@@ -99,6 +104,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
         donation.getAcceptedRequests().add(request);
         request.getDonations().add(donation);
+        donation.setStatus(DonStatus.INVALID);
 
         // Save both entities to persist the relationship
         reqRepository.save(request);
@@ -106,6 +112,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
 //        sendNotificationIfApplicable(donation, request);
 
+        this.sendMail(request);
         return entity;
     }
 
@@ -130,6 +137,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         // Remove the relationship
         donation.getAcceptedRequests().remove(request);
         request.getDonations().remove(donation);
+        donation.setStatus(DonStatus.VALID);
 
         // Save both entities to persist the relationship removal
         reqRepository.save(request);
@@ -168,6 +176,15 @@ public class DonServices extends BaseServices<DonEntity, Long> {
                 .ifPresent(token -> {
                     notificationService.sendNotification(new NotificationRequest(token, "notification.requestAcceptedTitle", message));
                 });
+    }
+
+    void sendMail(ReqEntity request) throws MessagingException {
+
+        SendMailToDoner context = new SendMailToDoner();
+        context.init(request.getUser());
+
+        emailService.sendMail(context);
+
     }
 
     public String messageParam(Long id, String message) {
