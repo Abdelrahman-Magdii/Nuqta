@@ -12,7 +12,6 @@ import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -67,9 +66,9 @@ public class DonEntity extends BaseEntity<Long> {
 
     public boolean isExpired() {
         LocalDate currentDate = LocalDate.now();
-//        LocalDate expiryDate = this.getDonationDate().plusMonths(3);
-        LocalDateTime expiryDateTime = this.getDonationDate().atStartOfDay().plusMinutes(1);
-        LocalDate expiryDate = expiryDateTime.toLocalDate();
+        LocalDate expiryDate = this.getDonationDate().plusMonths(3);
+//        LocalDateTime expiryDateTime = this.getDonationDate().atStartOfDay().plusMinutes(1);
+//        LocalDate expiryDate = expiryDateTime.toLocalDate();
 
         return !currentDate.isBefore(expiryDate);
     }
