@@ -3,6 +3,7 @@ package com.spring.nuqta.authentication.Controller;
 import com.spring.nuqta.authentication.Dto.AuthOrgDto;
 import com.spring.nuqta.authentication.Dto.AuthUserDto;
 import com.spring.nuqta.authentication.Services.AuthService;
+import com.spring.nuqta.donation.Services.DonServices;
 import com.spring.nuqta.forgotPassword.General.GeneralReset;
 import com.spring.nuqta.organization.Dto.AddOrgDto;
 import com.spring.nuqta.organization.Entity.OrgEntity;
@@ -39,6 +40,7 @@ public class AuthController {
     private final GeneralReset generalReset;
     private final GeneralVerification generalVerification;
     private final UserServices userServices;
+    private final DonServices donationService;
     private final UserInsertMapper userInsertMapper;
     private final OrgServices orgServices;
     private final AddOrgMapper addOrgMapper;
@@ -133,5 +135,28 @@ public class AuthController {
 
     private String getMS(String messageKey) {
         return ms.getMessage(messageKey, null, LocaleContextHolder.getLocale());
+    }
+
+
+    @GetMapping("/accept")
+    public ResponseEntity<?> verifyAccept(
+            @RequestParam("accept") boolean accept,
+            @RequestParam(value = "donationId", required = false) Long donationId,
+            HttpServletRequest servletRequest) {
+
+        if (accept && donationId != null) {
+            donationService.markAsAccepted(donationId);
+        }
+
+        String redirectPath = accept ? "/verification-success.html" : "/verification-failed.html";
+        String redirectUrl = ServletUriComponentsBuilder.fromRequest(servletRequest)
+                .replacePath(redirectPath)
+                .scheme("https")
+                .build()
+                .toUriString();
+
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(redirectUrl))
+                .build();
     }
 }

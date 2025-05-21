@@ -16,6 +16,7 @@ import com.spring.nuqta.request.Entity.ReqEntity;
 import com.spring.nuqta.request.Repo.ReqRepo;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import jakarta.mail.MessagingException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +26,11 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -107,6 +111,11 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         request.getDonations().add(donation);
         donation.setStatus(DonStatus.INVALID);
 
+        LocalDate currentDate = LocalDate.now();
+        donation.setDonationDate(currentDate);
+        donation.setLastDonation(currentDate);
+
+
         // Save both entities to persist the relationship
         reqRepository.save(request);
         DonEntity entity = donRepository.save(donation);
@@ -140,6 +149,9 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         donation.getAcceptedRequests().remove(request);
         request.getDonations().remove(donation);
         donation.setStatus(DonStatus.VALID);
+        donation.setDonationDate(null);
+        donation.setLastDonation(null);
+
 
         // Save both entities to persist the relationship removal
         reqRepository.save(request);
@@ -147,6 +159,27 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
         if (request.getUser() != null)
             this.sendMailRejected(donation, request);
+    }
+
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "users", allEntries = true),
+            })
+    @Scheduled(cron = "0 0 0 * * ?") // Run at midnight every day
+    public void updateDonationStatuses() {
+        List<DonEntity> donations = donRepository.findByStatus(DonStatus.INVALID);
+        List<DonEntity> expiredDonations = new ArrayList<>();
+
+        for (DonEntity donation : donations) {
+            if (donation.isExpired()) {
+                donation.setStatus(DonStatus.VALID);
+                expiredDonations.add(donation);
+            }
+        }
+
+        if (!expiredDonations.isEmpty()) {
+            donRepository.saveAll(expiredDonations);
+        }
     }
 
     /**
@@ -192,9 +225,19 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
         SendMailToDoner context = new SendMailToDoner();
         context.init(req.getUser());
-        context.buildVerificationUrl(donor);
+        context.buildVerificationUrl(donor, donation.getId());
 
         emailService.sendMail(context);
+
+    }
+
+    @Transactional
+    public void markAsAccepted(Long donationId) {
+        DonEntity donation = donRepository.findById(donationId)
+                .orElseThrow(() -> new EntityNotFoundException("Donation not found with id: " + donationId));
+
+        donation.setConfirmDonate(true);
+        donRepository.save(donation);
 
     }
 

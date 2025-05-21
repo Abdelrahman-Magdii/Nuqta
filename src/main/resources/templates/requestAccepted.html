@@ -34,6 +34,7 @@
 
         .content {
             padding: 20px 0;
+            align-content: center;
         }
 
         .content p {
@@ -66,6 +67,7 @@
             border-radius: 5px;
             font-weight: bold;
             margin: 20px 0;
+            cursor: pointer;
         }
 
         .whatsapp-button {
@@ -87,6 +89,10 @@
             font-size: 14px;
             color: #777;
         }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -98,7 +104,7 @@
     </div>
     <div class="content">
         <p>Hello <strong th:text="${User}">user</strong>,</p>
-        <p>Your blood donation request has been accepted by <strong th:text="${Name}">user</strong> .</p>
+        <p>Your blood donation request has been accepted by <strong th:text="${Name}">Abdo</strong>.</p>
 
         <div class="request-details">
             <p><strong>Request Type:</strong> <span>Accepted Request</span></p>
@@ -106,12 +112,25 @@
             <p><strong>Blood Type:</strong> <span th:text="${blood}">A+</span></p>
             <p><strong>Location:</strong> <span th:text="${location}">Benha</span></p>
             <p><strong>Gender:</strong> <span th:text="${gender}">Male</span></p>
-            <p><strong>Phone Number:</strong> <span th:text="${phoneNumber}">01024855747</span></p>
-            <p><strong>Contact:</strong> <a class="whatsapp-button" href="https://wa.me/01024855747"
-                                            target="_blank" th:href="'https://wa.me/' + ${phoneNumber}">Contact via
-                WhatsApp</a>
+
+            <!-- Hidden phone number that will be revealed after confirmation -->
+            <p class="hidden" id="phoneNumberSection">
+                <strong>Phone Number:</strong> <span th:text="${phoneNumber}">01024855747</span>
+            </p>
+
+            <p class="hidden" id="contactSection">
+                <strong>Contact:</strong>
+                <a class="whatsapp-button" href="https://wa.me/201024855747"
+                   target="_blank" th:href="'https://wa.me/2' + ${phoneNumber}"
+                   th:text="${phoneNumber}">01024855747</a>
             </p>
         </div>
+
+        <p>Press the confirmation button below to view contact information and complete the donation process.</p>
+
+        <a class="button" id="confirmButton" onclick="showContactInfo()" th:href="${verificationURL}">
+            Confirm Acceptance
+        </a>
 
         <p>If you have any questions or need further assistance, please don't hesitate to contact our support team.</p>
 
@@ -121,6 +140,20 @@
         <p>&copy; 2025 Nuqta. All rights reserved.</p>
     </div>
 </div>
+
+<script>
+    function showContactInfo() {
+        // Show the hidden phone number and contact sections
+        document.getElementById('phoneNumberSection').classList.remove('hidden');
+        document.getElementById('contactSection').classList.remove('hidden');
+
+        // Hide the confirmation button
+        document.getElementById('confirmButton').classList.add('hidden');
+
+        // Show the verification link
+        document.getElementById('verificationLink').classList.remove('hidden');
+    }
+</script>
 
 </body>
 </html>

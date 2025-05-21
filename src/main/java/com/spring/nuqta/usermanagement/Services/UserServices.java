@@ -3,6 +3,7 @@ package com.spring.nuqta.usermanagement.Services;
 import com.spring.nuqta.base.Services.BaseServices;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.donation.Repo.DonRepo;
+import com.spring.nuqta.enums.DonStatus;
 import com.spring.nuqta.enums.Scope;
 import com.spring.nuqta.exception.GlobalException;
 import com.spring.nuqta.organization.Entity.OrgEntity;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Slf4j
@@ -252,6 +254,16 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         userCreation.setCreatedUser(entity.getUsername());
         userCreation.setFcmToken(entity.getFcmToken());
 
+        if (userCreation.getDonation() != null
+                && !userCreation.getDonation().isExpired()
+                && userCreation.getDonation().getWeight() != null
+                && userCreation.getDonation().getWeight() > 50.0
+                && userCreation.getBirthDate() != null
+                && ChronoUnit.YEARS.between(userCreation.getBirthDate(), LocalDate.now()) > 18) {
+            userCreation.getDonation().setStatus(DonStatus.VALID);
+        } else {
+            userCreation.getDonation().setStatus(DonStatus.INVALID);
+        }
         userCreation = userRepository.save(userCreation);
 
         generalVerification.sendOtpEmail(userCreation);

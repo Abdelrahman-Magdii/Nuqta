@@ -12,6 +12,7 @@ import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,19 +29,22 @@ public class DonEntity extends BaseEntity<Long> {
     private String bloodType;
 
     @Column(name = "donation_date")
-    private LocalDate donationDate;
+    private LocalDate donationDate = LocalDate.now();
 
     @Column(name = "last_quiz_date")
     private LocalDate lastQuizDate;
 
     @Column(name = "last_donation")
-    private LocalDate lastDonation;
+    private LocalDate lastDonation = LocalDate.now();
 
     @Column(name = "amount")
     private Double amount;
 
     @Column(name = "payment_offered")
     private Boolean paymentOffered;
+
+    @Column(name = "confirm_Donate")
+    private Boolean confirmDonate = false;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
@@ -61,4 +65,12 @@ public class DonEntity extends BaseEntity<Long> {
     @ManyToMany(mappedBy = "donations", fetch = FetchType.EAGER)
     private Set<ReqEntity> acceptedRequests = new HashSet<>();
 
+    public boolean isExpired() {
+        LocalDate currentDate = LocalDate.now();
+//        LocalDate expiryDate = this.getDonationDate().plusMonths(3);
+        LocalDateTime expiryDateTime = this.getDonationDate().atStartOfDay().plusMinutes(1);
+        LocalDate expiryDate = expiryDateTime.toLocalDate();
+
+        return !currentDate.isBefore(expiryDate);
+    }
 }

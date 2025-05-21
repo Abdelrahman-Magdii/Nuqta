@@ -6,6 +6,7 @@ import com.spring.nuqta.enums.DonStatus;
 import com.spring.nuqta.request.Dto.ReqDto;
 import com.spring.nuqta.usermanagement.Dto.UserDto;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -29,6 +30,8 @@ public class DonDto extends BaseDto<Long> {
     @JsonProperty("last_quiz_date")
     private LocalDate lastQuizDate;
 
+    @Column(name = "confirm_Donate")
+    private Boolean confirmDonate;
 
     @Schema(description = "The date of the last donation made by the donor.", example = "2024-10-01")
     @JsonProperty("last_donation")
