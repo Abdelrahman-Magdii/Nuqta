@@ -86,17 +86,15 @@
     </div>
     <div class="content">
         <p>Hello <strong th:text="${User}">user</strong>,</p>
-        <p>We're pleased to inform you that your blood donation request has been accepted by a donor and is now being
-            processed.</p>
+        <p>Your blood donation request has been accepted by <strong th:text="${Name}">user</strong> .</p>
 
         <div class="request-details">
             <p><strong>Request Type:</strong> <span>Accepted Request</span></p>
-            <p><strong>Name:</strong> <span th:text="${User}">Abdo</span></p>
+            <p><strong>Name:</strong> <span th:text="${Name}">Abdo</span></p>
             <p><strong>Blood Type:</strong> <span th:text="${blood}">A+</span></p>
             <p><strong>Location:</strong> <span th:text="${location}">Benha</span></p>
             <p><strong>Gender:</strong> <span th:text="${gender}">Male</span></p>
             <p><strong>Phone Number:</strong> <span th:text="${phoneNumber}">01024855747</span></p>
-            <p><strong>Expected Completion:</strong> <span th:text="${completionDate}">May 28, 2025</span></p>
 
         </div>
 
