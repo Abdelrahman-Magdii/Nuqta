@@ -55,7 +55,7 @@ public class DonServicesTest {
 
     @Mock
     private EmailService emailService;
-    
+
     private DonEntity donation;
     private ReqEntity request;
     private AcceptDonationRequestDto dto;
@@ -157,7 +157,7 @@ public class DonServicesTest {
 
     @Test
     @Transactional
-    void testDeleteAcceptedDonationRequest() {
+    void testDeleteAcceptedDonationRequest() throws MessagingException {
         donation.getAcceptedRequests().add(request);
         request.getDonations().add(donation);
 

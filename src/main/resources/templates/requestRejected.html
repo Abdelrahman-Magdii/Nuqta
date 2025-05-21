@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Request Accepted</title>
+    <title>Request Rejected</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,10 +43,11 @@
         }
 
         .request-details {
-            background-color: #f5f5f5;
+            background-color: #f9f0f0;
             padding: 15px;
             border-radius: 5px;
             margin: 20px 0;
+            border-left: 4px solid #e74c3c;
         }
 
         .request-id {
@@ -68,15 +69,14 @@
             margin: 20px 0;
         }
 
-        .whatsapp-button {
+        .new-request-button {
             display: inline-block;
-            background-color: #25D366;
+            background-color: #3498db;
             color: white;
-            padding: 10px 15px;
+            padding: 10px 20px;
             text-decoration: none;
             border-radius: 5px;
             font-weight: bold;
-            font-size: 12px;
             margin: 10px 0;
         }
 
@@ -93,25 +93,20 @@
 
 <div class="email-container">
     <div class="header">
-        <h1>Blood Donation Request Accepted</h1>
+        <h1>Blood Donation Request Rejected</h1>
         <img src="cid:nuqtaLogo" style="width: 200px; border-radius: 5px;">
     </div>
     <div class="content">
         <p>Hello <strong th:text="${User}">user</strong>,</p>
-        <p>Your blood donation request has been accepted by <strong th:text="${Name}">user</strong> .</p>
+        <p>Unfortunately, your blood donation request has been rejected or deleted by <strong
+                th:text="${Name}">user</strong>.</p>
 
         <div class="request-details">
-            <p><strong>Request Type:</strong> <span>Accepted Request</span></p>
-            <p><strong>Name:</strong> <span th:text="${Name}">Abdo</span></p>
-            <p><strong>Blood Type:</strong> <span th:text="${blood}">A+</span></p>
-            <p><strong>Location:</strong> <span th:text="${location}">Benha</span></p>
-            <p><strong>Gender:</strong> <span th:text="${gender}">Male</span></p>
-            <p><strong>Phone Number:</strong> <span th:text="${phoneNumber}">01024855747</span></p>
-            <p><strong>Contact:</strong> <a class="whatsapp-button" href="https://wa.me/01024855747"
-                                            target="_blank" th:href="'https://wa.me/' + ${phoneNumber}">Contact via
-                WhatsApp</a>
-            </p>
+            <p><strong>Request Type:</strong> <span>Rejected Request</span></p>
         </div>
+
+        <p>Don't worry! You can still find other donors by creating a new request.</p>
+        
 
         <p>If you have any questions or need further assistance, please don't hesitate to contact our support team.</p>
 

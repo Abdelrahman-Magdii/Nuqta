@@ -8,6 +8,7 @@ import com.spring.nuqta.enums.DonStatus;
 import com.spring.nuqta.exception.GlobalException;
 import com.spring.nuqta.mail.Services.EmailService;
 import com.spring.nuqta.mail.template.SendMailToDoner;
+import com.spring.nuqta.mail.template.SendMailToDonerRejected;
 import com.spring.nuqta.notifications.Dto.NotificationRequest;
 import com.spring.nuqta.notifications.Services.NotificationService;
 import com.spring.nuqta.organization.Entity.OrgEntity;
@@ -112,8 +113,8 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
 //        sendNotificationIfApplicable(donation, request);
 
-
-        this.sendMail(donation, request);
+        if (request.getUser() != null)
+            this.sendMail(donation, request);
         return entity;
     }
 
@@ -124,7 +125,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
                     @CacheEvict(value = "users", allEntries = true),
                     @CacheEvict(value = "requests", allEntries = true)
             })
-    public void deleteAcceptedDonationRequest(AcceptDonationRequestDto dto) {
+    public void deleteAcceptedDonationRequest(AcceptDonationRequestDto dto) throws MessagingException {
         DonEntity donation = donRepository.findById(dto.getDonationId())
                 .orElseThrow(() -> new GlobalException("error.don.notFound", HttpStatus.NOT_FOUND));
 
@@ -143,6 +144,9 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         // Save both entities to persist the relationship removal
         reqRepository.save(request);
         donRepository.save(donation);
+
+        if (request.getUser() != null)
+            this.sendMailRejected(donation, request);
     }
 
     /**
@@ -187,6 +191,21 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         }
 
         SendMailToDoner context = new SendMailToDoner();
+        context.init(req.getUser());
+        context.buildVerificationUrl(donor);
+
+        emailService.sendMail(context);
+
+    }
+
+    void sendMailRejected(DonEntity donation, ReqEntity req) throws MessagingException {
+
+        UserEntity donor = donation.getUser();
+        if (donor == null || donor.getFcmToken() == null) {
+            return;
+        }
+
+        SendMailToDonerRejected context = new SendMailToDonerRejected();
         context.init(req.getUser());
         context.buildVerificationUrl(donor);
 
