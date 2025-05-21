@@ -28,7 +28,7 @@ class AccountVerificationEmailWithOtpTest {
         assertEquals("test@example.com", emailContext.getTo());
         assertEquals("mailOtp", emailContext.getTemplateLocation());
         assertEquals("Complete your registration", emailContext.getSubject());
-        assertEquals("no-reply@Nuqta.com", emailContext.getFrom());
+        assertEquals("Nuqta.help@gmail.com", emailContext.getFrom());
     }
 
     @Test
@@ -43,7 +43,7 @@ class AccountVerificationEmailWithOtpTest {
         assertEquals("org@example.com", emailContext.getTo());
         assertEquals("mailOtp", emailContext.getTemplateLocation());
         assertEquals("Complete your registration", emailContext.getSubject());
-        assertEquals("no-reply@Nuqta.com", emailContext.getFrom());
+        assertEquals("Nuqta.help@gmail.com", emailContext.getFrom());
     }
 
     @Test

@@ -28,7 +28,7 @@ class AccountVerificationEmailContextTest {
         assertEquals("test@example.com", emailContext.getTo());
         assertEquals("mail", emailContext.getTemplateLocation());
         assertEquals("Complete your registration", emailContext.getSubject());
-        assertEquals("no-reply@Nuqta.com", emailContext.getFrom());
+        assertEquals("Nuqta.help@gmail.com", emailContext.getFrom());
     }
 
     @Test

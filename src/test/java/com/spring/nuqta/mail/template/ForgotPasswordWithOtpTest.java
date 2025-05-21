@@ -36,7 +36,7 @@ public class ForgotPasswordWithOtpTest {
         assertEquals("testUser@example.com", forgotPasswordWithOtp.getTo());
         assertEquals("mailForgotPassword", forgotPasswordWithOtp.getTemplateLocation());
         assertEquals("Password Reset", forgotPasswordWithOtp.getSubject());
-        assertEquals("no-reply@Nuqta.com", forgotPasswordWithOtp.getFrom());
+        assertEquals("Nuqta.help@gmail.com", forgotPasswordWithOtp.getFrom());
     }
 
     @Test
@@ -54,7 +54,7 @@ public class ForgotPasswordWithOtpTest {
         assertEquals("testOrg@example.com", forgotPasswordWithOtp.getTo());
         assertEquals("mailForgotPassword", forgotPasswordWithOtp.getTemplateLocation());
         assertEquals("Password Reset", forgotPasswordWithOtp.getSubject());
-        assertEquals("no-reply@Nuqta.com", forgotPasswordWithOtp.getFrom());
+        assertEquals("Nuqta.help@gmail.com", forgotPasswordWithOtp.getFrom());
     }
 
     @Test

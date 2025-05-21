@@ -4,6 +4,7 @@ import com.spring.nuqta.donation.Dto.AcceptDonationRequestDto;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.donation.Repo.DonRepo;
 import com.spring.nuqta.exception.GlobalException;
+import com.spring.nuqta.mail.Services.EmailService;
 import com.spring.nuqta.notifications.Dto.NotificationRequest;
 import com.spring.nuqta.notifications.Services.NotificationService;
 import com.spring.nuqta.organization.Entity.OrgEntity;
@@ -52,6 +53,9 @@ public class DonServicesTest {
     @InjectMocks
     private DonServices donServices;
 
+    @Mock
+    private EmailService emailService;
+    
     private DonEntity donation;
     private ReqEntity request;
     private AcceptDonationRequestDto dto;
