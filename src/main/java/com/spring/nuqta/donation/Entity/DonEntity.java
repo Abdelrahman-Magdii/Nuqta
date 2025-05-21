@@ -64,12 +64,4 @@ public class DonEntity extends BaseEntity<Long> {
     @ManyToMany(mappedBy = "donations", fetch = FetchType.EAGER)
     private Set<ReqEntity> acceptedRequests = new HashSet<>();
 
-    public boolean isExpired() {
-        LocalDate currentDate = LocalDate.now();
-        LocalDate expiryDate = this.getDonationDate().plusMonths(3);
-//        LocalDateTime expiryDateTime = this.getDonationDate().atStartOfDay().plusMinutes(1);
-//        LocalDate expiryDate = expiryDateTime.toLocalDate();
-
-        return !currentDate.isBefore(expiryDate);
-    }
 }

@@ -138,25 +138,25 @@ public class AuthController {
     }
 
 
-    @GetMapping("/accept")
-    public ResponseEntity<?> verifyAccept(
-            @RequestParam("accept") boolean accept,
-            @RequestParam(value = "donationId", required = false) Long donationId,
-            HttpServletRequest servletRequest) {
-
-        if (accept && donationId != null) {
-            donationService.markAsAccepted(donationId);
-        }
-
-        String redirectPath = accept ? "/verification-success.html" : "/verification-failed.html";
-        String redirectUrl = ServletUriComponentsBuilder.fromRequest(servletRequest)
-                .replacePath(redirectPath)
-                .scheme("https")
-                .build()
-                .toUriString();
-
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create(redirectUrl))
-                .build();
-    }
+//    @GetMapping("/accept")
+//    public ResponseEntity<?> verifyAccept(
+//            @RequestParam("accept") boolean accept,
+//            @RequestParam(value = "donationId", required = false) Long donationId,
+//            HttpServletRequest servletRequest) {
+//
+//        if (accept && donationId != null) {
+//            donationService.markAsAccepted(donationId);
+//        }
+//
+//        String redirectPath = accept ? "/verification-success.html" : "/verification-failed.html";
+//        String redirectUrl = ServletUriComponentsBuilder.fromRequest(servletRequest)
+//                .replacePath(redirectPath)
+//                .scheme("https")
+//                .build()
+//                .toUriString();
+//
+//        return ResponseEntity.status(HttpStatus.FOUND)
+//                .location(URI.create(redirectUrl))
+//                .build();
+//    }
 }

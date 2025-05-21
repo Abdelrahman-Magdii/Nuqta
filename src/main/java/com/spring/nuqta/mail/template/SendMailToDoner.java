@@ -2,7 +2,6 @@ package com.spring.nuqta.mail.template;
 
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.util.UriComponentsBuilder;
 
 public class SendMailToDoner extends AbstractEmailContext {
 
@@ -30,12 +29,12 @@ public class SendMailToDoner extends AbstractEmailContext {
         put("phoneNumber", user.getPhoneNumber());
         put("completionDate", user.getModifiedDate());
 
-        final String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
-                .path("api/auth/accept")
-                .queryParam("accept", true)
-                .queryParam("donationId", donationId)
-                .toUriString();
-
-        put("verificationURL", url);
+//        final String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+//                .path("api/auth/accept")
+//                .queryParam("accept", true)
+//                .queryParam("donationId", donationId)
+//                .toUriString();
+//
+//        put("verificationURL", url);
     }
 }

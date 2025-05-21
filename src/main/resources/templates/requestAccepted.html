@@ -114,23 +114,23 @@
             <p><strong>Gender:</strong> <span th:text="${gender}">Male</span></p>
 
             <!-- Hidden phone number that will be revealed after confirmation -->
-            <p class="hidden" id="phoneNumberSection">
+            <p class="" id="phoneNumberSection">
                 <strong>Phone Number:</strong> <span th:text="${phoneNumber}">01024855747</span>
             </p>
 
-            <p class="hidden" id="contactSection">
-                <strong>Contact:</strong>
-                <a class="whatsapp-button" href="https://wa.me/201024855747"
-                   target="_blank" th:href="'https://wa.me/2' + ${phoneNumber}"
-                   th:text="${phoneNumber}">01024855747</a>
-            </p>
+            <!--            <p class="hidden" id="contactSection">-->
+            <!--                <strong>Contact:</strong>-->
+            <!--                <a class="whatsapp-button" href="https://wa.me/201024855747"-->
+            <!--                   target="_blank" th:href="'https://wa.me/2' + ${phoneNumber}"-->
+            <!--                   th:text="${phoneNumber}">01024855747</a>-->
+            <!--            </p>-->
         </div>
 
-        <p>Press the confirmation button below to view contact information and complete the donation process.</p>
+        <!--        <p>Press the confirmation button below to view contact information and complete the donation process.</p>-->
 
-        <a class="button" id="confirmButton" onclick="showContactInfo()" th:href="${verificationURL}">
-            Confirm Acceptance
-        </a>
+        <!--        <a class="button" id="confirmButton" onclick="showContactInfo()" th:href="${verificationURL}">-->
+        <!--            Confirm Acceptance-->
+        <!--        </a>-->
 
         <p>If you have any questions or need further assistance, please don't hesitate to contact our support team.</p>
 
@@ -141,19 +141,19 @@
     </div>
 </div>
 
-<script>
-    function showContactInfo() {
-        // Show the hidden phone number and contact sections
-        document.getElementById('phoneNumberSection').classList.remove('hidden');
-        document.getElementById('contactSection').classList.remove('hidden');
+<!--<script>-->
+<!--    function showContactInfo() {-->
+<!--        // Show the hidden phone number and contact sections-->
+<!--        document.getElementById('phoneNumberSection').classList.remove('hidden');-->
+<!--        document.getElementById('contactSection').classList.remove('hidden');-->
 
-        // Hide the confirmation button
-        document.getElementById('confirmButton').classList.add('hidden');
+<!--        // Hide the confirmation button-->
+<!--        document.getElementById('confirmButton').classList.add('hidden');-->
 
-        // Show the verification link
-        document.getElementById('verificationLink').classList.remove('hidden');
-    }
-</script>
+<!--        // Show the verification link-->
+<!--        document.getElementById('verificationLink').classList.remove('hidden');-->
+<!--    }-->
+<!--</script>-->
 
 </body>
 </html>
