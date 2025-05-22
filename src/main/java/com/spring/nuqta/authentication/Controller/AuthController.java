@@ -151,7 +151,8 @@ public class AuthController {
             @RequestParam("bloodType") String bloodType,
             @RequestParam(value = "encoded", defaultValue = "false") boolean isEncoded,
             HttpServletRequest request) {
-
+//https://nuqta-02f0fc9e8c38.herokuapp.com/api/auth/accept?accept=true
+// &donationId=2&name=bW9oYW1lZCBoYWJpYiA%3D&phoneNumber=MDEyMTE1NjU1Mjg%3D&bloodType=QS0%3D&encoded=true
         try {
             // Decode parameters if they were encoded
             String decodedName = name;

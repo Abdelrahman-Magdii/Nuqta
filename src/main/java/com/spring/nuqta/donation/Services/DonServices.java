@@ -221,6 +221,12 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
 
     @Transactional
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "donation", allEntries = true),
+                    @CacheEvict(value = "users", allEntries = true),
+                    @CacheEvict(value = "requests", allEntries = true)
+            })
     public void markAsAccepted(Long donationId) {
         DonEntity donation = donRepository.findById(donationId)
                 .orElseThrow(() -> new GlobalException("error.donation.notFound", HttpStatus.NOT_FOUND));
