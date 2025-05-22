@@ -61,7 +61,18 @@ public class DonEntity extends BaseEntity<Long> {
     @OneToOne(mappedBy = "donation", cascade = CascadeType.ALL)
     private UserEntity user;
 
-    @ManyToMany(mappedBy = "donations", fetch = FetchType.EAGER)
+    @ManyToMany(mappedBy = "donations", fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
     private Set<ReqEntity> acceptedRequests = new HashSet<>();
 
+    public boolean isExpired() {
+        LocalDate currentDate = LocalDate.now();
+        LocalDate expiryDate = this.getDonationDate().plusMonths(3);
+
+        return !currentDate.isBefore(expiryDate);
+    }
+
+    public void addAcceptedRequest(ReqEntity request) {
+        this.acceptedRequests.add(request);
+        request.getDonations().add(this);
+    }
 }

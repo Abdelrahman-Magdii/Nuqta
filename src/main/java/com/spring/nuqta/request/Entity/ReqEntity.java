@@ -70,4 +70,8 @@ public class ReqEntity extends BaseEntity<Long> {
     )
     private Set<DonEntity> donations = new HashSet<>();
 
+    public void addDonation(DonEntity donation) {
+        this.donations.add(donation);
+        donation.getAcceptedRequests().add(this);
+    }
 }

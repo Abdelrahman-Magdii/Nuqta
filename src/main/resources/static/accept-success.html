@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Donation Accepted</title>
+    <link href="./styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="content-wrapper">
+    <div class="success-message">
+        <h2>Donation from <strong id="donorNameTitle" th:text="${param.name[0]}">Donor Name</strong> Accepted!</h2>
+        <p>Thank you for accepting this donation request.</p>
+    </div>
+
+    <button class="contact-button" id="showContactBtn">
+        View Contact Information
+    </button>
+
+    <div class="contact-info" id="contactInfo">
+        <div class="info-item">
+            <strong>Name:</strong> <span id="donorName" th:text="${param.name[0]}">Donor Name</span>
+        </div>
+        <div class="info-item">
+            <strong>Phone:</strong> <span id="phoneNumber" th:text="${param.phoneNumber[0]}">Phone Number</span>
+        </div>
+        <div class="info-item">
+            <strong>Blood Type:</strong> <span id="bloodType" th:text="${param.bloodType[0]}">Blood Type</span>
+        </div>
+
+        <a class="whatsapp-btn" id="whatsappLink"
+           target="_blank"
+           th:href="'https://wa.me/2' + ${param.phoneNumber[0]}">
+            <i class="fab fa-whatsapp"></i> Contact via WhatsApp
+        </a>
+    </div>
+</div>
+
+<script src="./script.js"></script>
+</body>
+</html>

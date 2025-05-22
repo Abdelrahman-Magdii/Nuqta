@@ -25,8 +25,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -138,25 +142,59 @@ public class AuthController {
     }
 
 
-//    @GetMapping("/accept")
-//    public ResponseEntity<?> verifyAccept(
-//            @RequestParam("accept") boolean accept,
-//            @RequestParam(value = "donationId", required = false) Long donationId,
-//            HttpServletRequest servletRequest) {
-//
-//        if (accept && donationId != null) {
-//            donationService.markAsAccepted(donationId);
-//        }
-//
-//        String redirectPath = accept ? "/verification-success.html" : "/verification-failed.html";
-//        String redirectUrl = ServletUriComponentsBuilder.fromRequest(servletRequest)
-//                .replacePath(redirectPath)
-//                .scheme("https")
-//                .build()
-//                .toUriString();
-//
-//        return ResponseEntity.status(HttpStatus.FOUND)
-//                .location(URI.create(redirectUrl))
-//                .build();
-//    }
+    @GetMapping("/accept")
+    public ResponseEntity<?> verifyAccept(
+            @RequestParam("accept") boolean accept,
+            @RequestParam("donationId") Long donationId,
+            @RequestParam("name") String name,
+            @RequestParam("phoneNumber") String phoneNumber,
+            @RequestParam("bloodType") String bloodType,
+            @RequestParam(value = "encoded", defaultValue = "false") boolean isEncoded,
+            HttpServletRequest request) {
+
+        try {
+            // Decode parameters if they were encoded
+            String decodedName = name;
+            String decodedPhone = phoneNumber;
+            String decodedBloodType = bloodType;
+
+            if (isEncoded) {
+                decodedName = new String(Base64.getUrlDecoder().decode(name), StandardCharsets.UTF_8);
+                decodedPhone = new String(Base64.getUrlDecoder().decode(phoneNumber), StandardCharsets.UTF_8);
+                decodedBloodType = new String(Base64.getUrlDecoder().decode(bloodType), StandardCharsets.UTF_8);
+            }
+
+            if (accept) {
+                donationService.markAsAccepted(donationId);
+            }
+
+            String redirectPath = accept ? "/accept-success.html" : "/accept-failed.html";
+
+            // Re-encode for URL parameters to ensure safe transmission
+            String encodedNameForUrl = URLEncoder.encode(decodedName, StandardCharsets.UTF_8);
+            String encodedPhoneForUrl = URLEncoder.encode(decodedPhone, StandardCharsets.UTF_8);
+            String encodedBloodTypeForUrl = URLEncoder.encode(decodedBloodType, StandardCharsets.UTF_8);
+
+            String redirectUrl = UriComponentsBuilder.fromPath(redirectPath)
+                    .scheme("https")
+                    .host(request.getServerName())
+                    .port(request.getServerPort())
+                    .queryParam("donationId", donationId)
+                    .queryParam("name", encodedNameForUrl)
+                    .queryParam("phoneNumber", encodedPhoneForUrl)
+                    .queryParam("bloodType", encodedBloodTypeForUrl)
+                    .build(true)
+                    .toUriString();
+
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(redirectUrl))
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Error processing accept request: ", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Invalid request parameters"));
+        }
+    }
+
 }

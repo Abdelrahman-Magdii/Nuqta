@@ -18,9 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Tag(name = "Donation", description = "APIs for managing donations")
@@ -68,26 +66,16 @@ public class DonController {
     }
 
     @PostMapping("/acceptRequest")
-    public ResponseEntity<?> acceptDonationRequest(@RequestBody AcceptDonationRequestDto dto) throws MessagingException {
-        DonEntity updatedDonation = donServices.acceptDonationRequest(dto);
-        DonResponseDto entity = donResponseMapper.map(updatedDonation);
-        return ResponseEntity.ok(entity);
+    public void acceptDonationRequest(@RequestBody AcceptDonationRequestDto dto) throws MessagingException {
+        donServices.acceptDonationRequest(dto);
+        throw new GlobalException("donation.request.accepted.email.sent", HttpStatus.OK);
+
     }
 
     @DeleteMapping("/deleteRequest")
-    public ResponseEntity<Map<String, Object>> deleteAcceptedDonationRequest(@RequestBody AcceptDonationRequestDto dto) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            donServices.deleteAcceptedDonationRequest(dto);
-            response.put("message", getMS("success.donation.requestDeleted"));
-            return ResponseEntity.ok(response);
-        } catch (GlobalException e) {
-            response.put("message", getMS("error.globalException"));
-            return ResponseEntity.status(e.getStatus()).body(response);
-        } catch (Exception e) {
-            response.put("message", getMS("error.unknown"));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+    public void deleteAcceptedDonationRequest(@RequestBody AcceptDonationRequestDto dto) throws MessagingException {
+        donServices.deleteAcceptedDonationRequest(dto);
+        throw new GlobalException("success.donation.requestDeleted", HttpStatus.OK);
     }
 
     private String getMS(String messageKey) {
