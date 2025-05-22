@@ -120,7 +120,6 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         request.addDonation(donation);
 
         // Update donation status and dates
-        donation.setStatus(DonStatus.INVALID);
         LocalDate currentDate = LocalDate.now();
         donation.setDonationDate(currentDate);
         donation.setLastDonation(currentDate);
@@ -227,6 +226,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
                 .orElseThrow(() -> new GlobalException("error.donation.notFound", HttpStatus.NOT_FOUND));
 
         donation.setConfirmDonate(true);
+        donation.setStatus(DonStatus.INVALID);
         donRepository.save(donation);
 
     }
