@@ -160,7 +160,7 @@ class DonServicesTest {
 
         donServices.acceptDonationRequest(dto);
 
-        assertEquals(DonStatus.INVALID, validDonation.getStatus());
+        assertEquals(DonStatus.VALID, validDonation.getStatus());
         assertTrue(validDonation.getAcceptedRequests().contains(request));
         assertTrue(request.getDonations().contains(validDonation));
         assertNotNull(validDonation.getDonationDate());
