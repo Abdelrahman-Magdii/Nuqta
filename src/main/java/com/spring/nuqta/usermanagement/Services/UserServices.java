@@ -239,6 +239,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         }
 
         UserEntity userCreation = new UserEntity();
+        entity.getDonation().setConfirmDonate(false);
 
         userCreation.setUsername(entity.getUsername());
         userCreation.setEmail(entity.getEmail());
