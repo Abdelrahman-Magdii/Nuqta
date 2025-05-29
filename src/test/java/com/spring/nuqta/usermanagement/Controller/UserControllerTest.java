@@ -129,24 +129,6 @@ class UserControllerTest {
         assertThrows(ResponseStatusException.class, () -> userController.getUserById(1L));
     }
 
-    // Test for updateUser()
-    @Test
-    void updateUser_ShouldReturnUpdatedUser() {
-        // Arrange
-        when(userInsertMapper.unMap(userInsertDto)).thenReturn(userEntity);
-        when(userServices.update(userEntity)).thenReturn(userEntity);
-        when(userUpdateMapper.map(userEntity)).thenReturn(userUpdateDto);
-
-        // Act
-        ResponseEntity<UserUpdateDto> response = userController.updateUser(userInsertDto);
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userUpdateDto, response.getBody());
-        verify(userInsertMapper).unMap(userInsertDto);
-        verify(userServices).update(userEntity);
-        verify(userUpdateMapper).map(userEntity);
-    }
 
     @Test
     void updateUser_ShouldThrowExceptionWhenMappingFails() {

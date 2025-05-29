@@ -2,11 +2,9 @@ package com.spring.nuqta.usermanagement.Controller;
 
 import com.spring.nuqta.usermanagement.Dto.UserDto;
 import com.spring.nuqta.usermanagement.Dto.UserInsertDto;
-import com.spring.nuqta.usermanagement.Dto.UserUpdateDto;
 import com.spring.nuqta.usermanagement.Entity.UserEntity;
 import com.spring.nuqta.usermanagement.Mapper.UserInsertMapper;
 import com.spring.nuqta.usermanagement.Mapper.UserMapper;
-import com.spring.nuqta.usermanagement.Mapper.UserUpdateMapper;
 import com.spring.nuqta.usermanagement.Services.UserServices;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +29,6 @@ public class UserController {
     private final UserServices userServices;
     private final UserMapper userMapper;
     private final UserInsertMapper userInsertMapper;
-    private final UserUpdateMapper userUpdateMapper;
     private final MessageSource ms;
 
     @GetMapping("")
@@ -47,10 +44,10 @@ public class UserController {
     }
 
     @PutMapping("")
-    public ResponseEntity<UserUpdateDto> updateUser(@RequestBody UserInsertDto userDto) {
+    public ResponseEntity<UserDto> updateUser(@RequestBody UserInsertDto userDto) {
         UserEntity entity = userInsertMapper.unMap(userDto);
         entity = userServices.update(entity);
-        UserUpdateDto dto = userUpdateMapper.map(entity);
+        UserDto dto = userMapper.map(entity);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 

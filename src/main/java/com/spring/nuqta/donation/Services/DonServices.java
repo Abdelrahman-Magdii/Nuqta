@@ -144,12 +144,10 @@ public class DonServices extends BaseServices<DonEntity, Long> {
                     @CacheEvict(value = "requests", allEntries = true)
             })
     public void deleteAcceptedDonationRequest(AcceptDonationRequestDto dto) throws MessagingException {
-        // Validate input
         if (dto.getDonationId() == null || dto.getRequestId() == null) {
             throw new GlobalException("error.invalid.input", HttpStatus.BAD_REQUEST);
         }
 
-        // Fetch entities
         DonEntity donation = donRepository.findById(dto.getDonationId())
                 .orElseThrow(() -> new GlobalException("error.don.notFound", HttpStatus.NOT_FOUND));
 
@@ -158,29 +156,24 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
         log.info("Deleting accepted donation request for donation id: {}", donation.getAcceptedRequests());
 
-        // Check relationship
         if (!donation.getAcceptedRequests().contains(request) ||
                 !request.getDonations().contains(donation)) {
             throw new GlobalException("error.request.notLinked", HttpStatus.CONFLICT);
         }
 
-        // Check if donation is confirmed
         if (donation.getConfirmDonate()) {
             throw new GlobalException("error.donation.confirmed", HttpStatus.FORBIDDEN);
         }
 
-        // Remove relationship
         donation.getAcceptedRequests().remove(request);
         request.getDonations().remove(donation);
         donation.setStatus(DonStatus.VALID);
         donation.setDonationDate(null);
         donation.setLastDonation(null);
 
-        // Save changes
         donRepository.save(donation);
         reqRepository.save(request);
 
-        // Send notification
         sendMailToDoner.sendMailRejected(donation, request);
     }
 

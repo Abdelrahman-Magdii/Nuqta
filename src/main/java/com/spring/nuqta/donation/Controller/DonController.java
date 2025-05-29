@@ -42,26 +42,20 @@ public class DonController {
     @GetMapping("/nearest/conservatism")
     public ResponseEntity<?> getNearestDonations(@RequestParam String conservatism) {
 
-        // Fetch nearest donations from the service layer
         List<DonEntity> nearestDonations = donServices.findTopConservatism(conservatism);
 
-        // Map entities to DTOs
         List<DonDto> dtos = donMapper.map(nearestDonations);
 
-        // Return the DTOs with a 200 OK status
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 
     @GetMapping("/nearest/city")
     public ResponseEntity<?> getNearestDonationsCity(@RequestParam String city) {
 
-        // Fetch nearest donations from the service layer
         List<DonEntity> nearestDonations = donServices.findTopCity(city);
 
-        // Map entities to DTOs
         List<DonDto> dtos = donMapper.map(nearestDonations);
 
-        // Return the DTOs with a 200 OK status
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 

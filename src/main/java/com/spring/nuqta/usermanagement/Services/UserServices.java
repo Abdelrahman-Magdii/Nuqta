@@ -137,7 +137,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
     @Caching(
             evict = {
                     @CacheEvict(value = "users", key = "#entity.id"),
-                    @CacheEvict(value = "users", key = "'allUsers'")
+                    @CacheEvict(value = "users", allEntries = true)
             }
     )
     @Transactional
@@ -147,37 +147,42 @@ public class UserServices extends BaseServices<UserEntity, Long> {
             throw new GlobalException("error.user.id.null", HttpStatus.BAD_REQUEST);
         }
 
-        // Find existing user
         UserEntity existingUser = userRepository.findById(entity.getId())
                 .orElseThrow(() -> {
                     String msg = messageParam(entity.getId(), "error.user.notFound.id");
                     return new GlobalException(msg, HttpStatus.NOT_FOUND);
                 });
 
-        // Check username uniqueness
         if (userRepository.existsByUsernameAndIdNot(entity.getUsername(), entity.getId())) {
             throw new GlobalException("error.user.username.already.exist", HttpStatus.CONFLICT);
         }
 
-        // Handle donation entity properly
         if (entity.getDonation() == null) {
             throw new GlobalException("error.user.donation.notFound", HttpStatus.NOT_FOUND);
         }
 
         if (entity.getDonation().getId() == null) {
-            // If new donation, save it first
+            if (entity.getDonation().getConfirmDonate() == null) {
+                entity.getDonation().setConfirmDonate(false);
+            }
             DonEntity savedDonation = donRepo.save(entity.getDonation());
             entity.setDonation(savedDonation);
         } else {
-            // If existing donation, verify it exists
             if (existingUser.getDonation() == null ||
                     !existingUser.getDonation().getId().equals(entity.getDonation().getId())) {
                 String msg = messageParam(entity.getDonation().getId(), "error.user.donation.notFound.id");
                 throw new GlobalException(msg, HttpStatus.NOT_FOUND);
             }
 
-            // Merge donation changes if needed
             DonEntity existingDonation = existingUser.getDonation();
+
+            // Handle confirmDonate: if null, set to false; otherwise use the provided value
+            if (entity.getDonation().getConfirmDonate() != null) {
+                existingDonation.setConfirmDonate(entity.getDonation().getConfirmDonate());
+            } else {
+                existingDonation.setConfirmDonate(false);
+            }
+
             existingDonation.setAmount(entity.getDonation().getAmount() != null ? entity.getDonation().getAmount() : existingDonation.getAmount());
             existingDonation.setBloodType(entity.getDonation().getBloodType() != null ? entity.getDonation().getBloodType() : existingDonation.getBloodType());
             existingDonation.setCity(entity.getDonation().getCity() != null ? entity.getDonation().getCity() : existingDonation.getCity());
@@ -195,7 +200,6 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         existingUser.setDonation(entity.getDonation());
         existingUser.setModifiedDate(LocalDate.now());
         existingUser.setModifiedUser(entity.getUsername());
-
         return userRepository.save(existingUser);
     }
 
