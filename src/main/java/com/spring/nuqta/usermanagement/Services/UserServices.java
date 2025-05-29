@@ -239,12 +239,20 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         }
 
         UserEntity userCreation = new UserEntity();
-        entity.getDonation().setConfirmDonate(false);
+
+        DonEntity donationEntity;
+        if (entity.getDonation() != null) {
+            donationEntity = entity.getDonation();
+            donationEntity.setConfirmDonate(false);
+        } else {
+            donationEntity = new DonEntity();
+            donationEntity.setConfirmDonate(false);
+        }
 
         userCreation.setUsername(entity.getUsername());
         userCreation.setEmail(entity.getEmail());
         userCreation.setPassword(passwordEncoder.encode(entity.getPassword()));
-        userCreation.setDonation(entity.getDonation());
+        userCreation.setDonation(donationEntity);
         userCreation.setScope(entity.getScope());
         userCreation.setGender(entity.getGender());
         userCreation.setPhoneNumber(entity.getPhoneNumber());

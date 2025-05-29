@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 
 @Repository
 public interface ReqRepo extends BaseRepo<ReqEntity, Long> {
@@ -15,4 +17,7 @@ public interface ReqRepo extends BaseRepo<ReqEntity, Long> {
     @Query("DELETE FROM ReqEntity r WHERE r.id = :id")
     void hardDeleteById(@Param("id") Long id);
 
+    List<ReqEntity> findByUserId(Long user_id);
+
+    List<ReqEntity> findByOrganizationId(Long organization_id);
 }

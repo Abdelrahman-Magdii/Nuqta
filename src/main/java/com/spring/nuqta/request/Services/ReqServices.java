@@ -82,6 +82,22 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     }
 
     /**
+     * Get all requests by user ID
+     */
+    public List<ReqEntity> getRequestsByUserId(Long userId) {
+        validId(userId);
+        return reqRepo.findByUserId(userId);
+    }
+
+    /**
+     * Get all requests by organization ID
+     */
+    public List<ReqEntity> getRequestsByOrgId(Long orgId) {
+        validId(orgId);
+        return reqRepo.findByOrganizationId(orgId);
+    }
+
+    /**
      * Deletes a request by its ID.
      * Ensures associated user and organization fields are set to null before deletion.
      * Evicts the cache entry for the deleted request.

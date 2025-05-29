@@ -45,6 +45,41 @@ public class ReqController {
         return new ResponseEntity<>(reqDto, HttpStatus.OK);
     }
 
+    /**
+     * Get all requests by user ID
+     * GET /api/requests/user/{userId}
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<?>> getRequestsByUserId(@PathVariable Long userId) {
+        try {
+            List<AddReqDto> reqDto = addReqMapper.map(reqServices.getRequestsByUserId(userId));
+            if (reqDto.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(reqDto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Get all requests by organization ID
+     * GET /api/requests/org/{orgId}
+     */
+    @GetMapping("/org/{orgId}")
+    public ResponseEntity<List<?>> getRequestsByOrgId(@PathVariable Long orgId) {
+        try {
+            List<AddReqDto> reqDto = addReqMapper.map(reqServices.getRequestsByOrgId(orgId));
+            if (reqDto.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(reqDto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
     @PostMapping("")
     public ResponseEntity<?> addRequest(@RequestBody AddReqDto addReqDto) throws FirebaseMessagingException {
 
