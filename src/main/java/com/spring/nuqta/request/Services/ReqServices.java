@@ -47,13 +47,6 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
     private final CacheManager cacheManager;
     private final MessageSource ms;
 
-    /**
-     * Retrieves all requests from the database.
-     * Uses caching to improve performance.
-     *
-     * @return List of all requests
-     * @throws GlobalException if no requests are found
-     */
     @Override
     @Cacheable(value = "requests")
     public List<ReqEntity> findAll() throws GlobalException {
@@ -64,14 +57,6 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         return requests;
     }
 
-    /**
-     * Finds a request by its ID.
-     * Uses caching to store request details.
-     *
-     * @param id Request ID
-     * @return ReqEntity object corresponding to the given ID
-     * @throws GlobalException if the request is not found
-     */
     @Override
     @Cacheable(value = "requests", key = "#id")
     public ReqEntity findById(Long id) throws GlobalException {
@@ -81,30 +66,34 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
                 .orElseThrow(() -> new GlobalException(msg, HttpStatus.NOT_FOUND));
     }
 
-    /**
-     * Get all requests by user ID
-     */
     public List<ReqEntity> getRequestsByUserId(Long userId) {
         validId(userId);
         return reqRepo.findByUserId(userId);
     }
 
-    /**
-     * Get all requests by organization ID
-     */
     public List<ReqEntity> getRequestsByOrgId(Long orgId) {
         validId(orgId);
         return reqRepo.findByOrganizationId(orgId);
     }
 
-    /**
-     * Deletes a request by its ID.
-     * Ensures associated user and organization fields are set to null before deletion.
-     * Evicts the cache entry for the deleted request.
-     *
-     * @param id Request ID
-     * @throws GlobalException if the request is not found
-     */
+    @Cacheable(value = "requests")
+    public List<ReqEntity> getRequestsByCity(String city) {
+        List<ReqEntity> requests = reqRepo.findFirstByCityContainingIgnoreCase(city);
+        if (requests.isEmpty()) {
+            throw new GlobalException("error.request.no_requests", HttpStatus.NOT_FOUND);
+        }
+        return requests;
+    }
+
+    @Cacheable(value = "requests")
+    public List<ReqEntity> getRequestsByConservatism(String conservatism) {
+        List<ReqEntity> requests = reqRepo.findFirstByConservatismContainingIgnoreCase(conservatism);
+        if (requests.isEmpty()) {
+            throw new GlobalException("error.request.no_requests", HttpStatus.NOT_FOUND);
+        }
+        return requests;
+    }
+
     @Override
     @Transactional
     public void deleteById(Long id) throws GlobalException {
@@ -127,7 +116,6 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
             if (orgCache != null) orgCache.clear();
         }
     }
-
 
     public void ReCache(Long id) throws GlobalException {
         // Fetch the request entity
@@ -190,16 +178,6 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         reqEntity.setModifiedUser(user.getUsername());
     }
 
-
-    /**
-     * Updates an existing request with new details.
-     * Does not update relationships (user and organization remain unchanged).
-     * Updates cache with new request details.
-     *
-     * @param entity The updated request entity
-     * @return The updated request entity
-     * @throws GlobalException if the request ID is null or the request is not found
-     */
     @Override
     @Caching(
             evict = {
@@ -247,12 +225,6 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         return reqRepo.save(existingEntity);
     }
 
-    /**
-     * Sends notifications to nearby donors about a new request.
-     *
-     * @param reqEntity The request entity
-     * @throws GlobalException if any error occurs while sending notifications
-     */
     public void SendNotification(ReqEntity reqEntity) throws GlobalException, FirebaseMessagingException {
         // Ensure reqEntity has a user or organization
         if (reqEntity.getUser() == null && reqEntity.getOrganization() == null) {
@@ -281,12 +253,6 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
         }
     }
 
-    /**
-     * Finds nearby donors within a given radius.
-     *
-     * @param city The location of the request
-     * @return List of nearby donors
-     */
     public List<DonEntity> findNearbyDonors(String city, String conservatism) {
         return donRepo.findTopByCityOrConservatism(city, conservatism);
     }

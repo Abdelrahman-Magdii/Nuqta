@@ -20,4 +20,8 @@ public interface ReqRepo extends BaseRepo<ReqEntity, Long> {
     List<ReqEntity> findByUserId(Long user_id);
 
     List<ReqEntity> findByOrganizationId(Long organization_id);
+
+    List<ReqEntity> findFirstByCityContainingIgnoreCase(String city);
+
+    List<ReqEntity> findFirstByConservatismContainingIgnoreCase(String conservatism);
 }

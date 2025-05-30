@@ -45,10 +45,6 @@ public class ReqController {
         return new ResponseEntity<>(reqDto, HttpStatus.OK);
     }
 
-    /**
-     * Get all requests by user ID
-     * GET /api/requests/user/{userId}
-     */
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<?>> getRequestsByUserId(@PathVariable Long userId) {
         try {
@@ -62,10 +58,6 @@ public class ReqController {
         }
     }
 
-    /**
-     * Get all requests by organization ID
-     * GET /api/requests/org/{orgId}
-     */
     @GetMapping("/org/{orgId}")
     public ResponseEntity<List<?>> getRequestsByOrgId(@PathVariable Long orgId) {
         try {
@@ -78,7 +70,6 @@ public class ReqController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
 
     @PostMapping("")
     public ResponseEntity<?> addRequest(@RequestBody AddReqDto addReqDto) throws FirebaseMessagingException {
@@ -115,5 +106,17 @@ public class ReqController {
         String message = ms.getMessage("error.request.delete", null, LocaleContextHolder.getLocale());
         response.put("message", message);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("nearest/city")
+    public ResponseEntity<?> getNearestRequestsCity(@RequestParam("city") String city) {
+        List<ReqDto> dto = reqMapper.map(reqServices.getRequestsByCity(city));
+        return new ResponseEntity<>(dto, HttpStatus.OK);
+    }
+
+    @GetMapping("nearest/conservatism")
+    public ResponseEntity<?> getNearestRequestsConservatism(@RequestParam("conservatism") String conservatism) {
+        List<ReqDto> dto = reqMapper.map(reqServices.getRequestsByConservatism(conservatism));
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 }

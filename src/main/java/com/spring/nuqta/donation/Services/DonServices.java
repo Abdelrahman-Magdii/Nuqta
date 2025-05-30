@@ -41,9 +41,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
     private final NotificationService notificationService;
     private final MessageSource ms;
 
-    /**
-     * Retrieves all donations with caching.
-     */
+
     @Cacheable(value = "donation")
     public List<DonEntity> findTopConservatism(String conservatism) {
         List<DonEntity> entities = donRepository.findFirstByConservatismContainingIgnoreCase(conservatism);
@@ -62,9 +60,6 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         return entities;
     }
 
-    /**
-     * Retrieves a donation by ID with caching.
-     */
     @Override
     @Cacheable(value = "donation", key = "#id")
     public DonEntity findById(Long id) {
@@ -82,11 +77,6 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         return entity.get();
     }
 
-    /**
-     * Accepts a donation request and updates the cache.
-     *
-     * @return
-     */
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "donation", allEntries = true),
@@ -177,10 +167,6 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         sendMailToDoner.sendMailRejected(donation, request);
     }
 
-
-    /**
-     * Sends a notification when a donation request is accepted.
-     */
     void sendNotificationIfApplicable(DonEntity donation, ReqEntity request) {
         if (donation == null || request == null) {
             log.warn("Donation or request is null. Notification not sent.");
@@ -211,7 +197,6 @@ public class DonServices extends BaseServices<DonEntity, Long> {
                     notificationService.sendNotification(new NotificationRequest(token, "notification.requestAcceptedTitle", message));
                 });
     }
-
 
     @Transactional
     @Caching(
