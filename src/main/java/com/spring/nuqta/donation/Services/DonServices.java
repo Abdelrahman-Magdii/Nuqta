@@ -115,10 +115,12 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         donation.setDonationDate(currentDate);
         donation.setLastDonation(currentDate);
 
-        if (donation.getAcceptedRequests().size() == request.getAmount()) {
-            request.setStatus(Status.FULFILLED);
-        } else {
-            request.setStatus(Status.OPEN);
+        if (request.getAmount() != null) {
+            if (donation.getAcceptedRequests().size() == request.getAmount()) {
+                request.setStatus(Status.FULFILLED);
+            } else {
+                request.setStatus(Status.OPEN);
+            }
         }
 
         // Save entities
