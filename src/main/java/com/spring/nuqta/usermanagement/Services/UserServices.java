@@ -161,6 +161,8 @@ public class UserServices extends BaseServices<UserEntity, Long> {
             throw new GlobalException("error.user.donation.notFound", HttpStatus.NOT_FOUND);
         }
 
+        DonEntity existingDonation = existingUser.getDonation();
+
         if (entity.getDonation().getId() == null) {
             if (entity.getDonation().getConfirmDonate() == null) {
                 entity.getDonation().setConfirmDonate(false);
@@ -174,15 +176,13 @@ public class UserServices extends BaseServices<UserEntity, Long> {
                 throw new GlobalException(msg, HttpStatus.NOT_FOUND);
             }
 
-            DonEntity existingDonation = existingUser.getDonation();
-
-            // Handle confirmDonate: if null, set to false; otherwise use the provided value
             if (entity.getDonation().getConfirmDonate() != null) {
                 existingDonation.setConfirmDonate(entity.getDonation().getConfirmDonate());
             } else {
                 existingDonation.setConfirmDonate(false);
             }
 
+            existingDonation.setConfirmDonate(entity.getDonation().getConfirmDonate() != null ? entity.getDonation().getConfirmDonate() : existingDonation.getConfirmDonate());
             existingDonation.setAmount(entity.getDonation().getAmount() != null ? entity.getDonation().getAmount() : existingDonation.getAmount());
             existingDonation.setBloodType(entity.getDonation().getBloodType() != null ? entity.getDonation().getBloodType() : existingDonation.getBloodType());
             existingDonation.setCity(entity.getDonation().getCity() != null ? entity.getDonation().getCity() : existingDonation.getCity());
@@ -197,7 +197,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         // Update user fields
         existingUser.setUsername(entity.getUsername());
         existingUser.setPhoneNumber(entity.getPhoneNumber());
-        existingUser.setDonation(entity.getDonation());
+        existingUser.setDonation(existingDonation);
         existingUser.setModifiedDate(LocalDate.now());
         existingUser.setModifiedUser(entity.getUsername());
         return userRepository.save(existingUser);

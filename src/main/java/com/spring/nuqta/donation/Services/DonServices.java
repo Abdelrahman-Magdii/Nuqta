@@ -5,6 +5,7 @@ import com.spring.nuqta.donation.Dto.AcceptDonationRequestDto;
 import com.spring.nuqta.donation.Entity.DonEntity;
 import com.spring.nuqta.donation.Repo.DonRepo;
 import com.spring.nuqta.enums.DonStatus;
+import com.spring.nuqta.enums.Status;
 import com.spring.nuqta.exception.GlobalException;
 import com.spring.nuqta.notifications.Dto.NotificationRequest;
 import com.spring.nuqta.notifications.Services.NotificationService;
@@ -113,6 +114,12 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         LocalDate currentDate = LocalDate.now();
         donation.setDonationDate(currentDate);
         donation.setLastDonation(currentDate);
+
+        if (donation.getAcceptedRequests().size() == request.getAmount()) {
+            request.setStatus(Status.FULFILLED);
+        } else {
+            request.setStatus(Status.OPEN);
+        }
 
         // Save entities
         donRepository.save(donation);
