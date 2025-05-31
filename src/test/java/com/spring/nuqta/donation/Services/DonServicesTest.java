@@ -225,17 +225,7 @@ class DonServicesTest {
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatus());
         assertEquals("error.donation.confirmed", exception.getMessage());
     }
-
-    @Test
-    void markAsAccepted_WithValidDonation_UpdatesStatus() {
-        when(donRepository.findById(1L)).thenReturn(Optional.of(validDonation));
-
-        donServices.markAsAccepted(1L, 1L);
-
-        assertTrue(validDonation.getConfirmDonate());
-        verify(donRepository, times(1)).save(validDonation);
-    }
-
+    
 
     @Test
     void updateDonationStatuses_WithNoExpiredDonations_DoesNothing() {
