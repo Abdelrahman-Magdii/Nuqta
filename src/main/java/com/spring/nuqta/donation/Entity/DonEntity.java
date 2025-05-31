@@ -29,7 +29,7 @@ public class DonEntity extends BaseEntity<Long> {
     private String bloodType;
 
     @Column(name = "donation_date")
-    private LocalDate donationDate = LocalDate.now();
+    private LocalDateTime donationDate = LocalDateTime.now();
 
     @Column(name = "last_quiz_date")
     private LocalDate lastQuizDate;
@@ -76,7 +76,7 @@ public class DonEntity extends BaseEntity<Long> {
 
     public boolean isExpired() {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiryDateTime = now.plusSeconds(1);
+        LocalDateTime expiryDateTime = this.getDonationDate().plusSeconds(1);
         return now.isAfter(expiryDateTime) || now.isEqual(expiryDateTime);
     }
 
