@@ -230,7 +230,8 @@ public class DonServices extends BaseServices<DonEntity, Long> {
             evict = {
                     @CacheEvict(value = "users", allEntries = true),
             })
-    @Scheduled(cron = "0 0 0 * * ?") // Run at midnight every day
+//    @Scheduled(cron = "0 0 0 * * ?") // Run at midnight every day
+    @Scheduled(cron = "* * * * * ?") // Run every second
     public void updateDonationStatuses() {
         List<DonEntity> donations = donRepository.findByStatus(DonStatus.INVALID);
         List<DonEntity> expiredDonations = new ArrayList<>();
@@ -239,6 +240,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
             if (donation.isExpired()) {
                 donation.setStatus(DonStatus.VALID);
                 donation.setConfirmDonate(false);
+                donation.setConfirmDonateReqId(0L);
                 expiredDonations.add(donation);
             }
         }
