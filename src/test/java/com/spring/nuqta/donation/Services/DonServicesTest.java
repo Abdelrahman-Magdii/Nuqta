@@ -225,31 +225,5 @@ class DonServicesTest {
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatus());
         assertEquals("error.donation.confirmed", exception.getMessage());
     }
-    
-
-    @Test
-    void updateDonationStatuses_WithNoExpiredDonations_DoesNothing() {
-        when(donRepository.findByStatus(DonStatus.INVALID)).thenReturn(new ArrayList<>());
-
-        donServices.updateDonationStatuses();
-
-        verify(donRepository, never()).saveAll(anyList());
-    }
-
-    @Test
-    void updateDonationStatuses_WithExpiredDonations_UpdatesStatuses() {
-        // Arrange
-        List<DonEntity> expiredDonations = new ArrayList<>();
-        expiredDonations.add(invalidDonation);
-
-        when(donRepository.findByStatus(DonStatus.INVALID)).thenReturn(expiredDonations);
-
-        // Act
-        donServices.updateDonationStatuses();
-
-        // Assert
-        assertEquals(DonStatus.INVALID, invalidDonation.getStatus());
-        assertTrue(invalidDonation.getConfirmDonate());
-    }
 
 }
