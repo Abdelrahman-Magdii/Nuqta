@@ -230,7 +230,7 @@ class DonServicesTest {
     void markAsAccepted_WithValidDonation_UpdatesStatus() {
         when(donRepository.findById(1L)).thenReturn(Optional.of(validDonation));
 
-        donServices.markAsAccepted(1L);
+        donServices.markAsAccepted(1L, 1L);
 
         assertTrue(validDonation.getConfirmDonate());
         verify(donRepository, times(1)).save(validDonation);

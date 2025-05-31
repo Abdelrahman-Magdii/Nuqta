@@ -116,14 +116,6 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         donation.setLastDonation(currentDate);
         donation.setConfirmDonateReqId(dto.getRequestId());
 
-        if (request.getAmount() != null && request.getDonations() != null) {
-            if (request.getDonations().size() == request.getAmount()) {
-                request.setStatus(Status.FULFILLED);
-            } else {
-                request.setStatus(Status.OPEN);
-            }
-        }
-
         // Save entities
         donRepository.save(donation);
         reqRepository.save(request);
@@ -216,12 +208,24 @@ public class DonServices extends BaseServices<DonEntity, Long> {
                     @CacheEvict(value = "users", allEntries = true),
                     @CacheEvict(value = "requests", allEntries = true)
             })
-    public void markAsAccepted(Long donationId) {
+    public void markAsAccepted(Long donationId, Long requestId) {
         DonEntity donation = donRepository.findById(donationId)
                 .orElseThrow(() -> new GlobalException("error.donation.notFound", HttpStatus.NOT_FOUND));
 
+        ReqEntity request = reqRepository.findById(requestId)
+                .orElseThrow(() -> new GlobalException("error.request.notFound", HttpStatus.NOT_FOUND));
+
         donation.setConfirmDonate(true);
         donation.setStatus(DonStatus.INVALID);
+
+        if (request.getAmount() != null && request.getDonations() != null) {
+            if (request.getDonations().size() == request.getAmount()) {
+                request.setStatus(Status.FULFILLED);
+            } else {
+                request.setStatus(Status.OPEN);
+            }
+        }
+
         donRepository.save(donation);
 
     }
@@ -229,6 +233,8 @@ public class DonServices extends BaseServices<DonEntity, Long> {
     @Caching(
             evict = {
                     @CacheEvict(value = "users", allEntries = true),
+                    @CacheEvict(value = "donation", allEntries = true),
+                    @CacheEvict(value = "requests", allEntries = true)
             })
 //    @Scheduled(cron = "0 0 0 * * ?") // Run at midnight every day
     @Scheduled(cron = "* * * * * ?") // Run every second

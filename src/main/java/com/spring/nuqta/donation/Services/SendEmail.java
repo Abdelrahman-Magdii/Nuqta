@@ -34,7 +34,7 @@ public class SendEmail {
         } else if (req.getOrganization() != null) {
             context.init(req.getOrganization());
         }
-        context.buildVerificationUrl(donor, donation.getId(), baseUrl);
+        context.buildVerificationUrl(donor, donation.getId(), req.getId(), baseUrl);
 
         emailService.sendMail(context);
 

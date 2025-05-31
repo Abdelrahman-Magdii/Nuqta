@@ -26,7 +26,7 @@ public class SendMailToDoner extends AbstractEmailContext {
     }
 
 
-    public void buildVerificationUrl(final UserEntity user, final Long donationId, final String baseUrl) {
+    public void buildVerificationUrl(final UserEntity user, final Long donationId, final Long requestId, final String baseUrl) {
         put("Name", user.getUsername());
         put("location", user.getDonation().getConservatism() + " " + user.getDonation().getCity());
         put("gender", user.getGender());
@@ -44,6 +44,7 @@ public class SendMailToDoner extends AbstractEmailContext {
                     .path("/api/auth/accept")
                     .queryParam("accept", true)
                     .queryParam("donationId", donationId)
+                    .queryParam("requestId", requestId)
                     .queryParam("name", encodedName)
                     .queryParam("phoneNumber", encodedPhone)
                     .queryParam("bloodType", encodedBloodType)

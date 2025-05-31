@@ -146,6 +146,7 @@ public class AuthController {
     public ResponseEntity<?> verifyAccept(
             @RequestParam("accept") boolean accept,
             @RequestParam("donationId") Long donationId,
+            @RequestParam("requestId") Long requestId,
             @RequestParam("name") String name,
             @RequestParam("phoneNumber") String phoneNumber,
             @RequestParam("bloodType") String bloodType,
@@ -166,7 +167,7 @@ public class AuthController {
             }
 
             if (accept) {
-                donationService.markAsAccepted(donationId);
+                donationService.markAsAccepted(donationId, requestId);
             }
 
             String redirectPath = accept ? "/accept-success.html" : "/accept-failed.html";
