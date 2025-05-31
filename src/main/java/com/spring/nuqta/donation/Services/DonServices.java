@@ -238,23 +238,44 @@ public class DonServices extends BaseServices<DonEntity, Long> {
                     @CacheEvict(value = "requests", allEntries = true)
             })
 //    @Scheduled(cron = "0 0 0 * * ?") // Run at midnight every day
-    @Scheduled(cron = "* * * * * ?") // Run every second
+    @Scheduled(cron = "0 * * * * ?") // Run every minute instead of every second
     public void updateDonationStatuses() {
         List<DonEntity> donations = donRepository.findByStatus(DonStatus.INVALID);
-        log.info("Updating {} donations", donations.get(1).getUser().getUsername());
+
+        if (!donations.isEmpty()) {
+            log.info("Found {} donations with INVALID status to process", donations.size());
+        } else {
+            log.debug("No donations with INVALID status found");
+            return;
+        }
+
         List<DonEntity> expiredDonations = new ArrayList<>();
 
         for (DonEntity donation : donations) {
-            if (donation.isExpired()) {
-                donation.setStatus(DonStatus.VALID);
-                donation.setConfirmDonate(false);
-                donation.setConfirmDonateReqId(0L);
-                expiredDonations.add(donation);
+            try {
+                if (donation.isExpired()) {
+                    // Update the donation status and related fields
+                    donation.setStatus(DonStatus.VALID); // Or should this be EXPIRED?
+                    donation.setConfirmDonate(false);
+                    donation.setConfirmDonateReqId(0L);
+                    expiredDonations.add(donation);
+
+                    log.debug("Marking donation {} as expired for user: {}",
+                            donation.getId(),
+                            donation.getUser() != null ? donation.getUser().getUsername() : "Unknown");
+                }
+            } catch (Exception e) {
+                log.error("Error processing donation with ID: {}", donation.getId(), e);
             }
         }
 
         if (!expiredDonations.isEmpty()) {
-            donRepository.saveAll(expiredDonations);
+            try {
+                donRepository.saveAll(expiredDonations);
+                log.info("Successfully updated {} expired donations", expiredDonations.size());
+            } catch (Exception e) {
+                log.error("Error saving expired donations", e);
+            }
         }
     }
 
