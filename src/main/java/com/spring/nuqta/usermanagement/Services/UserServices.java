@@ -176,12 +176,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
                 throw new GlobalException(msg, HttpStatus.NOT_FOUND);
             }
 
-            if (entity.getDonation().getConfirmDonate() != null) {
-                existingDonation.setConfirmDonate(entity.getDonation().getConfirmDonate());
-            } else {
-                existingDonation.setConfirmDonate(false);
-            }
-
+            existingDonation.setConfirmDonateReqId(entity.getDonation().getConfirmDonateReqId() != null ? entity.getDonation().getConfirmDonateReqId() : existingDonation.getConfirmDonateReqId());
             existingDonation.setConfirmDonate(entity.getDonation().getConfirmDonate() != null ? entity.getDonation().getConfirmDonate() : existingDonation.getConfirmDonate());
             existingDonation.setAmount(entity.getDonation().getAmount() != null ? entity.getDonation().getAmount() : existingDonation.getAmount());
             existingDonation.setBloodType(entity.getDonation().getBloodType() != null ? entity.getDonation().getBloodType() : existingDonation.getBloodType());
@@ -248,9 +243,11 @@ public class UserServices extends BaseServices<UserEntity, Long> {
         if (entity.getDonation() != null) {
             donationEntity = entity.getDonation();
             donationEntity.setConfirmDonate(false);
+            donationEntity.setConfirmDonateReqId(0L);
         } else {
             donationEntity = new DonEntity();
             donationEntity.setConfirmDonate(false);
+            donationEntity.setConfirmDonateReqId(0L);
         }
 
         userCreation.setUsername(entity.getUsername());

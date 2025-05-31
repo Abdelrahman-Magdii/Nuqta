@@ -114,6 +114,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         LocalDate currentDate = LocalDate.now();
         donation.setDonationDate(currentDate);
         donation.setLastDonation(currentDate);
+        donation.setConfirmDonateReqId(dto.getRequestId());
 
         if (request.getAmount() != null && request.getDonations() != null) {
             if (request.getDonations().size() == request.getAmount()) {
@@ -169,6 +170,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         donation.setStatus(DonStatus.VALID);
         donation.setDonationDate(null);
         donation.setLastDonation(null);
+        donation.setConfirmDonateReqId(0L);
 
         donRepository.save(donation);
         reqRepository.save(request);

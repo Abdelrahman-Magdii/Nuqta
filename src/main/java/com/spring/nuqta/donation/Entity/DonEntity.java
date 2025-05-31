@@ -45,6 +45,9 @@ public class DonEntity extends BaseEntity<Long> {
     @Column(name = "confirm_Donate")
     private Boolean confirmDonate = false;
 
+    @Column(name = "confirm_Donate_Req_Id")
+    private Long confirmDonateReqId = 0L;
+
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private DonStatus status;

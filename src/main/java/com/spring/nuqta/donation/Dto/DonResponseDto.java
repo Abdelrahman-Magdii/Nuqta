@@ -32,6 +32,9 @@ public class DonResponseDto extends BaseDto<Long> {
     @Column(name = "confirm_Donate")
     private Boolean confirmDonate;
 
+    @Column(name = "confirm_Donate_Req_Id")
+    private Long confirmDonateReqId = 0L;
+
     @Schema(description = "The date of the last donation made by the donor.", example = "2024-10-01")
     @JsonProperty("last_donation")
     private LocalDate lastDonation;
