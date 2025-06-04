@@ -237,8 +237,8 @@ public class DonServices extends BaseServices<DonEntity, Long> {
                     @CacheEvict(value = "donation", allEntries = true),
                     @CacheEvict(value = "requests", allEntries = true)
             })
-//    @Scheduled(cron = "0 0 0 * * ?") // Run at midnight every day
-    @Scheduled(cron = "0 * * * * ?") // Run every minute instead of every second
+    @Scheduled(cron = "0 0 0 * * ?") // Run at midnight every day
+//    @Scheduled(cron = "* * * * * ?") // Run every minute instead of every second
     public void updateDonationStatuses() {
         List<DonEntity> donations = donRepository.findByStatus(DonStatus.INVALID);
 

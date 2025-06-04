@@ -76,7 +76,7 @@ public class DonEntity extends BaseEntity<Long> {
 
     public boolean isExpired() {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiryDateTime = this.getDonationDate().plusSeconds(1);
+        LocalDateTime expiryDateTime = this.getDonationDate().plusMonths(3);
         return now.isAfter(expiryDateTime) || now.isEqual(expiryDateTime);
     }
 
