@@ -10,7 +10,7 @@ import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Getter
@@ -24,10 +24,10 @@ public class DonResponseDto extends BaseDto<Long> {
 
     @Schema(description = "The date of the current donation.", example = "2024-12-03")
     @JsonProperty("donation_date")
-    private LocalDate donationDate;
+    private LocalDateTime donationDate;
 
     @JsonProperty("last_quiz_date")
-    private LocalDate lastQuizDate;
+    private LocalDateTime lastQuizDate;
 
     @Column(name = "confirm_Donate")
     private Boolean confirmDonate;
@@ -36,8 +36,8 @@ public class DonResponseDto extends BaseDto<Long> {
     private Long confirmDonateReqId = 0L;
 
     @Schema(description = "The date of the last donation made by the donor.", example = "2024-10-01")
-    @JsonProperty("last_donation")
-    private LocalDate lastDonation;
+    @JsonProperty("start_donation")
+    private LocalDateTime startDonation;
 
     @Schema(description = "Amount of blood donated in liters.", example = "0.5")
     private Double amount;

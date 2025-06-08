@@ -26,7 +26,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -114,7 +113,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         // Update donation status and dates
         LocalDateTime currentDate = LocalDateTime.now();
         donation.setDonationDate(currentDate);
-        donation.setLastDonation(LocalDate.from(currentDate));
+        donation.setStartDonation(currentDate);
         donation.setConfirmDonateReqId(dto.getRequestId());
 
         // Save entities
@@ -162,7 +161,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
         request.getDonations().remove(donation);
         donation.setStatus(DonStatus.VALID);
         donation.setDonationDate(null);
-        donation.setLastDonation(null);
+        donation.setStartDonation(null);
         donation.setConfirmDonateReqId(0L);
 
         donRepository.save(donation);

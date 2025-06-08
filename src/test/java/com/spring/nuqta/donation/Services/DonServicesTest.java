@@ -164,7 +164,7 @@ class DonServicesTest {
         assertTrue(validDonation.getAcceptedRequests().contains(request));
         assertTrue(request.getDonations().contains(validDonation));
         assertNotNull(validDonation.getDonationDate());
-        assertNotNull(validDonation.getLastDonation());
+        assertNotNull(validDonation.getStartDonation());
 
         verify(donRepository, times(1)).save(validDonation);
         verify(reqRepository, times(1)).save(request);
@@ -202,7 +202,7 @@ class DonServicesTest {
         assertFalse(validDonation.getAcceptedRequests().contains(request));
         assertFalse(request.getDonations().contains(validDonation));
         assertNull(validDonation.getDonationDate());
-        assertNull(validDonation.getLastDonation());
+        assertNull(validDonation.getStartDonation());
 
         verify(donRepository, times(1)).save(validDonation);
         verify(reqRepository, times(1)).save(request);

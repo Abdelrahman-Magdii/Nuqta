@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,10 +31,10 @@ public class DonEntity extends BaseEntity<Long> {
     private LocalDateTime donationDate = LocalDateTime.now();
 
     @Column(name = "last_quiz_date")
-    private LocalDate lastQuizDate;
+    private LocalDateTime lastQuizDate;
 
-    @Column(name = "last_donation")
-    private LocalDate lastDonation = LocalDate.now();
+    @Column(name = "start_donation")
+    private LocalDateTime startDonation = LocalDateTime.now();
 
     @Column(name = "amount")
     private Double amount;
@@ -68,11 +67,6 @@ public class DonEntity extends BaseEntity<Long> {
     @ManyToMany(mappedBy = "donations", fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
     private Set<ReqEntity> acceptedRequests = new HashSet<>();
 
-//    public boolean isExpired() {
-//        LocalDate currentDate = LocalDate.now();
-//        LocalDate expiryDate = this.getDonationDate().plusMonths(3);
-//        return currentDate.isAfter(expiryDate) || currentDate.isEqual(expiryDate);
-//    }
 
     public boolean isExpired() {
         LocalDateTime now = LocalDateTime.now();

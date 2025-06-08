@@ -182,7 +182,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
             existingDonation.setBloodType(entity.getDonation().getBloodType() != null ? entity.getDonation().getBloodType() : existingDonation.getBloodType());
             existingDonation.setCity(entity.getDonation().getCity() != null ? entity.getDonation().getCity() : existingDonation.getCity());
             existingDonation.setConservatism(entity.getDonation().getConservatism() != null ? entity.getDonation().getConservatism() : existingDonation.getConservatism());
-            existingDonation.setLastDonation(entity.getDonation().getLastDonation() != null ? entity.getDonation().getLastDonation() : existingDonation.getLastDonation());
+            existingDonation.setStartDonation(entity.getDonation().getStartDonation() != null ? entity.getDonation().getStartDonation() : existingDonation.getStartDonation());
             existingDonation.setDonationDate(entity.getDonation().getDonationDate() != null ? entity.getDonation().getDonationDate() : existingDonation.getDonationDate());
             existingDonation.setStatus(entity.getDonation().getStatus() != null ? entity.getDonation().getStatus() : existingDonation.getStatus());
             existingDonation.setWeight(entity.getDonation().getWeight() != null ? entity.getDonation().getWeight() : existingDonation.getWeight());
