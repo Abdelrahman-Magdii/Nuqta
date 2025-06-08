@@ -217,6 +217,7 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
         donation.setConfirmDonate(true);
         donation.setStatus(DonStatus.INVALID);
+        donation.setStartDonation(LocalDateTime.now().plusMonths(3));
 
         if (request.getAmount() != null && request.getDonations() != null) {
             if (request.getDonations().size() == request.getAmount()) {
