@@ -16,5 +16,5 @@ public interface DonRepo extends BaseRepo<DonEntity, Long> {
 
     List<DonEntity> findFirstByConservatismContainingIgnoreCase(String conservatism);
 
-    List<DonEntity> findByStatus(DonStatus status);
+    List<DonEntity> findByStatusAndConfirmDonate(DonStatus status, Boolean confirmDonate);
 }
