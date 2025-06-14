@@ -184,6 +184,7 @@ public class UserServices extends BaseServices<UserEntity, Long> {
             existingDonation.setConservatism(entity.getDonation().getConservatism() != null ? entity.getDonation().getConservatism() : existingDonation.getConservatism());
             existingDonation.setStartDonation(entity.getDonation().getStartDonation() != null ? entity.getDonation().getStartDonation() : existingDonation.getStartDonation());
             existingDonation.setDonationDate(entity.getDonation().getDonationDate() != null ? entity.getDonation().getDonationDate() : existingDonation.getDonationDate());
+            existingDonation.setLastQuizDate(entity.getDonation().getLastQuizDate() != null ? entity.getDonation().getLastQuizDate() : existingDonation.getLastQuizDate());
             existingDonation.setStatus(entity.getDonation().getStatus() != null ? entity.getDonation().getStatus() : existingDonation.getStatus());
             existingDonation.setWeight(entity.getDonation().getWeight() != null ? entity.getDonation().getWeight() : existingDonation.getWeight());
             donRepo.save(existingDonation);

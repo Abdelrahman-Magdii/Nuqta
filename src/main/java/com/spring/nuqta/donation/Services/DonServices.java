@@ -22,12 +22,10 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -231,54 +229,54 @@ public class DonServices extends BaseServices<DonEntity, Long> {
 
     }
 
-    @Caching(
-            evict = {
-                    @CacheEvict(value = "users", allEntries = true),
-                    @CacheEvict(value = "donation", allEntries = true),
-                    @CacheEvict(value = "requests", allEntries = true)
-            })
-    @Scheduled(cron = "0 0 0 * * ?") // Run at midnight every day
-//    @Scheduled(cron = "* * * * * ?") // Run every minute instead of every second
-    public void updateDonationStatuses() {
-        List<DonEntity> donations = donRepository.findByStatus(DonStatus.INVALID);
+//    @Caching(
+//            evict = {
+//                    @CacheEvict(value = "users", allEntries = true),
+//                    @CacheEvict(value = "donation", allEntries = true),
+//                    @CacheEvict(value = "requests", allEntries = true)
+//            })
+//    @Scheduled(cron = "0 0 0 * * ?") // Run at midnight every day
 
-        if (!donations.isEmpty()) {
-            log.info("Found {} donations with INVALID status to process", donations.size());
-        } else {
-            log.debug("No donations with INVALID status found");
-            return;
-        }
-
-        List<DonEntity> expiredDonations = new ArrayList<>();
-
-        for (DonEntity donation : donations) {
-            try {
-                if (donation.isExpired()) {
-                    // Update the donation status and related fields
-                    donation.setStatus(DonStatus.VALID); // Or should this be EXPIRED?
-                    donation.setConfirmDonate(false);
-                    donation.setConfirmDonateReqId(0L);
-                    expiredDonations.add(donation);
-
-                    log.debug("Marking donation {} as expired for user: {}",
-                            donation.getId(),
-                            donation.getUser() != null ? donation.getUser().getUsername() : "Unknown");
-                }
-            } catch (Exception e) {
-                log.error("Error processing donation with ID: {}", donation.getId(), e);
-            }
-        }
-
-        if (!expiredDonations.isEmpty()) {
-            try {
-                donRepository.saveAll(expiredDonations);
-                log.info("Successfully updated {} expired donations", expiredDonations.size());
-            } catch (Exception e) {
-                log.error("Error saving expired donations", e);
-            }
-        }
-    }
-
+    /// /    @Scheduled(cron = "* * * * * ?") // Run every minute instead of every second
+//    public void updateDonationStatuses() {
+//        List<DonEntity> donations = donRepository.findByStatus(DonStatus.INVALID);
+//
+//        if (!donations.isEmpty()) {
+//            log.info("Found {} donations with INVALID status to process", donations.size());
+//        } else {
+//            log.debug("No donations with INVALID status found");
+//            return;
+//        }
+//
+//        List<DonEntity> expiredDonations = new ArrayList<>();
+//
+//        for (DonEntity donation : donations) {
+//            try {
+//                if (donation.isExpired()) {
+//                    // Update the donation status and related fields
+//                    donation.setStatus(DonStatus.VALID); // Or should this be EXPIRED?
+//                    donation.setConfirmDonate(false);
+//                    donation.setConfirmDonateReqId(0L);
+//                    expiredDonations.add(donation);
+//
+//                    log.debug("Marking donation {} as expired for user: {}",
+//                            donation.getId(),
+//                            donation.getUser() != null ? donation.getUser().getUsername() : "Unknown");
+//                }
+//            } catch (Exception e) {
+//                log.error("Error processing donation with ID: {}", donation.getId(), e);
+//            }
+//        }
+//
+//        if (!expiredDonations.isEmpty()) {
+//            try {
+//                donRepository.saveAll(expiredDonations);
+//                log.info("Successfully updated {} expired donations", expiredDonations.size());
+//            } catch (Exception e) {
+//                log.error("Error saving expired donations", e);
+//            }
+//        }
+//    }
     public String messageParam(Long id, String message) {
         String[] msParam = {id != null ? id.toString() : "null"};
         return ms.getMessage(message, msParam, LocaleContextHolder.getLocale());
