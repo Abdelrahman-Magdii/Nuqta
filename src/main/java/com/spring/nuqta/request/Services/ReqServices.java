@@ -78,7 +78,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
 
     @Cacheable(value = "requests")
     public List<ReqEntity> getRequestsByCity(String city) {
-        List<ReqEntity> requests = reqRepo.findFirstByCityContainingIgnoreCase(city);
+        List<ReqEntity> requests = reqRepo.findAllByCityContainingIgnoreCase(city);
         if (requests.isEmpty()) {
             throw new GlobalException("error.request.no_requests", HttpStatus.NOT_FOUND);
         }
@@ -87,7 +87,7 @@ public class ReqServices extends BaseServices<ReqEntity, Long> {
 
     @Cacheable(value = "requests")
     public List<ReqEntity> getRequestsByConservatism(String conservatism) {
-        List<ReqEntity> requests = reqRepo.findFirstByConservatismContainingIgnoreCase(conservatism);
+        List<ReqEntity> requests = reqRepo.findAllByConservatismContainingIgnoreCase(conservatism);
         if (requests.isEmpty()) {
             throw new GlobalException("error.request.no_requests", HttpStatus.NOT_FOUND);
         }

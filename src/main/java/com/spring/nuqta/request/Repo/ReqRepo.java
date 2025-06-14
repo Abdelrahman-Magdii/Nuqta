@@ -21,7 +21,7 @@ public interface ReqRepo extends BaseRepo<ReqEntity, Long> {
 
     List<ReqEntity> findByOrganizationId(Long organization_id);
 
-    List<ReqEntity> findFirstByCityContainingIgnoreCase(String city);
+    List<ReqEntity> findAllByCityContainingIgnoreCase(String city);
 
-    List<ReqEntity> findFirstByConservatismContainingIgnoreCase(String conservatism);
+    List<ReqEntity> findAllByConservatismContainingIgnoreCase(String conservatism);
 }
